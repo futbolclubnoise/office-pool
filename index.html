@@ -397,7 +397,6 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           <div class="fg"><label class="fl">Correo</label><input class="fi" id="rEmail" type="email" placeholder="tu@correo.com"></div>
           <div class="fg"><label class="fl">Contraseña</label><input class="fi" id="rPass" type="password" placeholder="Mínimo 6 caracteres"></div>
           <div class="fg"><label class="fl">Celular</label><input class="fi" id="rPhone" type="tel" placeholder="+1 555 000 0000"></div>
-          <div class="fg"><label class="fl">Código de acceso</label><input class="fi" id="rCode" type="text" placeholder="Código de la polla" autocomplete="off"></div>
           <button class="btn btn-p" onclick="doRegister()">CREAR CUENTA</button>
         </div>
       </div>
@@ -1205,10 +1204,8 @@ function doRegister(){
   const email=document.getElementById('rEmail').value.trim();
   const pass=document.getElementById('rPass').value;
   const phone=document.getElementById('rPhone').value.trim();
-  const regCode=document.getElementById('rCode').value.trim();
+
   const ph=document.getElementById('rPhPrev').src||'';
-  const poolCode=DB.settings&&DB.settings.regCode?DB.settings.regCode:'POLLA2026';
-  if(regCode.toUpperCase()!==poolCode.toUpperCase())return showE('Código de acceso incorrecto');
   if(!name||!email||!pass)return showE('Completa todos los campos');
   if(pass.length<6)return showE('Contraseña mínimo 6 caracteres');
   if(DB.users.find(u=>u.email===email))return showE('Correo ya registrado');
@@ -2074,7 +2071,7 @@ async function fbSync(){
     if(d&&d.users&&d.users.length){
       DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
       DB.banners=d.banners||{b1:'',b2:''};DB.stripe=d.stripe||{pub:'',secret:''};
-      DB.settings=d.settings||{regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'};
+      DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
       DB.nid=d.nid||{u:10,p:1,m:1};
       DB.bonusQuestions=d.bonusQuestions||[];
       DB.specials=d.specials&&d.specials.length?d.specials:[];
@@ -2617,7 +2614,7 @@ function startApp(){
   if(local&&local.users&&local.users.length){
     DB.users=local.users;DB.pollas=local.pollas||[];DB.matches=local.matches||[];
     DB.banners=local.banners||{b1:'',b2:''};DB.stripe=local.stripe||{pub:'',secret:''};
-    DB.settings=local.settings||{regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'};
+    DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},local.settings||{});
     DB.nid=local.nid||{u:10,p:1,m:1};DB.bonusQuestions=local.bonusQuestions||[];DB.specials=local.specials||[];
     seedWC2026();
     seedWC2026Specials();
