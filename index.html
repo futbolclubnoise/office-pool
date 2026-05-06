@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>The CFL Office Pool</title>
 <script src="https://js.stripe.com/v3/"></script>
 <style>
@@ -39,8 +39,8 @@ body.light {
   --card:#fff;--inp:#ebebeb;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html{max-width:100vw;overflow-x:hidden;}
-body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px;transition:background .3s,color .3s;overflow-x:hidden;}
+html,body{max-width:100%;overflow-x:hidden;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px;transition:background .3s,color .3s;}
 .hidden{display:none!important;}
 
 /* ── BAND ── */
@@ -308,13 +308,14 @@ code{background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:10px;}
   .nav-uname{display:none;}
 }
 @media(max-width:480px){
-  html,body{overflow-x:hidden;max-width:100%;}
-  .page{padding:10px 12px;overflow-x:hidden;}
-  .card{padding:14px;}
-  .mc{padding:10px;}
-  .modal-box{border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;max-height:92vh;}
+  .page{padding:10px 10px;}
+  .card{padding:12px;}
+  .mc{padding:9px 10px;}
+  .modal-box{border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%!important;max-height:92vh;width:100%!important;}
   .modal{align-items:flex-end;padding:0;}
-  .stab{padding:8px 9px;font-size:8.5px;}
+  .stab{padding:8px 8px;font-size:8.5px;}
+  .nav-logo{width:30px;height:30px;}
+  .sc-inp{width:42px!important;font-size:16px!important;}
 }
 
 /* ════ MODAL CENTER ════ */
@@ -1149,21 +1150,23 @@ function teamLogo(m,side){
   }
   return'<div style="width:40px;height:40px;border-radius:50%;background:var(--c2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--tx1)">'+ini(name)+'</div>';
 }
-function matchTeams(m){
-  var hF=teamLogo(m,'home');
-  var aF=teamLogo(m,'away');
-  return'<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:6px 0">'
-    +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center">'
-      +hF
-      +'<span style="font-size:11px;font-weight:700;color:var(--tx)">'+m.home+'</span>'
+function matchTeamRow(m){
+  var hFlag=getFlag(m.home);var aFlag=getFlag(m.away);
+  var hLogo=m.homeLogo?'<img src="'+m.homeLogo+'" onerror="this.style.display=\'none\'" style="width:22px;height:22px;object-fit:contain;border-radius:4px;flex-shrink:0">':( hFlag?'<span style="font-size:22px;line-height:1;flex-shrink:0">'+hFlag+'</span>':'<span style="font-size:10px;font-weight:700;color:var(--tx2);flex-shrink:0">'+ini(m.home)+'</span>');
+  var aLogo=m.awayLogo?'<img src="'+m.awayLogo+'" onerror="this.style.display=\'none\'" style="width:22px;height:22px;object-fit:contain;border-radius:4px;flex-shrink:0">':( aFlag?'<span style="font-size:22px;line-height:1;flex-shrink:0">'+aFlag+'</span>':'<span style="font-size:10px;font-weight:700;color:var(--tx2);flex-shrink:0">'+ini(m.away)+'</span>');
+  return'<div style="display:flex;align-items:center;gap:6px;padding:4px 0">'
+    +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0">'
+      +'<span style="font-size:11px;font-weight:700;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.home+'</span>'
+      +hLogo
     +'</div>'
-    +'<div style="font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:2px;padding:0 4px">VS</div>'
-    +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center">'
-      +aF
-      +'<span style="font-size:11px;font-weight:700;color:var(--tx)">'+m.away+'</span>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--tx3);padding:0 6px;flex-shrink:0">VS</div>'
+    +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-start;gap:5px;min-width:0">'
+      +aLogo
+      +'<span style="font-size:11px;font-weight:700;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.away+'</span>'
     +'</div>'
   +'</div>';
 }
+function matchTeams(m){return matchTeamRow(m);}
 
 function calcPool(pol){
   const paid=DB.users.filter(u=>u.payments&&u.payments.find(p=>p.pollaId===pol.id&&p.status==='succeeded'));
@@ -1367,20 +1370,34 @@ function renderAdmRes(){
       const pol=DB.pollas.find(p=>p.id===m.pollaId);
       const stg=STAGE_LABELS[m.stage]||'';
       const tz=m.tz||pol?.tz||'America/New_York';
-      return`<div class="mc" style="margin-bottom:10px">
+      const hFlag=getFlag(m.home),aFlag=getFlag(m.away);
+      const hI=m.homeLogo?`<img src="${m.homeLogo}" onerror="this.style.display='none'" style="width:22px;height:22px;object-fit:contain;border-radius:4px;flex-shrink:0">`:(hFlag?`<span style="font-size:22px;line-height:1;flex-shrink:0">${hFlag}</span>`:'');
+      const aI=m.awayLogo?`<img src="${m.awayLogo}" onerror="this.style.display='none'" style="width:22px;height:22px;object-fit:contain;border-radius:4px;flex-shrink:0">`:(aFlag?`<span style="font-size:22px;line-height:1;flex-shrink:0">${aFlag}</span>`:'');
+      return`<div class="mc" style="margin-bottom:8px">
         <div class="mc-hdr">
           <div style="display:flex;align-items:center;gap:5px">
             <span class="stage-badge ${STAGE_CSS[m.stage]||'stage-league'}">${stg}</span>
             ${m.round?`<span style="font-size:9px;color:var(--tx2)">${m.round}</span>`:''}
           </div>
-          <div class="mc-time"><div class="date-main">${fmt(m.date,tz)}</div><div class="date-tz">${TZ_LABELS[tz]||tz}</div></div>
+          <div class="mc-time"><div class="date-main">${fmt(m.date,tz)}</div></div>
         </div>
-        ${matchTeams(m)}
-        <div class="sc-row">
-          <input class="sc-inp" id="rh${m.id}" type="number" min="0" placeholder="0">
-          <div class="sc-sep">—</div>
-          <input class="sc-inp" id="ra${m.id}" type="number" min="0" placeholder="0">
-          <button class="btn-grn" onclick="saveResult(${m.id})">✓ GUARDAR</button>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0">
+            <span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.home}</span>
+            ${hI}
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+            <input class="sc-inp" id="rh${m.id}" type="number" min="0" placeholder="0" style="width:46px;font-size:18px">
+            <span style="color:var(--tx3);font-weight:700;font-size:13px">—</span>
+            <input class="sc-inp" id="ra${m.id}" type="number" min="0" placeholder="0" style="width:46px;font-size:18px">
+          </div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:flex-start;gap:5px;min-width:0">
+            ${aI}
+            <span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.away}</span>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <button onclick="saveResult(${m.id})" style="padding:5px 20px;font-size:9px;border-radius:7px;background:var(--grn2);color:var(--grn);border:1px solid var(--grn3);font-family:Poppins,sans-serif;font-weight:600;cursor:pointer">✓ Guardar resultado</button>
         </div>
       </div>`;
     }).join('')+
@@ -1881,52 +1898,68 @@ function openModal(pollaId){
       var tz=m.tz||pol.tz||'America/New_York';
       var homeF=teamLogo(m,'home');
       var awayF=teamLogo(m,'away');
-      html+='<div id="mc_'+m.id+'" style="background:var(--c2);border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid var(--bd)">';
-      // Date + round row
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+      var hFlag=getFlag(m.home);var aFlag=getFlag(m.away);
+      var hInline=m.homeLogo?'<img src="'+m.homeLogo+'" onerror="this.style.display=\'none\'" style="width:24px;height:24px;object-fit:contain;border-radius:4px;flex-shrink:0">':( hFlag?'<span style="font-size:24px;line-height:1;flex-shrink:0">'+hFlag+'</span>':'');
+      var aInline=m.awayLogo?'<img src="'+m.awayLogo+'" onerror="this.style.display=\'none\'" style="width:24px;height:24px;object-fit:contain;border-radius:4px;flex-shrink:0">':( aFlag?'<span style="font-size:24px;line-height:1;flex-shrink:0">'+aFlag+'</span>':'');
+      html+='<div id="mc_'+m.id+'" style="background:var(--c2);border-radius:10px;padding:10px 12px;margin-bottom:7px;border:1px solid var(--bd)">';
+      // Date + round
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
         +'<span style="font-size:9px;color:var(--tx3)">'+( m.round||'' )+'</span>'
         +'<span style="font-size:9px;color:var(--tx2);font-weight:600">'+fmt(m.date,tz)+'</span>'
         +'</div>';
-      // Teams row
-      html+='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:10px">'
-        // Home
-        +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center">'
-          +homeF
-          +'<span style="font-size:11px;font-weight:700;color:var(--tx)">'+m.home+'</span>'
-        +'</div>'
-        // VS
-        +'<div style="font-size:10px;font-weight:700;color:var(--tx3);padding:0 4px">VS</div>'
-        // Away
-        +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center">'
-          +awayF
-          +'<span style="font-size:11px;font-weight:700;color:var(--tx)">'+m.away+'</span>'
-        +'</div>'
-        +'</div>';
-      // Input / result
+      // Teams + score inline
       if(m.result){
         var resColor=pr&&pr.pts>0?'var(--grn)':'var(--red2)';
-        var resText=m.result.home+' — '+m.result.away;
-        var ptsText=pr?(pr.pts>0?'✅ +'+pr.pts+' pts':'❌ 0 pts'):'Sin predicción';
-        html+='<div style="text-align:center;padding:6px;border-radius:8px;background:var(--bg3)">'
-          +'<div style="font-size:14px;font-weight:700;color:var(--tx)">'+resText+'</div>'
-          +'<div style="font-size:10px;color:'+resColor+';margin-top:2px">'+ptsText+'</div>'
+        html+='<div style="display:flex;align-items:center;gap:6px">'
+          +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0">'
+            +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.home+'</span>'
+            +hInline
+          +'</div>'
+          +'<div style="background:var(--bg3);border-radius:8px;padding:5px 12px;text-align:center;flex-shrink:0">'
+            +'<div style="font-size:16px;font-weight:700;color:var(--tx);font-family:Kallisto,sans-serif">'+m.result.home+'–'+m.result.away+'</div>'
+            +(pr?'<div style="font-size:9px;color:'+resColor+';">'+(pr.pts>0?'✅ +'+pr.pts+' pts':'❌ 0 pts')+'</div>':'')
+          +'</div>'
+          +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-start;gap:5px;min-width:0">'
+            +aInline
+            +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.away+'</span>'
+          +'</div>'
           +'</div>';
       } else if(closed){
-        var savedTxt=pr?'Tu predicción: <strong>'+pr.home+'–'+pr.away+'</strong>':(locked?'🔒 '+lockLabel:'Sin predicción');
-        html+='<div style="text-align:center;font-size:10px;color:var(--tx3);padding:6px;background:var(--bg3);border-radius:8px">'+savedTxt+'</div>';
+        var savedTxt=pr?pr.home+'–'+pr.away:(locked?'🔒 '+lockLabel:'—');
+        html+='<div style="display:flex;align-items:center;gap:6px">'
+          +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0">'
+            +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.home+'</span>'
+            +hInline
+          +'</div>'
+          +'<div style="background:var(--bg3);border-radius:8px;padding:5px 12px;text-align:center;flex-shrink:0;font-size:10px;color:var(--tx3)">'+savedTxt+'</div>'
+          +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-start;gap:5px;min-width:0">'
+            +aInline
+            +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.away+'</span>'
+          +'</div>'
+          +'</div>';
       } else {
         var hv=pr!=null?pr.home:'';
         var av=pr!=null?pr.away:'';
         var btnId='btn_'+m.id;
-        html+='<div style="display:flex;align-items:center;gap:8px">'
-          +'<div style="flex:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:4px">'
-            +'<input class="sc-inp" id="ph_'+m.id+'" type="number" min="0" value="'+hv+'" placeholder="0" style="font-size:20px;text-align:center;width:100%">'
-            +'<span style="color:var(--tx3);font-weight:700;text-align:center">—</span>'
-            +'<input class="sc-inp" id="pa_'+m.id+'" type="number" min="0" value="'+av+'" placeholder="0" style="font-size:20px;text-align:center;width:100%">'
+        html+='<div style="display:flex;align-items:center;gap:6px">'
+          +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0">'
+            +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.home+'</span>'
+            +hInline
           +'</div>'
-          +'<button id="'+btnId+'" class="btn btn-p" onclick="saveOnePred('+m.id+')" style="width:auto;padding:6px 12px;font-size:9px;border-radius:7px;white-space:nowrap;margin-top:0;letter-spacing:0.5px;flex-shrink:0">'
-            +(pr!=null?'✅':'💾 Guardar')
-          +'</button>'
+          +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
+            +'<input class="sc-inp" id="ph_'+m.id+'" type="number" min="0" value="'+hv+'" placeholder="0" style="width:46px;font-size:18px;text-align:center">'
+            +'<span style="color:var(--tx3);font-weight:700;font-size:13px">—</span>'
+            +'<input class="sc-inp" id="pa_'+m.id+'" type="number" min="0" value="'+av+'" placeholder="0" style="width:46px;font-size:18px;text-align:center">'
+          +'</div>'
+          +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-start;gap:5px;min-width:0">'
+            +aInline
+            +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.away+'</span>'
+          +'</div>'
+          +'</div>'
+          +'<div style="text-align:center;margin-top:7px">'
+            +'<button id="'+btnId+'" onclick="saveOnePred('+m.id+')" style="padding:5px 20px;font-size:9px;border-radius:7px;background:'+(pr!=null?'var(--grn)':'var(--tx)')+';color:'+(pr!=null?'#fff':'var(--bg)')+';border:none;font-family:Poppins,sans-serif;font-weight:600;cursor:pointer;letter-spacing:0.5px">'
+              +(pr!=null?'✅ Guardado':'💾 Guardar')
+            +'</button>'
           +'</div>';
       }
       html+='</div>';
@@ -1953,7 +1986,7 @@ function saveOnePred(matchId){
   if(u)u.predictions=CU.predictions;
   saveDB();
   var btn=document.getElementById('btn_'+matchId);
-  if(btn){btn.textContent='✅ Guardado';btn.style.background='var(--grn)';btn.style.color='#fff';}
+  if(btn){btn.textContent='✅ Guardado';btn.style.background='var(--grn)';btn.style.color='#fff';btn.style.border='none';}
 }
 
 // ════ MATCH CUTOFF ════
