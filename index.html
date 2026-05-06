@@ -311,8 +311,8 @@ code{background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:10px;}
   .page{padding:10px 10px;}
   .card{padding:12px;}
   .mc{padding:9px 10px;}
-  .modal-box{border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%!important;max-height:92vh;width:100%!important;}
-  .modal{align-items:flex-end;padding:0;}
+  .modal-box{max-width:calc(100% - 24px)!important;max-height:90vh;border-radius:14px;}
+  .modal{align-items:center;padding:12px;}
   .stab{padding:8px 8px;font-size:8.5px;}
   .nav-logo{width:30px;height:30px;}
   .sc-inp{width:42px!important;font-size:16px!important;}
@@ -716,11 +716,6 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <div class="fg"><label class="fl">URL del Payment Link</label><input class="fi" id="stripeLink" placeholder="https://buy.stripe.com/..."></div>
         <button class="btn btn-p" onclick="saveStripeLink()">GUARDAR LINK</button>
         <div id="stripeLinkOK" class="msg-ok" style="margin-top:9px;display:none">Guardado ✓</div>
-      </div>
-      <div class="card" style="margin-bottom:12px">
-        <div class="ct"><div class="ct-dot ct-dot-o"></div>Código de acceso para registro</div>
-        <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Los jugadores deben ingresar este código al registrarse.</div>
-        <div style="display:flex;gap:8px"><input class="fi" id="regCodeInp" type="text" placeholder="POLLA2026" style="flex:1"><button class="btn btn-p" style="width:auto;padding:8px 16px;font-size:10px;margin-top:0" onclick="saveRegCode()">Guardar</button></div>
       </div>
     </div>
 
