@@ -1,0 +1,4 @@
+
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+try{const app=initializeApp({apiKey:"AIzaSyAmsEX2VJRytF9Sw8NOySPD80K9gzv6hRc",authDomain:"cfl-office-pool.firebaseapp.com",projectId:"cfl-office-pool",storageBucket:"cfl-office-pool.firebasestorage.app",messagingSenderId:"670177533526",appId:"1:670177533526:web:7107c4c54701c49a1125f7"});const db=getFirestore(app),ref=doc(db,"cfl","data");window._fbSave=async function(d){try{await setDoc(ref,JSON.parse(JSON.stringify(d)));}catch(e){}};window._fbLoad=async function(){try{const s=await getDoc(ref);return s.exists()?s.data():null;}catch(e){return null;}};window._fbReady=true;document.dispatchEvent(new Event('firebase-ready'));}catch(e){console.warn('Firebase:',e);}

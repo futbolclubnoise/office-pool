@@ -1,0 +1,2 @@
+function swTab(t,b){document.querySelectorAll('.tabp').forEach(function(x){x.classList.remove('on');});b.classList.add('on');document.getElementById('fLogin').classList.toggle('hidden',t!=='login');document.getElementById('fReg').classList.toggle('hidden',t!=='reg');var ae=document.getElementById('ae'),ao=document.getElementById('aok');if(ae)ae.style.display='none';if(ao)ao.style.display='none';}
+function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display='block';}
