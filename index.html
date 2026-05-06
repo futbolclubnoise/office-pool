@@ -297,8 +297,22 @@ code{background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:10px;}
   .scoring-grid{grid-template-columns:1fr;}
   .type-grid{grid-template-columns:1fr;}
   .pmg{grid-template-columns:1fr 1fr;}
-  .page{padding:14px 16px;}
-  .bnr-wrap{padding:12px 16px 0;}
+  .page{padding:12px 14px;}
+  .bnr-wrap{padding:10px 14px 0;}
+  .nav{padding:0 14px;height:52px;}
+  .nav-t1{font-size:11px;letter-spacing:2px;}
+  .nav-t2{display:none;}
+  .tabs{padding:0 8px;}
+  .stab{padding:9px 10px;font-size:9px;letter-spacing:1px;}
+  .nav-uname{display:none;}
+}
+@media(max-width:480px){
+  .page{padding:10px 12px;}
+  .card{padding:14px;}
+  .mc{padding:10px;}
+  .modal-box{border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;max-height:92vh;}
+  .modal{align-items:flex-end;padding:0;}
+  .stab{padding:8px 9px;font-size:8.5px;}
 }
 
 /* ════ MODAL CENTER ════ */
@@ -1889,8 +1903,8 @@ function openModal(pollaId){
           +'<input class="sc-inp" id="ph_'+m.id+'" type="number" min="0" value="'+hv+'" placeholder="0" style="width:56px;font-size:22px;text-align:center">'
           +'<span style="color:var(--tx3);font-weight:700">—</span>'
           +'<input class="sc-inp" id="pa_'+m.id+'" type="number" min="0" value="'+av+'" placeholder="0" style="width:56px;font-size:22px;text-align:center">'
-          +'<button id="'+btnId+'" class="btn btn-p" onclick="saveOnePred('+m.id+')" style="padding:7px 14px;font-size:10px;border-radius:8px;white-space:nowrap">'
-            +(pr!=null?'✅ Guardado':'💾 Guardar')
+          +'<button id="'+btnId+'" class="btn btn-p" onclick="saveOnePred('+m.id+')" style="padding:5px 10px;font-size:9px;border-radius:7px;white-space:nowrap;min-width:72px">'
+            +(pr!=null?'✅':'💾 Guardar')
           +'</button>'
           +'</div>';
       }
@@ -2036,6 +2050,7 @@ async function fbSync(){
       if(!DB.specials.length){
         seedWC2026Specials();changed=true;
       }
+      if(cleanOldSpecials())changed=true;
       if(changed&&window._fbSave)window._fbSave(DB).catch(function(){});
       lsSave();
       var auth=document.getElementById('S_auth');
@@ -2534,6 +2549,16 @@ function editSpecialAnswer(spId){
 // ════ STARTUP ════
 
 // ════ Seed WC2026 specials if missing ════
+function cleanOldSpecials(){
+  if(!DB.specials)return false;
+  var blocked=['goleador','mejor jugador','balón de oro','balon de oro','top scorer'];
+  var before=DB.specials.length;
+  DB.specials=DB.specials.filter(function(s){
+    var n=(s.name||'').toLowerCase();
+    return !blocked.some(function(b){return n.indexOf(b)>-1;});
+  });
+  return DB.specials.length!==before;
+}
 function seedWC2026Specials(){
   var wcPolla=DB.pollas.find(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;});
   if(!wcPolla)return;
@@ -2557,8 +2582,9 @@ function startApp(){
     DB.users=local.users;DB.pollas=local.pollas||[];DB.matches=local.matches||[];
     DB.banners=local.banners||{b1:'',b2:''};DB.stripe=local.stripe||{pub:'',secret:''};
     DB.nid=local.nid||{u:10,p:1,m:1};DB.bonusQuestions=local.bonusQuestions||[];DB.specials=local.specials||[];
-    seedWC2026();        // adds WC polla if missing
-    seedWC2026Specials(); // adds specials if missing
+    seedWC2026();
+    seedWC2026Specials();
+    cleanOldSpecials();
     lsSave();
   }else{
     seedWC2026();
