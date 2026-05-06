@@ -485,15 +485,11 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
       <div class="card">
         <div class="ct"><div class="ct-dot ct-dot-g"></div>Inscripción — Pool</div>
         <div class="fg"><label class="fl">Polla</label><select class="fi" id="payPolla" onchange="updatePayPreview()"></select></div>
-        <div id="payPreview" style="margin-bottom:14px"></div>
-        <div class="fg"><label class="fl">Datos de Pago (Stripe)</label>
-          <div id="card-element"></div>
-          <div id="card-errors" style="font-size:10px;color:var(--red);margin-top:5px"></div>
-        </div>
-        <button class="btn btn-p" id="payBtn" onclick="submitPayment()">PAGAR INSCRIPCIÓN</button>
+        <div id="payPreview" style="margin-bottom:16px"></div>
+        <div id="payLinkWrap"></div>
         <div id="payOK" class="st-ok"></div>
         <div id="payER" class="st-er"></div>
-        <div style="display:flex;align-items:center;gap:7px;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:7px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
           <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" style="height:14px;filter:grayscale(1) brightness(.5)">
           <span style="font-size:8px;color:var(--tx3)">Pagos procesados de forma segura por Stripe</span>
         </div>
@@ -715,23 +711,17 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
 
     <!-- STRIPE -->
     <div id="A_stripe" class="hidden">
-      <div class="card" style="margin-bottom:12px"><div style="font-size:10px;color:var(--tx3);margin-bottom:6px">Código de acceso para registro</div><div style="display:flex;gap:8px"><input class="fi" id="regCodeInp" type="text" placeholder="POLLA2026" style="flex:1"><button class="btn btn-p" style="width:auto;padding:8px 16px;font-size:10px;margin-top:0" onclick="saveRegCode()">Guardar</button></div></div>
-      <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-g"></div>Configuración Stripe</div>
-        <div class="fg"><label class="fl">Publishable Key</label><input class="fi" id="skPub" placeholder="pk_test_..."></div>
-        <div class="fg"><label class="fl">Secret Key (solo backend)</label><input class="fi" id="skSec" type="password" placeholder="sk_test_..."></div>
-        <button class="btn btn-p" onclick="saveStripe()">GUARDAR</button>
-        <div id="stripeOK" class="msg-ok" style="margin-top:9px">Guardado ✓</div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="ct"><div class="ct-dot ct-dot-g"></div>Link de Pago Stripe</div>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Pega el Payment Link de tu cuenta Stripe. Los jugadores serán redirigidos a pagar ahí.</div>
+        <div class="fg"><label class="fl">URL del Payment Link</label><input class="fi" id="stripeLink" placeholder="https://buy.stripe.com/..."></div>
+        <button class="btn btn-p" onclick="saveStripeLink()">GUARDAR LINK</button>
+        <div id="stripeLinkOK" class="msg-ok" style="margin-top:9px;display:none">Guardado ✓</div>
       </div>
-      <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-r"></div>Guía de Integración</div>
-        <div style="font-size:11px;color:var(--tx2);line-height:2">
-          <p>1 · Crea tu cuenta en <strong>stripe.com</strong> y obtén tus API keys.</p>
-          <p>2 · La <strong>Publishable Key</strong> va en el frontend (este campo).</p>
-          <p>3 · El <strong>Secret Key</strong> va SOLO en tu servidor backend.</p>
-          <p>4 · Crea endpoint <code>/create-payment-intent</code> en tu backend.</p>
-          <p>5 · Activa webhook <code>payment_intent.succeeded</code> para registrar pagos.</p>
-        </div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="ct"><div class="ct-dot ct-dot-o"></div>Código de acceso para registro</div>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Los jugadores deben ingresar este código al registrarse.</div>
+        <div style="display:flex;gap:8px"><input class="fi" id="regCodeInp" type="text" placeholder="POLLA2026" style="flex:1"><button class="btn btn-p" style="width:auto;padding:8px 16px;font-size:10px;margin-top:0" onclick="saveRegCode()">Guardar</button></div>
       </div>
     </div>
 
@@ -929,7 +919,7 @@ var DB = {
   matches: [],
   banners: {b1:'', b2:''},
   stripe: {pub:'', secret:''},
-  settings: {regCode:'POLLA2026'},
+  settings: {regCode:'POLLA2026', stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},
   nid: {u:2, p:1, m:1},
   userSortCol: 'points',
   userSortDir: 'desc'
@@ -1476,11 +1466,8 @@ function renderAdmPremios(){
   }).join('')||empty('Sin pollas creadas');
 }
 
-function renderAdmStripe(){
-  document.getElementById('skPub').value=DB.stripe.pub||'';
-}
 function saveStripe(){
-  DB.stripe.pub=document.getElementById('skPub').value.trim();
+  DB.stripe.pub=document.getElementById('skPub')?.value.trim()||'';
   DB.stripe.secret=document.getElementById('skSec').value.trim();
   const ok=document.getElementById('stripeOK');ok.style.display='block';setTimeout(()=>ok.style.display='none',3000);
 }
@@ -1813,53 +1800,47 @@ function renderPInscripcion(){
   const open=DB.pollas.filter(p=>p.status==='open');
   document.getElementById('payPolla').innerHTML=open.map(p=>`<option value="${p.id}">${p.name} — ${usd(p.fee)}</option>`).join('')||'<option>Sin pollas abiertas</option>';
   updatePayPreview();
-  if(DB.stripe.pub&&typeof Stripe!=='undefined'){
-    try{
-      if(!stripeInst)stripeInst=Stripe(DB.stripe.pub);
-      if(!cardEl){
-        const els=stripeInst.elements();
-        cardEl=els.create('card',{style:{base:{color:'#efefef',fontFamily:"'Poppins',sans-serif",fontSize:'13px','::placeholder':{color:'#444'}}}});
-        cardEl.mount('#card-element');
-        cardEl.on('change',e=>document.getElementById('card-errors').textContent=e.error?e.error.message:'');
-      }
-    }catch(e){}
-  }else{
-    document.getElementById('card-element').innerHTML='<p style="font-size:10px;color:var(--tx3);padding:7px 0">Configura Stripe Publishable Key en Admin → Stripe para activar cobros.</p>';
-  }
 }
 function updatePayPreview(){
   const id=parseInt(document.getElementById('payPolla')?.value);
   const pol=DB.pollas.find(p=>p.id===id);if(!pol)return;
   const prz=calcPrizes(pol);
   const ya=CU.payments&&CU.payments.find(p=>p.pollaId===id&&p.status==='succeeded');
+  const link=DB.settings&&DB.settings.stripeLink?DB.settings.stripeLink:'';
   document.getElementById('payPreview').innerHTML=`
     <div class="pmg">
       <div class="pmg-item"><div class="pmg-v c-o">${usd(pol.fee)}</div><div class="pmg-l">Inscripción</div></div>
       <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">Inscritos</div></div>
       <div class="pmg-item"><div class="pmg-v c-r">${usd(prz.pool)}</div><div class="pmg-l">Pool actual</div></div>
     </div>
-    ${ya?`<div class="res-correct">✅ Ya estás inscrito en esta polla</div>`:''}
-    ${prz.pool>0?`<div style="font-size:10px;color:var(--tx2);padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--bd)">
-      Premios estimados: <span style="color:var(--org)">1° ${usd(prz.p1)}</span> · <span style="color:var(--g2)">2° ${usd(prz.p2)}</span> · <span style="color:var(--grn)">3° ${usd(prz.p3)}</span>
+    ${prz.pool>0?`<div style="font-size:10px;color:var(--tx2);padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--bd);margin-top:10px">
+      Premios: <span style="color:var(--org)">1° ${usd(prz.p1)}</span> · <span style="color:var(--g2)">2° ${usd(prz.p2)}</span> · <span style="color:var(--grn)">3° ${usd(prz.p3)}</span>
     </div>`:''}`;
+  const wrap=document.getElementById('payLinkWrap');
+  if(ya){
+    wrap.innerHTML='<div class="res-correct" style="margin-top:12px">✅ Ya estás inscrito en esta polla. El admin verificará tu pago.</div>';
+  } else if(link){
+    wrap.innerHTML=`<a href="${link}?client_reference_id=${CU.id}_${id}" target="_blank" style="display:block;text-decoration:none;margin-top:14px">
+      <button class="btn btn-p" style="background:var(--org);color:#fff;border:none;font-size:12px;letter-spacing:1px;padding:13px">💳 PAGAR INSCRIPCIÓN — ${usd(pol.fee)}</button>
+    </a>
+    <div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:8px">Serás redirigido a Stripe. Después el admin confirmará tu pago.</div>`;
+  } else {
+    wrap.innerHTML='<div style="font-size:10px;color:var(--tx3);padding:10px 0">El admin aún no ha configurado el link de pago.</div>';
+  }
 }
-async function submitPayment(){
-  if(!stripeInst||!cardEl)return;
-  document.getElementById('payBtn').textContent='Procesando...';
-  try{
-    const {paymentMethod,error}=await stripeInst.createPaymentMethod('card',cardEl);
-    if(error){document.getElementById('card-errors').textContent=error.message;}
-    else{
-      const pollaId=parseInt(document.getElementById('payPolla').value);
-      const pol=DB.pollas.find(p=>p.id===pollaId);
-      if(!CU.payments)CU.payments=[];
-      CU.payments.push({id:Date.now(),pollaId,amount:pol?.fee||0,pmId:paymentMethod.id,date:new Date().toISOString(),status:'succeeded'});
-      const ok=document.getElementById('payOK');
-      ok.textContent=`✅ ¡Inscrito en "${pol?.name||''}"!`;ok.style.display='block';
-      updatePayPreview();
-    }
-  }catch(e){document.getElementById('payER').textContent='Error al procesar';document.getElementById('payER').style.display='block';}
-  document.getElementById('payBtn').textContent='PAGAR INSCRIPCIÓN';
+function saveStripeLink(){
+  var url=document.getElementById('stripeLink').value.trim();
+  if(!url)return;
+  if(!DB.settings)DB.settings={};
+  DB.settings.stripeLink=url;
+  saveDB();
+  var ok=document.getElementById('stripeLinkOK');
+  ok.style.display='block';
+  setTimeout(function(){ok.style.display='none';},2500);
+}
+function renderAdmStripe(){
+  document.getElementById('stripeLink').value=DB.settings&&DB.settings.stripeLink?DB.settings.stripeLink:'';
+  document.getElementById('regCodeInp').value=DB.settings&&DB.settings.regCode?DB.settings.regCode:'';
 }
 
 // ═══════════ PREDICTION MODAL ═══════════
@@ -2093,7 +2074,7 @@ async function fbSync(){
     if(d&&d.users&&d.users.length){
       DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
       DB.banners=d.banners||{b1:'',b2:''};DB.stripe=d.stripe||{pub:'',secret:''};
-      DB.settings=d.settings||{regCode:'POLLA2026'};
+      DB.settings=d.settings||{regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'};
       DB.nid=d.nid||{u:10,p:1,m:1};
       DB.bonusQuestions=d.bonusQuestions||[];
       DB.specials=d.specials&&d.specials.length?d.specials:[];
@@ -2636,7 +2617,7 @@ function startApp(){
   if(local&&local.users&&local.users.length){
     DB.users=local.users;DB.pollas=local.pollas||[];DB.matches=local.matches||[];
     DB.banners=local.banners||{b1:'',b2:''};DB.stripe=local.stripe||{pub:'',secret:''};
-    DB.settings=local.settings||{regCode:'POLLA2026'};
+    DB.settings=local.settings||{regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'};
     DB.nid=local.nid||{u:10,p:1,m:1};DB.bonusQuestions=local.bonusQuestions||[];DB.specials=local.specials||[];
     seedWC2026();
     seedWC2026Specials();
