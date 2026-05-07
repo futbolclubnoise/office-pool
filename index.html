@@ -640,21 +640,15 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     <!-- DASH -->
     <div id="A_dash">
       <div class="stats">
-        <div class="stat"><div class="sv c-g" id="stU">0</div><div class="sl">Jugadores</div></div>
-        <div class="stat"><div class="sv"     id="stP">0</div><div class="sl">Pollas</div></div>
-        <div class="stat"><div class="sv c-o" id="stM">0</div><div class="sl">Partidos</div></div>
-        <div class="stat"><div class="sv c-r" id="stPr">0</div><div class="sl">Apuestas</div></div>
+        <div class="stat"><div class="sv c-g" id="stU">0</div><div class="sl">Players</div></div>
+        <div class="stat"><div class="sv"     id="stP">0</div><div class="sl">Pools</div></div>
+        <div class="stat"><div class="sv c-o" id="stM">0</div><div class="sl">Matches</div></div>
+        <div class="stat"><div class="sv c-r" id="stPr">0</div><div class="sl">Picks</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="card">
-          <div class="ct"><div class="ct-dot ct-dot-g"></div>Pollas Activas</div>
-          <div id="admAP"></div>
-        </div>
-        <div class="card">
-          <div class="ct"><div class="ct-dot ct-dot-o"></div>Top 15 Jugadores</div>
-          <div id="admLb"></div>
-        </div>
-      </div>
+      <div id="admDashContent"></div>
+      <!-- Legacy placeholders (kept for JS compat) -->
+      <div id="admAP" style="display:none"></div>
+      <div id="admLb" style="display:none"></div>
     </div>
 
     <!-- POLLAS -->
@@ -756,7 +750,6 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
 
     <!-- PARTIDOS -->
     <div id="A_partidos" class="hidden">
-      <div class="card"><div class="ct"><div class="ct-dot ct-dot-g"></div>Partidos Programados</div><div id="admML"></div></div>
       <div class="card">
         <div class="collapsible-hdr" id="newMatchHdr" onclick="toggleNewMatchForm()">
           <div class="ct" style="margin:0"><div class="ct-dot ct-dot-o"></div>Agregar Partido</div>
@@ -807,6 +800,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <button class="btn btn-p" onclick="createMatch()">AGREGAR PARTIDO</button>
         </div><!-- /collapsible body -->
       </div>
+      <div class="card"><div class="ct"><div class="ct-dot ct-dot-g"></div>Partidos Programados</div><div id="admML"></div></div>
     </div>
 
     <!-- RESULTADOS -->
@@ -1369,42 +1363,62 @@ function renderAdmDash(){
   document.getElementById('stP').textContent=DB.pollas.length;
   document.getElementById('stM').textContent=DB.matches.length;
   document.getElementById('stPr').textContent=DB.users.reduce((s,u)=>s+u.predictions.length,0);
-  // Top 15 con info de polla
-  const top=[...non].sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,15);
-  document.getElementById('admLb').innerHTML=top.map((u,i)=>{
-    // Find which pool(s) this user has predictions in
-    const userPollIds=[...new Set(DB.matches.filter(m=>u.predictions.find(pr=>pr.matchId===m.id)).map(m=>m.pollaId))];
-    const pollNames=userPollIds.map(id=>DB.pollas.find(p=>p.id===id)?.name).filter(Boolean);
-    const pc=i===0?'p1':i===1?'p2':i===2?'p3':'';
-    const sym=i===0?'◆':i===1?'◇':i===2?'▸':i+1;
-    return`<div class="lb-r">
-      <div class="lb-pos ${pc}">${sym}</div>
-      ${avEl(u)}
-      <div class="lb-name" style="flex:1">
-        <div>${u.name}</div>
-        ${pollNames.length?`<div style="font-size:9px;color:var(--tx3)">${pollNames.join(' · ')}</div>`:''}
-      </div>
-      <div><div class="lb-pts">${u.points||0}</div><div class="lb-ptsl">PTS</div></div>
-    </div>`;
-  }).join('')||empty('Sin jugadores');
-  document.getElementById('admAP').innerHTML=DB.pollas.filter(p=>p.status==='open').map(p=>{
-    const prz=calcPrizes(p),cnt=DB.matches.filter(m=>m.pollaId===p.id).length;
-    // Find who's winning this pool
-    const ins=DB.users.filter(u=>u.role!=='admin');
-    const ranked=[...ins].map(u=>({u,pts:u.predictions.filter(pr=>DB.matches.find(m=>m.id===pr.matchId&&m.pollaId===p.id)).reduce((s,pr)=>s+(pr.pts||0),0)})).sort((a,b)=>b.pts-a.pts);
-    const leader=ranked[0];
-    return`<div class="polla-card">
-      <div class="polla-card-top">
-        <div class="dot dot-on"></div>
-        <div class="polla-card-info">
-          <div class="pr-nm">${p.name}</div>
-          <div class="pr-mt">${cnt} partidos · ${prz.inscribed} inscritos · $${p.fee||0} fee</div>
-          ${leader&&leader.pts>0?`<div style="font-size:9px;color:var(--org);margin-top:2px">🏅 ${leader.u.name} lidera con ${leader.pts} pts</div>`:''}
+  // Per-polla sections: active first, then closed
+  const sorted=[...DB.pollas].sort((a,b)=>(a.status==='open'?0:1)-(b.status==='open'?0:1));
+  let dashHtml='';
+  if(!sorted.length){dashHtml=empty('Sin pollas creadas');}
+  else{
+    sorted.forEach(p=>{
+      const on=p.status==='open';
+      const prz=calcPrizes(p);
+      const cnt=DB.matches.filter(m=>m.pollaId===p.id).length;
+      const matchIds=DB.matches.filter(m=>m.pollaId===p.id).map(m=>m.id);
+      const ranked=[...non].map(u=>({
+        u,pts:(u.predictions||[]).filter(pr=>matchIds.includes(pr.matchId)).reduce((s,pr)=>s+(pr.pts||0),0)
+      })).sort((a,b)=>b.pts-a.pts).filter(r=>r.pts>0||true).slice(0,8);
+      dashHtml+=`<div class="card" style="margin-bottom:14px;${on?'border-left:3px solid var(--grn)':'border-left:3px solid var(--bd3)'}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <div class="dot ${on?'dot-on':'dot-off'}"></div>
+              <span class="bdg ${on?'bdg-on':'bdg-off'}" style="font-size:9px">${on?'Active':'Closed'}</span>
+            </div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px">${p.name}</div>
+            <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">${cnt} matches · ${prz.inscribed} players · $${p.fee||0} fee</div>
+            <div style="display:flex;gap:8px">
+              <div style="background:var(--bg3);border-radius:10px;padding:8px 12px;text-align:center;flex:1">
+                <div style="font-family:'Kallisto',sans-serif;font-size:20px;color:var(--org)">${prz.inscribed}</div>
+                <div style="font-size:9px;color:var(--tx3)">Players</div>
+              </div>
+              <div style="background:var(--bg3);border-radius:10px;padding:8px 12px;text-align:center;flex:1">
+                <div style="font-family:'Kallisto',sans-serif;font-size:20px;color:var(--grn)">$${prz.pool||0}</div>
+                <div style="font-size:9px;color:var(--tx3)">Pool $</div>
+              </div>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn-xs" onclick="aTab('pollas',document.querySelector('#S_admin .stab[data-tab=pollas]'))">⚙️ Manage</button>
+              <button class="btn-xs" onclick="aTab('resultados',document.querySelector('#S_admin .stab[data-tab=resultados]'))">📊 Results</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">Ranking</div>
+            ${ranked.slice(0,8).map((r,i)=>{
+              const sym=i===0?'◆':i===1?'◇':i===2?'▸':(i+1)+'.';
+              const pc=i===0?'a':i===1?'b':i===2?'c':'';
+              return`<div class="t5-r" style="padding:4px 2px">
+                <div class="t5-pos ${pc}" style="font-size:11px;width:22px">${sym}</div>
+                <div style="flex:1;font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)">${r.u.nickname||r.u.name}</div>
+                <div style="font-family:'Kallisto',sans-serif;font-size:13px;color:var(--g1)">${r.pts}<span style="font-size:7px;color:var(--tx3);font-family:Poppins"> pts</span></div>
+              </div>`;
+            }).join('')||`<div style="font-size:11px;color:var(--tx3);padding:10px 0">No scores yet</div>`}
+          </div>
         </div>
-        <span class="bdg bdg-on">Activa</span>
-      </div>
-    </div>`;
-  }).join('')||empty('Sin pollas activas');
+      </div>`;
+    });
+  }
+  document.getElementById('admAP').innerHTML='';
+  document.getElementById('admLb').innerHTML='';
+  document.getElementById('admDashContent').innerHTML=dashHtml;
 }
 
 function selType(t){
@@ -2684,10 +2698,9 @@ function initLang(){
   var s='en';
   try{
     var stored=localStorage.getItem('cfl_lang');
-    // Only use stored value if user explicitly chose it; default is always 'en'
     s=(stored==='es'||stored==='en')?stored:'en';
   }catch(e){}
-  CL=s;
+  setLang(s);
 }
 
 // ════ THEME ════
@@ -3563,6 +3576,16 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
     <div id="upBody"></div>
   </div>
 </div>
+
+<!-- ── Back to top ── -->
+<button id="backToTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top" style="display:none;position:fixed;bottom:22px;right:18px;width:44px;height:44px;border-radius:50%;background:var(--org);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);z-index:999;align-items:center;justify-content:center;transition:opacity .2s">↑</button>
+<script>
+window.addEventListener('scroll',function(){
+  var b=document.getElementById('backToTopBtn');
+  if(!b)return;
+  b.style.display=window.scrollY>300?'flex':'none';
+});
+</script>
 
 </body>
 </html>
