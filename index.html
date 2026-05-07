@@ -424,12 +424,12 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     </div>
   </nav>
   <div class="tabs">
-    <button class="stab on" onclick="pTab('inicio',this)">Inicio</button>
-    <button class="stab" onclick="pTab('pollas',this)">Mis Pollas</button>
-    <button class="stab" onclick="pTab('ranking',this)">Ranking</button>
-    <button class="stab" onclick="pTab('historial',this)">Historial</button>
-    <button class="stab" onclick="pTab('perfil',this)">Perfil</button>
-    <button class="stab" onclick="pTab('inscripcion',this)">Inscripción</button>
+    <button class="stab on" onclick="pTab('inicio',this)" data-t="home">Inicio</button>
+    <button class="stab" onclick="pTab('pollas',this)" data-t="myPools">Mis Pollas</button>
+    <button class="stab" onclick="pTab('ranking',this)" data-t="ranking">Ranking</button>
+    <button class="stab" onclick="pTab('historial',this)" data-t="history">Historial</button>
+    <button class="stab" onclick="pTab('perfil',this)" data-t="profile">Perfil</button>
+    <button class="stab" onclick="pTab('inscripcion',this)" data-t="joinPool">Inscripción</button>
     <button class="stab" onclick="pTab('especiales',this)">⭐ Especiales</button>
   </div>
   <div class="bnr-wrap bnr-pc"><div class="bnr-slot" id="bnr1"><span class="bnr-lbl">Banner 1 — Desktop</span><img id="bnr1Img" src="" alt=""></div></div>
@@ -1932,10 +1932,15 @@ function openModal(pollaId){
   const ms=DB.matches.filter(m=>m.pollaId===pollaId),now=new Date();
   const isPaid=CU&&CU.payments&&CU.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';});
 
+  var pollaMatchIds=ms.map(function(m){return m.id;});
+  var myPts=CU?(CU.predictions||[]).filter(function(p){return pollaMatchIds.includes(p.matchId);}).reduce(function(s,p){return s+(p.pts||0);},0):0;
+  var paidPlayers=(DB.users||[]).filter(function(u){return u.role!=='admin'&&u.payments&&u.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';});});
+  var rankedPlayers=paidPlayers.map(function(u){var pts=(u.predictions||[]).filter(function(p){return pollaMatchIds.includes(p.matchId);}).reduce(function(s,p){return s+(p.pts||0);},0);return{u:u,pts:pts};}).sort(function(a,b){return b.pts-a.pts;});
+  var myRank=CU?rankedPlayers.findIndex(function(r){return r.u.id===CU.id;})+1:0;
   document.getElementById('modMeta').innerHTML=`
-    <div class="pmg-item"><div class="pmg-v c-o">${sc.exact}</div><div class="pmg-l">Pts Exacto</div></div>
-    <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">Inscritos</div></div>
-    <div class="pmg-item"><div class="pmg-v c-r">${usd(prz.pool)}</div><div class="pmg-l">Pool USD</div></div>`;
+    <div class="pmg-item"><div class="pmg-v c-o">${myPts}</div><div class="pmg-l">Mis Puntos</div></div>
+    <div class="pmg-item"><div class="pmg-v c-g">${myRank>0?'#'+myRank:'—'}</div><div class="pmg-l">Posición</div></div>
+    <div class="pmg-item"><div class="pmg-v c-r">${prz.inscribed}</div><div class="pmg-l">Inscritos</div></div>`;
 
   document.getElementById('modScLegend').innerHTML=
     '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">'
@@ -2000,10 +2005,24 @@ function openModal(pollaId){
           +'</div>'
           +'</div>';
       } else if(!isPaid){
-        html+='<div style="text-align:center;padding:8px;border-radius:8px;background:var(--bg3);border:1px solid var(--bd)">'
-          +'<div style="font-size:11px;color:var(--tx3)">🔒 Inscríbete para predecir</div>'
-          +'<div style="font-size:9px;color:var(--tx3);margin-top:3px">El admin debe aprobar tu pago</div>'
-          +'</div>';
+        html+='<div style="display:flex;align-items:center;gap:6px">'
+          +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0">'
+            +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.home+'</span>'
+            +hInline
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
+            +'<input class="sc-inp" type="number" min="0" placeholder="0" disabled style="width:46px;font-size:18px;text-align:center;opacity:0.3">'
+            +'<span style="color:var(--tx3);font-weight:700;font-size:13px">—</span>'
+            +'<input class="sc-inp" type="number" min="0" placeholder="0" disabled style="width:46px;font-size:18px;text-align:center;opacity:0.3">'
+          +'</div>'
+          +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-start;gap:5px;min-width:0">'
+            +aInline
+            +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.away+'</span>'
+          +'</div>'
+        +'</div>'
+        +'<div style="text-align:center;margin-top:7px">'
+          +'<button onclick="document.getElementById(\'predModal\').style.display=\'none\';pTab(\'inscripcion\',document.querySelector(\'#S_player .stab:nth-child(6)\'))" style="padding:5px 20px;font-size:9px;border-radius:7px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-weight:600;cursor:pointer;letter-spacing:0.5px">🔒 Inscríbete</button>'
+        +'</div>';
       } else {
         var canEdit=!pr||(DB.settings&&DB.settings.allowPredEdit);
         var hv=pr!=null?pr.home:'';
