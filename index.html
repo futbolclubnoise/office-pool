@@ -417,7 +417,6 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
       <div><div class="nav-t1">OFFICE POOL</div><div class="nav-t2">by FCNOISE</div></div>
     </div>
     <div class="nav-r">
-      <button class="iBtn" onclick="toggleTheme()">◑</button>
       <button class="iBtn" onclick="openSettings()" title="Settings" style="font-size:16px">⚙️</button>
       <div class="nav-av" id="porAv" onclick="openSelfEdit()"></div>
       <span class="nav-uname" id="porNm"></span>
@@ -460,7 +459,11 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     </div>
 
     <div id="P_ranking" class="hidden">
-      <div class="card"><div class="ct"><div class="ct-dot ct-dot-o"></div>Ranking General</div><div id="porRanking"></div></div>
+      <div class="card">
+        <div class="ct"><div class="ct-dot ct-dot-o"></div>Ranking</div>
+        <div class="fg" style="margin-bottom:12px"><select class="fi" id="rankingPolla" onchange="renderPRanking()" style="font-size:11px;padding:8px 10px"></select></div>
+        <div id="porRanking"></div>
+      </div>
     </div>
 
     <div id="P_historial" class="hidden">
@@ -1782,8 +1785,33 @@ function renderPPollas(){
 }
 
 function renderPRanking(){
-  const sorted=[...DB.users.filter(u=>u.role!=='admin'&&u.status!=='disabled')].sort((a,b)=>(b.points||0)-(a.points||0));
-  document.getElementById('porRanking').innerHTML=sorted.map((u,i)=>lbRow(u,i,true)).join('')||empty('Sin jugadores');
+  var sel=document.getElementById('rankingPolla');
+  if(!sel)return;
+  // Populate selector if empty
+  if(!sel.options.length||sel.dataset.populated!=='1'){
+    sel.innerHTML=DB.pollas.map(function(p){return'<option value="'+p.id+'">'+p.name+'</option>';}).join('');
+    sel.dataset.populated='1';
+  }
+  var pollaId=parseInt(sel.value);
+  var pol=DB.pollas.find(function(p){return p.id===pollaId;});
+  if(!pol){document.getElementById('porRanking').innerHTML=empty('Sin pollas');return;}
+  var matchIds=DB.matches.filter(function(m){return m.pollaId===pollaId;}).map(function(m){return m.id;});
+  var players=DB.users.filter(function(u){return u.role!=='admin'&&u.status!=='disabled';});
+  var ranked=players.map(function(u){
+    var pts=(u.predictions||[]).filter(function(p){return matchIds.indexOf(p.matchId)>=0;}).reduce(function(s,p){return s+(p.pts||0);},0);
+    return{u:u,pts:pts};
+  }).sort(function(a,b){return b.pts-a.pts;});
+  document.getElementById('porRanking').innerHTML=ranked.map(function(r,i){
+    var isMe=r.u.id===CU.id;
+    var pc=i===0?'a':i===1?'b':i===2?'c':'';
+    var sym=i===0?'◆':i===1?'◇':i===2?'▸':i+1;
+    return'<div class="t5-r">'
+      +'<div class="t5-pos '+pc+'">'+sym+'</div>'
+      +avEl(r.u)
+      +'<div style="flex:1;font-size:11px;font-weight:'+(isMe?700:400)+';color:'+(isMe?'var(--org)':'var(--tx)')+'">'+r.u.name+(isMe?' (tú)':'')+'</div>'
+      +'<div style="font-family:\'Kallisto\',sans-serif;font-weight:500;font-size:15px;color:var(--g1)">'+r.pts+'<span style="font-size:7px;color:var(--tx3);font-family:\'Poppins\',sans-serif"> PTS</span></div>'
+      +'</div>';
+  }).join('')||empty('Sin jugadores');
 }
 
 function renderPHist(){
@@ -1902,6 +1930,7 @@ function openModal(pollaId){
   document.getElementById('modTitle').textContent=pol.name;
   const prz=calcPrizes(pol),sc=pol.scoring||{win:1,draw:1,exact:3,diff:2};
   const ms=DB.matches.filter(m=>m.pollaId===pollaId),now=new Date();
+  const isPaid=CU&&CU.payments&&CU.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';});
 
   document.getElementById('modMeta').innerHTML=`
     <div class="pmg-item"><div class="pmg-v c-o">${sc.exact}</div><div class="pmg-l">Pts Exacto</div></div>
@@ -1970,6 +1999,11 @@ function openModal(pollaId){
             +'<span style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+m.away+'</span>'
           +'</div>'
           +'</div>';
+      } else if(!isPaid){
+        html+='<div style="text-align:center;padding:8px;border-radius:8px;background:var(--bg3);border:1px solid var(--bd)">'
+          +'<div style="font-size:11px;color:var(--tx3)">🔒 Inscríbete para predecir</div>'
+          +'<div style="font-size:9px;color:var(--tx3);margin-top:3px">El admin debe aprobar tu pago</div>'
+          +'</div>';
       } else {
         var canEdit=!pr||(DB.settings&&DB.settings.allowPredEdit);
         var hv=pr!=null?pr.home:'';
@@ -2002,8 +2036,70 @@ function openModal(pollaId){
       html+='</div>';
     });
   });
+  // Especiales for this polla
+  var specials=(DB.specials||[]).filter(function(s){return s.pollaId===pollaId&&(s.status!=='closed'||s.answer);});
+  if(specials.length){
+    html+='<div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1.5px;margin:16px 0 8px;padding-left:2px">⭐ Especiales</div>';
+    specials.forEach(function(s){
+      var myAns=(s.userAnswers||[]).find(function(a){return a.userId===CU.id;});
+      var isClosed=s.status==='closed';
+      html+='<div style="background:var(--c2);border-radius:10px;padding:11px 12px;margin-bottom:7px;border:1px solid var(--bd)">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">'
+        +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--tx)">'+s.name+'</div>'
+        +'<div style="font-size:9px;color:var(--tx3);margin-top:2px">'+s.desc+'</div></div>'
+        +'<span style="font-size:11px;font-weight:700;background:var(--org2);color:var(--org);border-radius:20px;padding:3px 9px;white-space:nowrap;flex-shrink:0">+'+s.pts+'pts</span>'
+        +'</div>';
+      if(isClosed&&s.answer){
+        var correct=myAns&&myAns.answer.trim().toLowerCase()===s.answer.trim().toLowerCase();
+        html+='<div style="padding:8px 10px;border-radius:8px;background:'+(correct?'var(--grn2)':'var(--bg3)')+';border:1px solid '+(correct?'var(--grn3)':'var(--bd)')+'">'
+          +'<div style="font-size:11px;font-weight:700;color:'+(correct?'var(--grn)':'var(--tx)')+'">'+s.answer+'</div>'
+          +(myAns?'<div style="font-size:9px;color:var(--tx3);margin-top:2px">Tu respuesta: '+(correct?'<span style="color:var(--grn)">'+myAns.answer+' ✓</span>':'<span style="color:var(--red2)">'+myAns.answer+' ✗</span>')+'</div>':'<div style="font-size:9px;color:var(--tx3)">No respondiste</div>')
+          +'</div>';
+      } else if(myAns&&myAns.answer){
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-radius:8px;padding:8px 10px">'
+          +'<div><div style="font-size:9px;color:var(--tx3)">Tu predicción</div>'
+          +'<div style="font-size:12px;font-weight:600;color:var(--tx)">'+myAns.answer+'</div></div>'
+          +'<button onclick="editSpecialAnswerModal('+s.id+')" style="padding:4px 10px;font-size:9px;border-radius:6px;background:var(--bg4);border:1px solid var(--bd2);color:var(--tx);cursor:pointer;font-family:Poppins,sans-serif">Cambiar</button>'
+          +'</div>';
+      } else if(isPaid){
+        var opts=s.opciones&&s.opciones.length?s.opciones:getPollaTeams(pollaId);
+        if(opts.length){
+          html+='<div style="display:flex;gap:6px;align-items:center">'
+            +'<select class="fi" id="mspAns_'+s.id+'" style="flex:1;font-size:11px;padding:8px 10px;border-color:var(--org3)">'
+            +'<option value="">— Selecciona —</option>'
+            +opts.map(function(o){var f=getFlag(o);return'<option value="'+o+'">'+(f?f+' ':'')+o+'</option>';}).join('')
+            +'</select>'
+            +'<button onclick="submitSpecialModal('+s.id+')" style="padding:6px 12px;font-size:9px;border-radius:7px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-weight:600;cursor:pointer;flex-shrink:0">✓ OK</button>'
+            +'</div>';
+        }else{
+          html+='<div style="display:flex;gap:6px">'
+            +'<input class="fi" id="mspAns_'+s.id+'" placeholder="Tu predicción..." style="flex:1;padding:8px 10px;font-size:11px">'
+            +'<button onclick="submitSpecialModal('+s.id+')" style="padding:6px 12px;font-size:9px;border-radius:7px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-weight:600;cursor:pointer;flex-shrink:0">✓ OK</button>'
+            +'</div>';
+        }
+      } else {
+        html+='<div style="font-size:9px;color:var(--tx3);padding:6px 0">🔒 Inscríbete para responder</div>';
+      }
+      html+='</div>';
+    });
+  }
   document.getElementById('modBody').innerHTML=html;
   document.getElementById('predModal').style.display='block';
+}
+function submitSpecialModal(spId){
+  var el=document.getElementById('mspAns_'+spId);
+  if(!el||!el.value.trim()){alert('Selecciona o escribe tu predicción');return;}
+  var s=(DB.specials||[]).find(function(x){return x.id===spId;});if(!s)return;
+  if(!s.userAnswers)s.userAnswers=[];
+  var ex=s.userAnswers.find(function(a){return a.userId===CU.id;});
+  if(ex){ex.answer=el.value.trim();ex.ts=Date.now();}
+  else s.userAnswers.push({userId:CU.id,answer:el.value.trim(),ts:Date.now()});
+  saveDB();openModal(activePolla);
+}
+function editSpecialAnswerModal(spId){
+  var s=(DB.specials||[]).find(function(x){return x.id===spId;});if(!s)return;
+  var my=(s.userAnswers||[]).find(function(a){return a.userId===CU.id;});if(!my)return;
+  my.answer='';saveDB();openModal(activePolla);
 }
 function closeModal(){document.getElementById('predModal').style.display='none';activePolla=null;}
 
