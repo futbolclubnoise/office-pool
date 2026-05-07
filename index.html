@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>The CFL Office Pool</title>
 <script src="https://js.stripe.com/v3/"></script>
 <style>
@@ -1306,13 +1309,19 @@ const showE=m=>{const e=document.getElementById('ae');e.textContent=m;e.style.di
 const showOK=m=>{const e=document.getElementById('aok');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',3000);};
 
 function doLogin(){
-  const email=document.getElementById('lEmail').value.trim();
-  const pass=document.getElementById('lPass').value;
-  if(!email||!pass)return showE('Completa correo y contraseña');
-  const u=DB.users.find(x=>x.email===email&&x.pass===pass);
-  if(!u)return showE('Correo o contraseña incorrectos');
-  CU=u;document.getElementById('S_auth').classList.add('hidden');
-  if(u.role==='admin')initAdmin();else initPlayer();
+  try{
+    var email=document.getElementById('lEmail').value.trim();
+    var pass=document.getElementById('lPass').value;
+    if(!email||!pass)return showE('Completa usuario y contraseña');
+    var u=DB.users.find(function(x){return x.email===email&&x.pass===pass;});
+    if(!u)return showE('Usuario o contraseña incorrectos ('+DB.users.length+' usuarios en DB)');
+    CU=u;
+    document.getElementById('S_auth').classList.add('hidden');
+    if(u.role==='admin')initAdmin();else initPlayer();
+  }catch(err){
+    showE('Error: '+err.message);
+    console.error('doLogin error:',err);
+  }
 }
 function doRegister(){
   const name=document.getElementById('rName').value.trim();
@@ -1338,7 +1347,8 @@ function doLogout(){
 // ═══════════ ADMIN ═══════════
 function initAdmin(){
   document.getElementById('S_admin').classList.remove('hidden');
-  setNav('admAv','admNm'); renderAdmDash();
+  setNav('admAv','admNm');
+  try{renderAdmDash();}catch(e){console.error('renderAdmDash error:',e);document.getElementById('admDashContent').innerHTML='<p style="color:red;padding:10px">Error: '+e.message+'</p>';}
 }
 function setNav(avId,nmId){
   const av=document.getElementById(avId),nm=document.getElementById(nmId);
@@ -2697,12 +2707,13 @@ function setLang(l){
       else{renderPInicio();}
     }
   }catch(e){}
-  try{localStorage.setItem('cfl_lang',l);}catch(e){}
+  try{localStorage.setItem('cfl_lang_v2',l);}catch(e){}
 }
 function initLang(){
   var s='en';
   try{
-    var stored=localStorage.getItem('cfl_lang');
+    // Use cfl_lang_v2 key — old 'cfl_lang' had Spanish as default so we ignore it
+    var stored=localStorage.getItem('cfl_lang_v2');
     s=(stored==='es'||stored==='en')?stored:'en';
   }catch(e){}
   setLang(s);
@@ -2777,6 +2788,10 @@ async function fbSync(){
       DB.nid=d.nid||{u:10,p:1,m:1};
       DB.bonusQuestions=d.bonusQuestions||[];
       DB.specials=d.specials&&d.specials.length?d.specials:[];
+      // Always ensure admin user exists (safeguard against Firebase data corruption)
+      if(!DB.users.find(function(u){return u.role==='admin';})){
+        DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});
+      }
       // Always seed missing data and push back to Firebase
       var changed=false;
       if(!DB.pollas.some(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;})){
