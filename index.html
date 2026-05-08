@@ -2052,7 +2052,7 @@ function renderPInicio(){
           <div class="stat-pill"><div class="sp-val" style="color:var(--red)">${myWrong}</div><div class="sp-lbl">Missed</div></div>
         </div>`:''}
         ${isOpen?`<button class="pool-enter-btn" onclick="openModal(${pol.id})">
-          ${myPreds.length?`✏️ Enter / Edit Scores (${myPreds.length}/${ms.length})`:'🎯 Enter Scores'}
+          ${myPreds.length?('✏️ Enter / Edit Scores ('+myPreds.length+'/'+ms.length+')'):'🎯 Enter Scores'}
         </button>`:''}
         ${!isPaid&&prz.pool>0&&isOpen?`<div style="margin-top:8px;font-size:10px;color:var(--org)">⚠️ Join pool to participate → <button onclick="pTab('inscripcion',document.querySelector('#S_player .stab:nth-child(6)'))" style="background:none;border:none;color:var(--org);font-size:10px;font-weight:700;cursor:pointer;padding:0;font-family:Poppins,sans-serif">Pay now</button></div>`:''}
       </div>`;
