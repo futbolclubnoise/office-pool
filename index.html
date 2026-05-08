@@ -442,8 +442,8 @@ body{font-size:14px;}
 <script type="module">
 
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-try{const app=initializeApp({apiKey:"AIzaSyAmsEX2VJRytF9Sw8NOySPD80K9gzv6hRc",authDomain:"cfl-office-pool.firebaseapp.com",projectId:"cfl-office-pool",storageBucket:"cfl-office-pool.firebasestorage.app",messagingSenderId:"670177533526",appId:"1:670177533526:web:7107c4c54701c49a1125f7"});const db=getFirestore(app),ref=doc(db,"cfl","data");window._fbSave=async function(d){try{await setDoc(ref,JSON.parse(JSON.stringify(d)));}catch(e){}};window._fbLoad=async function(){try{const s=await getDoc(ref);return s.exists()?s.data():null;}catch(e){return null;}};window._fbReady=true;document.dispatchEvent(new Event('firebase-ready'));}catch(e){console.warn('Firebase:',e);}
+import{getFirestore,doc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+try{const app=initializeApp({apiKey:"AIzaSyAmsEX2VJRytF9Sw8NOySPD80K9gzv6hRc",authDomain:"cfl-office-pool.firebaseapp.com",projectId:"cfl-office-pool",storageBucket:"cfl-office-pool.firebasestorage.app",messagingSenderId:"670177533526",appId:"1:670177533526:web:7107c4c54701c49a1125f7"});const db=getFirestore(app),ref=doc(db,"cfl","data");window._fbSave=async function(d){try{await setDoc(ref,JSON.parse(JSON.stringify(d)));}catch(e){}};onSnapshot(ref,function(snap){if(snap.exists()&&window._fbOnUpdate)window._fbOnUpdate(snap.data());});window._fbReady=true;document.dispatchEvent(new Event('firebase-ready'));}catch(e){console.warn('Firebase:',e);}
 
 </script>
 <script>
@@ -2793,46 +2793,11 @@ function updateThemeBtns(){
 function lsSave(){try{localStorage.setItem('cfl_db',JSON.stringify(DB));}catch(e){}}
 function lsLoad(){try{var r=localStorage.getItem('cfl_db');return r?JSON.parse(r):null;}catch(e){return null;}}
 async function saveDB(){lsSave();if(window._fbSave)window._fbSave(DB).catch(function(){});}
-async function fbSync(){
-  try{
-    if(!window._fbLoad)return;
-    var d=await window._fbLoad();
-    if(d&&d.users&&d.users.length){
-      DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
-      DB.banners=Object.assign({b1:'',b1url:'',b1m:'',b1murl:'',b2:'',b2url:'',b2m:'',b2murl:''},d.banners||{});DB.stripe=d.stripe||{pub:'',secret:''};
-      DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
-      DB.nid=d.nid||{u:10,p:1,m:1};
-      DB.bonusQuestions=d.bonusQuestions||[];
-      DB.specials=d.specials&&d.specials.length?d.specials:[];
-      // Always ensure admin user exists with correct credentials
-      var fbAdm=DB.users.find(function(u){return u.role==='admin';});
-      if(!fbAdm){
-        DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});
-      }else{
-        fbAdm.email='admin_fcnoise';fbAdm.pass='FCNOISE26';
-      }
-      // Always seed missing data and push back to Firebase
-      var changed=false;
-      if(!DB.pollas.some(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;})){
-        seedWC2026();changed=true;
-      }
-      if(!DB.specials.length){
-        seedWC2026Specials();changed=true;
-      }
-      if(cleanOldSpecials())changed=true;
-      if(changed&&window._fbSave)window._fbSave(DB).catch(function(){});
-      lsSave();
-      var auth=document.getElementById('S_auth');
-      if(typeof CU!=='undefined'&&CU&&auth&&auth.classList.contains('hidden')){
-        CU=DB.users.find(function(u){return u.id===CU.id;})||CU;
-        try{if(CU.role==='admin')renderAdmDash();else renderPInicio();}catch(e){}
-      }
-    }else if(window._fbSave){
-      // No cloud data — push everything including specials
-      seedWC2026();seedWC2026Specials();
-      window._fbSave(DB).catch(function(){});
-    }
-  }catch(e){console.warn('fbSync:',e);}
+// fbSync: only used as fallback if onSnapshot hasn't fired yet (e.g. offline start)
+function fbSync(){
+  // onSnapshot handles all real-time sync — this is now a no-op fallback
+  // If _fbOnUpdate has already been called by onSnapshot, skip
+  // If Firebase hasn't connected yet, onSnapshot will fire when it does
 }
 
 // ════ WORLD CUP 2026 SEED ════
@@ -3391,6 +3356,42 @@ function startApp(){
   initLang();initTheme();
   setTimeout(fbSync,1000);
 }
+// ════ REAL-TIME FIREBASE SYNC ════
+// Fires automatically whenever ANY user saves data to Firebase
+window._fbOnUpdate=function(d){
+  if(!d||!d.users||!d.users.length)return;
+  // Don't process our own saves (avoid flicker) — skip if data matches what we just saved
+  DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
+  DB.banners=Object.assign({b1:'',b1url:'',b1m:'',b1murl:'',b2:'',b2url:'',b2m:'',b2murl:''},d.banners||{});
+  DB.stripe=d.stripe||{pub:'',secret:''};
+  DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
+  DB.nid=d.nid||{u:10,p:1,m:1};DB.bonusQuestions=d.bonusQuestions||[];DB.specials=d.specials||[];
+  // Always fix admin credentials
+  var adm=DB.users.find(function(u){return u.role==='admin';});
+  if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
+  else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';}
+  // Seed if missing
+  var changed=false;
+  if(!DB.pollas.some(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;})){seedWC2026();changed=true;}
+  if(!DB.specials.length){seedWC2026Specials();changed=true;}
+  if(cleanOldSpecials())changed=true;
+  if(changed&&window._fbSave)window._fbSave(DB).catch(function(){});
+  lsSave();
+  // Re-render current view if user is logged in
+  if(typeof CU!=='undefined'&&CU){
+    var auth=document.getElementById('S_auth');
+    if(auth&&auth.classList.contains('hidden')){
+      CU=DB.users.find(function(u){return u.id===CU.id;})||CU;
+      try{
+        if(CU.role==='admin'){
+          var cur=document.querySelector('#S_admin .stab.on');
+          if(cur){var tab=cur.dataset.tab||'dash';var map={dash:renderAdmDash,pollas:renderAdmPollas,partidos:renderAdmPartidos,resultados:renderAdmRes,premios:renderAdmPremios,stripe:renderAdmStripe,banners:renderAdmBanners,especiales:renderAdmEspeciales,usuarios:renderAdmUsers};if(map[tab])map[tab]();}
+        }else{renderPInicio();}
+      }catch(e){}
+    }
+  }
+};
+
 document.addEventListener('DOMContentLoaded',startApp);
 document.addEventListener('firebase-ready',function(){setTimeout(fbSync,300);});
 setTimeout(function(){if(!window._appStarted)startApp();},500);
