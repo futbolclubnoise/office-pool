@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <script>
 // Force fresh load — clears stale cache on every deployment
-(function(){var v='v6';if(location.search.indexOf(v)<0){location.replace(location.pathname+'?'+v);}})();
+(function(){var v='v7';if(location.search.indexOf(v)<0){location.replace(location.pathname+'?'+v);}})();
 </script>
 <title>The CFL Office Pool</title>
 <script src="https://js.stripe.com/v3/"></script>
@@ -1684,40 +1684,56 @@ function resolveSinglePrizes(pol){
 }
 
 function renderAdmPremios(){
-  document.getElementById('premiosResumen').innerHTML=DB.pollas.map(pol=>{
-    const ms=DB.matches.filter(m=>m.pollaId===pol.id);
-    const prz=calcPrizes(pol),on=pol.status==='open';
-    const ins=DB.users.filter(u=>u.payments&&u.payments.find(p=>p.pollaId===pol.id&&p.status==='succeeded'));
-    const ranked=[...ins].map(u=>{
-      const pts=u.predictions.filter(pr=>ms.find(m=>m.id===pr.matchId)).reduce((s,pr)=>s+(pr.pts||0),0);
-      return{...u,pollaPts:pts};
-    }).sort((a,b)=>b.pollaPts-a.pollaPts);
-    return`<div style="margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--bd)">
-      <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
-        <div class="dot ${on?'dot-on':'dot-off'}"></div>
-        <div style="flex:1">
-          <div style="font-family:'Kallisto',sans-serif;font-weight:500;font-size:12px;letter-spacing:1.5px">${pol.name}</div>
-          <div style="font-size:9px;color:var(--tx3);margin-top:2px">${pol.type} · ${ms.length} partidos</div>
-        </div>
-        <span class="bdg ${on?'bdg-on':'bdg-off'}">${on?'Activa':'Cerrada'}</span>
-      </div>
-      <div class="pmg">
-        <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">Inscritos</div></div>
-        <div class="pmg-item"><div class="pmg-v c-o">${usd(prz.pool)}</div><div class="pmg-l">Pool USD</div></div>
-        <div class="pmg-item"><div class="pmg-v c-r">${usd(pol.fee||0)}</div><div class="pmg-l">Fee</div></div>
-      </div>
-      ${prz.pool>0?`<table class="prize-tbl"><thead><tr><th>Pos</th><th>Jugador</th><th>Pts Polla</th><th>Premio</th></tr></thead><tbody>
-        ${ranked.slice(0,3).map((u,i)=>{
-          const prizes=[prz.p1,prz.p2,prz.p3];
-          const col=i===0?'var(--org)':i===1?'var(--g2)':'var(--grn)';
-          return`<tr><td style="color:${col};font-family:'Kallisto',sans-serif;font-weight:500;font-size:14px">${i===0?'◆':i===1?'◇':'▸'}</td>
-            <td><div style="display:flex;align-items:center;gap:7px">${avEl(u)} ${u.name}</div></td>
-            <td style="font-family:'Kallisto',sans-serif;font-weight:500">${u.pollaPts}</td>
-            <td style="color:${col};font-family:'Kallisto',sans-serif;font-weight:500">USD ${usd(prizes[i])}</td></tr>`;
-        }).join('')}
-      </tbody></table>`:'<p style="font-size:10px;color:var(--tx3)">Polla gratuita — sin pool monetario</p>'}
-    </div>`;
-  }).join('')||empty('Sin pollas creadas');
+  var html='';
+  if(!DB.pollas.length){html=empty('Sin pollas creadas');}
+  else{
+    DB.pollas.forEach(function(pol){
+      var ms=DB.matches.filter(function(m){return m.pollaId===pol.id;});
+      var prz=calcPrizes(pol);
+      var on=pol.status==='open';
+      var ins=DB.users.filter(function(u){return u.payments&&u.payments.find(function(p){return p.pollaId===pol.id&&p.status==='succeeded';});});
+      var ranked=ins.map(function(u){
+        var pts=u.predictions.filter(function(pr){return ms.find(function(m){return m.id===pr.matchId;});}).reduce(function(s,pr){return s+(pr.pts||0);},0);
+        return {id:u.id,name:u.name,nickname:u.nickname,photo:u.photo,predictions:u.predictions,payments:u.payments,pollaPts:pts};
+      }).sort(function(a,b){return b.pollaPts-a.pollaPts;});
+      // Build prize rows with no nested template literals
+      var prizeSection='';
+      if(prz.pool>0){
+        var prizes=[prz.p1,prz.p2,prz.p3];
+        var syms=['◆','◇','▸'];
+        var cols=['var(--org)','var(--g2)','var(--grn)'];
+        var rows='';
+        ranked.slice(0,3).forEach(function(u,i){
+          rows+='<tr>'
+            +'<td style="color:'+cols[i]+';font-family:Kallisto,sans-serif;font-weight:500;font-size:14px">'+syms[i]+'</td>'
+            +'<td><div style="display:flex;align-items:center;gap:7px">'+avEl(u)+' '+u.name+'</div></td>'
+            +'<td style="font-family:Kallisto,sans-serif;font-weight:500">'+u.pollaPts+'</td>'
+            +'<td style="color:'+cols[i]+';font-family:Kallisto,sans-serif;font-weight:500">USD '+usd(prizes[i])+'</td>'
+            +'</tr>';
+        });
+        prizeSection='<table class="prize-tbl"><thead><tr><th>Pos</th><th>Jugador</th><th>Pts Polla</th><th>Premio</th></tr></thead><tbody>'+rows+'</tbody></table>';
+      }else{
+        prizeSection='<p style="font-size:10px;color:var(--tx3)">Polla gratuita — sin pool monetario</p>';
+      }
+      html+='<div style="margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--bd)">'
+        +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">'
+          +'<div class="dot '+(on?'dot-on':'dot-off')+'"></div>'
+          +'<div style="flex:1">'
+            +'<div style="font-family:Kallisto,sans-serif;font-weight:500;font-size:12px;letter-spacing:1.5px">'+pol.name+'</div>'
+            +'<div style="font-size:9px;color:var(--tx3);margin-top:2px">'+pol.type+' · '+ms.length+' partidos</div>'
+          +'</div>'
+          +'<span class="bdg '+(on?'bdg-on':'bdg-off')+'">'+(on?'Activa':'Cerrada')+'</span>'
+        +'</div>'
+        +'<div class="pmg">'
+          +'<div class="pmg-item"><div class="pmg-v c-g">'+prz.inscribed+'</div><div class="pmg-l">Inscritos</div></div>'
+          +'<div class="pmg-item"><div class="pmg-v c-o">'+usd(prz.pool)+'</div><div class="pmg-l">Pool USD</div></div>'
+          +'<div class="pmg-item"><div class="pmg-v c-r">'+usd(pol.fee||0)+'</div><div class="pmg-l">Fee</div></div>'
+        +'</div>'
+        +prizeSection
+        +'</div>';
+    });
+  }
+  document.getElementById('premiosResumen').innerHTML=html;
 }
 
 function saveStripe(){
