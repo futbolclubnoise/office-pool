@@ -2269,7 +2269,7 @@ function renderPRanking(){
       +'<div class="t5-pos '+pc+'" style="font-size:'+(i<3?'15px':'12px')+';'+(isMe?'color:var(--org)':'color:var(--tx3)')+';width:28px">'+sym+'</div>'
       +avEl(r.u)
       +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:'+(isMe?700:500)+';color:'+(isMe?'var(--org)':'var(--tx2)');overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+displayName(r.u)+(isMe?' ◀':'')+'</div>'
+        +'<div style="font-size:13px;font-weight:'+(isMe?700:500)+';color:'+(isMe?'var(--org)':'var(--tx2)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+displayName(r.u)+(isMe?' ◀':'')+'</div>'
         +(r.u.name&&r.u.nickname&&r.u.name!==r.u.nickname&&!isMe?'<div style="font-size:9px;color:var(--tx3)">'+r.u.name+'</div>':'')
       +'</div>'
       +'<div style="font-family:\'Kallisto\',sans-serif;font-weight:500;font-size:16px;color:'+(isMe?'var(--org)':'var(--tx2)')+'">'+r.pts+'<span style="font-size:8px;color:var(--tx3);font-family:\'Poppins\',sans-serif"> pts</span></div>'
