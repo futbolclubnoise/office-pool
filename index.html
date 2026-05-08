@@ -1989,6 +1989,17 @@ function renderPInicio(){
   const el=document.getElementById('porInicioContent');
   if(!el)return;
   const displayName=u=>u.nickname||u.name;
+
+  // ── Banner 1 — TOP ──
+  let topHtml='';
+  const _b1=DB.banners&&(DB.banners.b1||DB.banners.b1m);
+  const _b1url=DB.banners&&DB.banners.b1url;
+  if(_b1){
+    const _b1wrap=_b1url?'<a href="'+_b1url+'" target="_blank" style="display:block">':'<div>';
+    const _b1end=_b1url?'</a>':'</div>';
+    topHtml+=_b1wrap+'<img src="'+_b1+'" style="width:100%;display:block;border-radius:10px;max-height:90px;object-fit:cover;margin-bottom:10px">'+_b1end;
+  }
+
   let html='';
 
   // ── Per-pool sections ──
@@ -2164,23 +2175,16 @@ function renderPInicio(){
     </div>`;
   }
 
-  // ── Banners (below pool content) ──
-  const b1=DB.banners&&(DB.banners.b1||DB.banners.b1m);
-  const b2=DB.banners&&(DB.banners.b2||DB.banners.b2m);
-  const b1url=DB.banners&&DB.banners.b1url;
-  const b2url=DB.banners&&DB.banners.b2url;
-  if(b1){
-    const b1wrap=b1url?`<a href="${b1url}" target="_blank" style="display:block">`:'<div>';
-    const b1end=b1url?'</a>':'</div>';
-    html+=b1wrap+`<img src="${b1}" style="width:100%;display:block;border-radius:10px;max-height:90px;object-fit:cover;margin-bottom:10px">`+b1end;
-  }
-  if(b2){
-    const b2wrap=b2url?`<a href="${b2url}" target="_blank" style="display:block">`:'<div>';
-    const b2end=b2url?'</a>':'</div>';
-    html+=b2wrap+`<img src="${b2}" style="width:100%;display:block;border-radius:10px;max-height:90px;object-fit:cover;margin-bottom:10px">`+b2end;
+  // ── Banner 2 — BOTTOM (below all content) ──
+  const _b2=DB.banners&&(DB.banners.b2||DB.banners.b2m);
+  const _b2url=DB.banners&&DB.banners.b2url;
+  if(_b2){
+    const _b2wrap=_b2url?'<a href="'+_b2url+'" target="_blank" style="display:block">':'<div>';
+    const _b2end=_b2url?'</a>':'</div>';
+    html+=_b2wrap+'<img src="'+_b2+'" style="width:100%;display:block;border-radius:10px;max-height:90px;object-fit:cover;margin-top:10px">'+_b2end;
   }
 
-  el.innerHTML=html;
+  el.innerHTML=topHtml+html;
 }
 
 function fmtDate(d){
@@ -2720,13 +2724,12 @@ function setLang(l){
       else{renderPInicio();}
     }
   }catch(e){}
-  try{localStorage.setItem('cfl_lang_v2',l);}catch(e){}
+  try{localStorage.setItem('cfl_lang_v3',l);}catch(e){}
 }
 function initLang(){
   var s='en';
   try{
-    // Use cfl_lang_v2 key — old 'cfl_lang' had Spanish as default so we ignore it
-    var stored=localStorage.getItem('cfl_lang_v2');
+    var stored=localStorage.getItem('cfl_lang_v3');
     s=(stored==='es'||stored==='en')?stored:'en';
   }catch(e){}
   setLang(s);
