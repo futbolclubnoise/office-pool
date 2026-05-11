@@ -5,8 +5,8 @@
 :root {
   --bg:#0c0c0c;--bg2:#111;--bg3:#181818;--bg4:#202020;--bg5:#2a2a2a;
   --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.13);--bd3:rgba(255,255,255,.22);
-  --tx:#efefef;--tx2:#ccc;--tx3:#999;
-  --g0:#fff;--g1:#e4e4e4;--g2:#aaa;--g3:#666;--g4:#333;
+  --tx:#f5f5f5;--tx2:#e0e0e0;--tx3:#c0c0c0;
+  --g0:#fff;--g1:#ececec;--g2:#c8c8c8;--g3:#888;--g4:#444;
   --card:#131313;--inp:#1c1c1c;
   --red:#e03c3c;--red2:rgba(224,60,60,.13);--red3:rgba(224,60,60,.28);
   --grn:#3aaa6a;--grn2:rgba(58,170,106,.13);--grn3:rgba(58,170,106,.28);
@@ -18,16 +18,16 @@
 body.light {
   --bg:#f4f4f7;--bg2:#eeeef2;--bg3:#e8e8ed;--bg4:#dddde3;--bg5:#d3d3da;
   --bd:rgba(0,0,0,.08);--bd2:rgba(0,0,0,.14);--bd3:rgba(0,0,0,.22);
-  --tx:#111111;--tx2:#555;--tx3:#999;
-  --g0:#111;--g1:#333;--g2:#666;--g3:#999;--g4:#ccc;
+  --tx:#111111;--tx2:#444;--tx3:#777;
+  --g0:#111;--g1:#222;--g2:#555;--g3:#888;--g4:#ccc;
   --card:#ffffff;--inp:#f0f0f4;
 }
 
 body.light {
   --bg:#f0f0ee;--bg2:#e8e8e6;--bg3:#e0e0de;--bg4:#d8d8d6;--bg5:#d0d0ce;
   --bd:rgba(0,0,0,.06);--bd2:rgba(0,0,0,.12);--bd3:rgba(0,0,0,.22);
-  --tx:#0c0c0c;--tx2:#555;--tx3:#aaa;
-  --g0:#000;--g1:#1a1a1a;--g2:#555;--g3:#999;--g4:#bbb;
+  --tx:#0c0c0c;--tx2:#444;--tx3:#777;
+  --g0:#000;--g1:#1a1a1a;--g2:#555;--g3:#888;--g4:#bbb;
   --card:#fff;--inp:#ebebeb;
 }
 *{margin:0;padding:0;box-sizing:border-box;}

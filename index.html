@@ -621,19 +621,19 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
       <button class="iBtn" onclick="openSettings()" title="Settings" style="font-size:16px">⚙️</button>
       <div class="nav-av" id="admAv" onclick="openSelfEdit()"></div>
       <span class="nav-uname" id="admNm"></span>
-      <button class="btn-s" onclick="doLogout()">Salir</button>
+      <button class="btn-s" onclick="doLogout()" data-t="logout">Sign Out</button>
     </div>
   </nav>
   <div class="tabs">
     <button class="stab on"  onclick="aTab('dash',this)" data-tab="dash">Dashboard</button>
     <button class="stab"     onclick="aTab('pollas',this)" data-tab="pollas">Pollas</button>
-    <button class="stab"     onclick="aTab('partidos',this)" data-tab="partidos">Partidos</button>
-    <button class="stab"     onclick="aTab('resultados',this)" data-tab="resultados">Resultados</button>
+    <button class="stab"     onclick="aTab('partidos',this)" data-tab="partidos">Matches</button>
+    <button class="stab"     onclick="aTab('resultados',this)" data-tab="resultados">Results</button>
     <button class="stab"     onclick="aTab('premios',this)" data-tab="premios">Pool $</button>
     <button class="stab"     onclick="aTab('stripe',this)" data-tab="stripe">Stripe</button>
     <button class="stab"     onclick="aTab('banners',this)" data-tab="banners">Banners</button>
-    <button class="stab"     onclick="aTab('especiales',this)" data-tab="especiales">⭐ Especiales</button>
-    <button class="stab"     onclick="aTab('usuarios',this)" data-tab="usuarios">Usuarios</button>
+    <button class="stab"     onclick="aTab('especiales',this)" data-tab="especiales">⭐ Specials</button>
+    <button class="stab"     onclick="aTab('usuarios',this)" data-tab="usuarios">Players</button>
   </div>
   <div class="page">
 
@@ -658,7 +658,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
       <!-- Formulario crear polla (colapsable) -->
       <div class="card">
         <div class="collapsible-hdr" id="newPollaHdr" onclick="toggleNewPollaForm()">
-          <div class="ct" style="margin:0"><div class="ct-dot ct-dot-g"></div>Nueva Polla</div>
+          <div class="ct" style="margin:0"><div class="ct-dot ct-dot-g"></div>New Pool</div>
           <span class="chev">▼</span>
         </div>
         <div id="newPollaBody" class="collapsible-body" style="max-height:0;padding-top:0;overflow:hidden;">
@@ -666,24 +666,24 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <div class="type-grid">
           <div class="type-card sel-multi" id="tc-multi" onclick="selType('multi')">
             <div class="type-icon">🏆</div>
-            <div class="type-label">Multi-Partido</div>
-            <div class="type-desc">Varios partidos. Los jugadores predicen todos y acumulan puntos. Gana quien más puntos tenga.</div>
+            <div class="type-label">Multi-Match</div>
+            <div class="type-desc">Multiple matches. Players predict all and accumulate points. Highest score wins.</div>
           </div>
           <div class="type-card" id="tc-single" onclick="selType('single')">
             <div class="type-icon">⚡</div>
-            <div class="type-label">Partido Único</div>
-            <div class="type-desc">Un solo partido. Premio directo al ganador del marcador exacto o mejor resultado.</div>
+            <div class="type-label">Single Match</div>
+            <div class="type-desc">One match. Direct prize to the winner with the exact or best score.</div>
           </div>
         </div>
         <input type="hidden" id="pType" value="multi">
-        <div class="fg"><label class="fl">Nombre de la polla</label><input class="fi" id="pNm" placeholder="Ej: Semana 1 — CFL 2025"></div>
+        <div class="fg"><label class="fl">Pool Name</label><input class="fi" id="pNm" placeholder="e.g. Week 1 — CFL 2025"></div>
         <div class="fr2">
-          <div class="fg"><label class="fl">Fecha apertura</label><input class="fi" id="pSt" type="datetime-local"></div>
-          <div class="fg"><label class="fl">Fecha cierre</label><input class="fi" id="pEn" type="datetime-local"></div>
+          <div class="fg"><label class="fl">Start Date</label><input class="fi" id="pSt" type="datetime-local"></div>
+          <div class="fg"><label class="fl">End Date</label><input class="fi" id="pEn" type="datetime-local"></div>
         </div>
         <div class="fr2">
-          <div class="fg"><label class="fl">Valor de inscripción (USD)</label><div style="position:relative"><span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:12px;pointer-events:none">$</span><input class="fi" id="pFee" type="number" value="5" min="0" step="0.5" oninput="updatePrizePreview()" style="padding-left:22px"></div></div>
-          <div class="fg"><label class="fl">Zona horaria base</label>
+          <div class="fg"><label class="fl">Entry Fee (USD)</label><div style="position:relative"><span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:12px;pointer-events:none">$</span><input class="fi" id="pFee" type="number" value="5" min="0" step="0.5" oninput="updatePrizePreview()" style="padding-left:22px"></div></div>
+          <div class="fg"><label class="fl">Base Timezone</label>
             <select class="fi" id="pTz">
               <option value="America/New_York">Eastern (ET)</option>
               <option value="America/Chicago">Central (CT)</option>
@@ -697,11 +697,11 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
 
         <!-- SISTEMA DE PUNTOS -->
         <div style="margin-bottom:14px">
-          <label class="fl" style="margin-bottom:8px">Sistema de Puntos</label>
+          <label class="fl" style="margin-bottom:8px">Scoring System</label>
           <div class="preset-row" id="presetRow">
-            <button class="preset-btn" onclick="applyPreset('standard')">Estándar</button>
-            <button class="preset-btn active" onclick="applyPreset('wc')">Mundial FIFA</button>
-            <button class="preset-btn" onclick="applyPreset('exacto')">Solo Exacto</button>
+            <button class="preset-btn" onclick="applyPreset('standard')">Standard</button>
+            <button class="preset-btn active" onclick="applyPreset('wc')">FIFA World Cup</button>
+            <button class="preset-btn" onclick="applyPreset('exacto')">Exact Only</button>
             <button class="preset-btn" onclick="applyPreset('nfl')">NFL Style</button>
             <button class="preset-btn" onclick="applyPreset('custom')">Personalizado</button>
           </div>
@@ -743,7 +743,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           </div>
           <div id="prizePreview" style="font-size:10px;color:var(--tx2);padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--bd);margin-top:8px"></div>
         </div>
-        <button class="btn btn-p" onclick="createPolla()">CREAR POLLA</button>
+        <button class="btn btn-p" onclick="createPolla()">CREATE POOL</button>
         </div><!-- /collapsible body -->
       </div>
     </div>
@@ -782,11 +782,11 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         </div>
         <div class="fr2">
           <div class="fg">
-            <label class="fl">Fecha y hora del partido</label>
+            <label class="fl">Match Date & Time</label>
             <input class="fi" id="mDt" type="datetime-local" oninput="updateTzPreview()">
-            <div class="tz-info" id="tzPreview">Selecciona fecha para ver la hora en distintas zonas</div>
+            <div class="tz-info" id="tzPreview">Select date to preview time in different zones</div>
           </div>
-          <div class="fg"><label class="fl">Zona horaria del partido</label>
+          <div class="fg"><label class="fl">Match Timezone</label>
             <select class="fi" id="mTz" onchange="updateTzPreview()">
               <option value="America/New_York">Eastern (ET)</option>
               <option value="America/Chicago">Central (CT)</option>
@@ -797,17 +797,17 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
             </select>
           </div>
         </div>
-        <button class="btn btn-p" onclick="createMatch()">AGREGAR PARTIDO</button>
+        <button class="btn btn-p" onclick="createMatch()">ADD MATCH</button>
         </div><!-- /collapsible body -->
       </div>
-      <div class="card"><div class="ct"><div class="ct-dot ct-dot-g"></div>Partidos Programados</div><div id="admML"></div></div>
+      <div class="card"><div class="ct"><div class="ct-dot ct-dot-g"></div>Scheduled Matches</div><div id="admML"></div></div>
     </div>
 
     <!-- RESULTADOS -->
     <div id="A_resultados" class="hidden">
       <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-r"></div>Cargar Resultados</div>
-        <div class="info-box">Al guardar el marcador, el sistema calcula automáticamente los puntos según el sistema configurado en cada polla: acierto de resultado, diferencia, marcador exacto.</div>
+        <div class="ct"><div class="ct-dot ct-dot-r"></div>Enter Results</div>
+        <div class="info-box">When you save a score, the system automatically calculates points based on the scoring rules set for each pool: correct result, goal difference, or exact score.</div>
         <div id="admRL"></div>
       </div>
     </div>
@@ -815,7 +815,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     <!-- PREMIOS -->
     <div id="A_premios" class="hidden">
       <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-o"></div>Pool $ — Resumen de Premios</div>
+        <div class="ct"><div class="ct-dot ct-dot-o"></div>Pool $ — Prize Summary</div>
         <div id="premiosResumen"></div>
       </div>
     </div>
@@ -823,18 +823,18 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     <!-- STRIPE -->
     <div id="A_stripe" class="hidden">
       <div class="card" style="margin-bottom:12px">
-        <div class="ct"><div class="ct-dot ct-dot-g"></div>Link de Pago Stripe</div>
-        <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Pega el Payment Link de tu cuenta Stripe. Los jugadores serán redirigidos a pagar ahí.</div>
+        <div class="ct"><div class="ct-dot ct-dot-g"></div>Stripe Payment Link</div>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Paste your Stripe Payment Link. Players will be redirected there to pay.</div>
         <div class="fg"><label class="fl">URL del Payment Link</label><input class="fi" id="stripeLink" placeholder="https://buy.stripe.com/..."></div>
-        <button class="btn btn-p" onclick="saveStripeLink()">GUARDAR LINK</button>
+        <button class="btn btn-p" onclick="saveStripeLink()">SAVE LINK</button>
         <div id="stripeLinkOK" class="msg-ok" style="margin-top:9px;display:none">Guardado ✓</div>
       </div>
       <div class="card" style="margin-bottom:12px">
-        <div class="ct"><div class="ct-dot ct-dot-r"></div>Predicciones</div>
-        <div style="font-size:10px;color:var(--tx2);margin-bottom:10px">Una vez guardada una predicción, el jugador no puede cambiarla. Activa esto solo si necesitas corregir predicciones.</div>
+        <div class="ct"><div class="ct-dot ct-dot-r"></div>Predictions</div>
+        <div style="font-size:10px;color:var(--tx2);margin-bottom:10px">Once a prediction is saved, the player cannot change it. Enable this only if you need to allow corrections.</div>
         <div style="display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:11px;color:var(--tx)">Permitir editar predicciones guardadas</span>
-          <button id="toggleEditBtn" onclick="togglePredEdit()" style="padding:6px 14px;font-size:9px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg3);color:var(--tx);font-family:Poppins,sans-serif;font-weight:600;cursor:pointer">Cargando...</button>
+          <span style="font-size:11px;color:var(--tx)">Allow editing saved predictions</span>
+          <button id="toggleEditBtn" onclick="togglePredEdit()" style="padding:6px 14px;font-size:9px;border-radius:7px;border:1px solid var(--bd2);background:var(--bg3);color:var(--tx);font-family:Poppins,sans-serif;font-weight:600;cursor:pointer">Loading...</button>
         </div>
       </div>
     </div>
@@ -842,10 +842,10 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     <!-- BANNERS -->
     <div id="A_banners" class="hidden">
       <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-g"></div>Banners Publicitarios</div>
-        <p style="font-size:10px;color:var(--tx2);margin-bottom:14px">Los banners se muestran en la parte superior del portal de jugadores, justo debajo de la navegación.</p>
+        <div class="ct"><div class="ct-dot ct-dot-g"></div>Ad Banners</div>
+        <p style="font-size:10px;color:var(--tx2);margin-bottom:14px">Banners are shown at the top and bottom of the player portal.</p>
         <div id="bnrAdm"></div>
-        <button class="btn btn-p" onclick="saveBanners()">ACTUALIZAR</button>
+        <button class="btn btn-p" onclick="saveBanners()">UPDATE BANNERS</button>
         <div id="bnrOK" class="msg-ok" style="margin-top:9px">Banners actualizados ✓</div>
       </div>
     </div>
@@ -853,18 +853,18 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     <!-- USUARIOS -->
     <div id="A_usuarios" class="hidden">
       <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-g"></div>Jugadores Registrados</div>
+        <div class="ct"><div class="ct-dot ct-dot-g"></div>Registered Players</div>
         <div style="overflow-x:auto">
           <table class="utbl" id="usersTable">
             <thead>
               <tr>
-                <th onclick="sortUsers('name')" id="th-name">Jugador</th>
-                <th onclick="sortUsers('email')" id="th-email">Correo</th>
-                <th onclick="sortUsers('points')" id="th-points">Puntos</th>
-                <th onclick="sortUsers('preds')" id="th-preds">Apuestas</th>
-                <th onclick="sortUsers('payments')" id="th-payments">Pagos</th>
-                <th onclick="sortUsers('role')" id="th-role">Rol</th>
-                <th>Acciones</th>
+                <th onclick="sortUsers('name')" id="th-name">Player</th>
+                <th onclick="sortUsers('email')" id="th-email">Email</th>
+                <th onclick="sortUsers('points')" id="th-points">Points</th>
+                <th onclick="sortUsers('preds')" id="th-preds">Picks</th>
+                <th onclick="sortUsers('payments')" id="th-payments">Payments</th>
+                <th onclick="sortUsers('role')" id="th-role">Role</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="admUT"></tbody>
@@ -886,14 +886,14 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         </div>
         <div class="fr2">
           <div class="fg">
-            <label class="fl">Puntos</label>
+            <label class="fl">Points</label>
             <input class="fi" type="number" id="spPts" value="20" min="1">
           </div>
           <div class="fg">
             <label class="fl">Estado</label>
             <select class="fi" id="spStatus">
-              <option value="open">🟢 Activo (acepta respuestas)</option>
-              <option value="closed">🔴 Cerrado</option>
+              <option value="open">🟢 Active (accepts answers)</option>
+              <option value="closed">🔴 Closed</option>
             </select>
           </div>
         </div>
@@ -1062,7 +1062,7 @@ function fmt(iso,tz){
   }catch(e){return new Date(iso).toLocaleDateString('es-CO',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
 }
 function tLeft(d){
-  const diff=new Date(d)-new Date(); if(diff<=0)return'Cerrado';
+  const diff=new Date(d)-new Date(); if(diff<=0)return'Closed';
   const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
   return h>24?Math.floor(h/24)+'d '+h%24+'h':h+'h '+m+'m';
 }
@@ -1634,7 +1634,7 @@ function renderAdmRes(){
             </div>
           </div>
           <div style="text-align:center">
-            <button onclick="saveResult(${m.id})" style="padding:5px 20px;font-size:9px;border-radius:7px;background:var(--grn2);color:var(--grn);border:1px solid var(--grn3);font-family:Poppins,sans-serif;font-weight:600;cursor:pointer">✓ Guardar resultado</button>
+            <button onclick="saveResult(${m.id})" style="padding:5px 20px;font-size:9px;border-radius:7px;background:var(--grn2);color:var(--grn);border:1px solid var(--grn3);font-family:Poppins,sans-serif;font-weight:600;cursor:pointer">✓ Save Result</button>
           </div>
         </div>`;
       });
@@ -1647,7 +1647,7 @@ function renderAdmRes(){
 function saveResult(mid){
   const hv=document.getElementById('rh'+mid).value;
   const av=document.getElementById('ra'+mid).value;
-  if(hv===''||av==='')return alert('Ingresa ambos marcadores');
+  if(hv===''||av==='')return alert('Enter both scores');
   const m=DB.matches.find(x=>x.id===mid);
   m.result={home:parseInt(hv),away:parseInt(av)};
   const pol=DB.pollas.find(p=>p.id===m.pollaId);
@@ -1918,26 +1918,26 @@ function showPollaDetail(pollaId){
   var specials=(DB.specials||[]).filter(function(s){return s.pollaId===pollaId;});
   var prz=calcPrizes(pol);
   var html='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
-    +'<div class="stat" style="flex:1"><div class="sv c-g">'+matches.length+'</div><div class="sl">Partidos</div></div>'
-    +'<div class="stat" style="flex:1"><div class="sv c-o">'+specials.length+'</div><div class="sl">Especiales</div></div>'
-    +'<div class="stat" style="flex:1"><div class="sv">'+prz.inscribed+'</div><div class="sl">Inscritos</div></div>'
+    +'<div class="stat" style="flex:1"><div class="sv c-g">'+matches.length+'</div><div class="sl">Matches</div></div>'
+    +'<div class="stat" style="flex:1"><div class="sv c-o">'+specials.length+'</div><div class="sl">Specials</div></div>'
+    +'<div class="stat" style="flex:1"><div class="sv">'+prz.inscribed+'</div><div class="sl">Players</div></div>'
     +'<div class="stat" style="flex:1"><div class="sv c-g">$'+prz.pool+'</div><div class="sl">Pool USD</div></div>'
     +'</div>';
 
   if(matches.length){
     var byStage={};
     matches.forEach(function(m){var s=m.stage||'group';if(!byStage[s])byStage[s]=[];byStage[s].push(m);});
-    html+='<div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-g"></div>Partidos ('+matches.length+')</div>';
+    html+='<div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-g"></div>Matches ('+matches.length+')</div>';
     Object.keys(byStage).forEach(function(stage){
       var label=STAGE_LABELS[stage]||stage;
       html+='<div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px">'+label+'</div>';
       byStage[stage].forEach(function(m){
-        var res=m.result?m.result.home+' - '+m.result.away:'Sin resultado';
+        var res=m.result?m.result.home+' - '+m.result.away:'No result';
         var locked=matchIsLocked(m);
         html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:var(--c2);border-radius:8px;margin-bottom:4px;font-size:10px">'
           +'<span style="display:flex;align-items:center;gap:6px">'+getFlag(m.home)+' <strong>'+m.home+'</strong> vs '+getFlag(m.away)+' <strong>'+m.away+'</strong></span>'
           +'<span style="color:'+(m.result?'var(--grn)':locked?'var(--red)':'var(--tx3)')+'">'+
-            (m.result?'✅ '+res:locked?'🔒 Cerrado':'⏳ '+fmt(m.date,'America/New_York'))
+            (m.result?'✅ '+res:locked?'🔒 Locked':'⏳ '+fmt(m.date,'America/New_York'))
           +'</span></div>';
       });
     });
@@ -2381,7 +2381,7 @@ function updatePayPreview(){
   const link=DB.settings&&DB.settings.stripeLink?DB.settings.stripeLink:'';
   document.getElementById('payPreview').innerHTML=`
     <div class="pmg">
-      <div class="pmg-item"><div class="pmg-v c-o">${usd(pol.fee)}</div><div class="pmg-l">Inscripción</div></div>
+      <div class="pmg-item"><div class="pmg-v c-o">${usd(pol.fee)}</div><div class="pmg-l">Entry Fee</div></div>
       <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">Inscritos</div></div>
       <div class="pmg-item"><div class="pmg-v c-r">${usd(prz.pool)}</div><div class="pmg-l">Pool actual</div></div>
     </div>
@@ -2395,9 +2395,9 @@ function updatePayPreview(){
     wrap.innerHTML=`<a href="${link}?client_reference_id=${CU.id}_${id}" target="_blank" style="display:block;text-decoration:none;margin-top:14px">
       <button class="btn btn-p" style="background:var(--org);color:#fff;border:none;font-size:12px;letter-spacing:1px;padding:13px">💳 PAGAR INSCRIPCIÓN — ${usd(pol.fee)}</button>
     </a>
-    <div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:8px">Serás redirigido a Stripe. Después el admin confirmará tu pago.</div>`;
+    <div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:8px">You'll be redirected to Stripe. The admin will confirm your payment afterward.</div>`;
   } else {
-    wrap.innerHTML='<div style="font-size:10px;color:var(--tx3);padding:10px 0">El admin aún no ha configurado el link de pago.</div>';
+    wrap.innerHTML='<div style="font-size:10px;color:var(--tx3);padding:10px 0">The admin has not set up the payment link yet.</div>';
   }
 }
 function saveStripeLink(){
@@ -2439,8 +2439,8 @@ function openModal(pollaId){
   var rankedPlayers=paidPlayers.map(function(u){var pts=(u.predictions||[]).filter(function(p){return pollaMatchIds.includes(p.matchId);}).reduce(function(s,p){return s+(p.pts||0);},0);return{u:u,pts:pts};}).sort(function(a,b){return b.pts-a.pts;});
   var myRank=CU?rankedPlayers.findIndex(function(r){return r.u.id===CU.id;})+1:0;
   document.getElementById('modMeta').innerHTML=`
-    <div class="pmg-item"><div class="pmg-v c-o">${myPts}</div><div class="pmg-l">Mis Puntos</div></div>
-    <div class="pmg-item"><div class="pmg-v c-g">${myRank>0?'#'+myRank:'—'}</div><div class="pmg-l">Posición</div></div>
+    <div class="pmg-item"><div class="pmg-v c-o">${myPts}</div><div class="pmg-l">My Points</div></div>
+    <div class="pmg-item"><div class="pmg-v c-g">${myRank>0?'#'+myRank:'—'}</div><div class="pmg-l">Position</div></div>
     <div class="pmg-item"><div class="pmg-v c-r">${prz.inscribed}</div><div class="pmg-l">Inscritos</div></div>`;
 
   document.getElementById('modScLegend').innerHTML=
@@ -2547,9 +2547,9 @@ function openModal(pollaId){
           +'<div style="text-align:center;margin-top:7px">'
           +(canEdit
             ?'<button id="'+btnId+'" onclick="saveOnePred('+m.id+')" style="padding:5px 20px;font-size:9px;border-radius:7px;background:'+(pr!=null?'var(--grn)':'var(--tx)')+';color:'+(pr!=null?'#fff':'var(--bg)')+';border:none;font-family:Poppins,sans-serif;font-weight:600;cursor:pointer;letter-spacing:0.5px">'
-              +(pr!=null?'✅ Guardado':'💾 Guardar')
+              +(pr!=null?'✅ Saved':'💾 Save')
             +'</button>'
-            :'<span style="font-size:9px;color:var(--grn)">✅ Guardado · 🔒 No modificable</span>'
+            :'<span style="font-size:9px;color:var(--grn)">✅ Saved · 🔒 Locked</span>'
           )
           +'</div>';
       }
@@ -2656,7 +2656,7 @@ function timeUntilLock(m){
   if(!m.date)return '';
   var kickoff=new Date(m.date).getTime();
   var diff=kickoff-(2*60*60*1000)-Date.now();
-  if(diff<=0)return '🔒 Cerrado';
+  if(diff<=0)return '🔒 Locked';
   var h=Math.floor(diff/3600000);
   var min=Math.floor((diff%3600000)/60000);
   if(h>24){var d=Math.floor(h/24);return 'Cierra en '+d+'d '+(h%24)+'h';}
@@ -3106,7 +3106,7 @@ function renderAdmEspeciales(){
         +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
         +'<span style="font-size:11px;font-weight:700;color:var(--tx)">'+s.name+'</span>'
         +'<span style="font-size:9px;background:var(--org2);color:var(--org);border-radius:8px;padding:2px 8px;font-weight:700">+'+s.pts+' pts</span>'
-        +'<span style="font-size:9px;padding:2px 8px;border-radius:8px;font-weight:700;background:'+(isOpen?'var(--grn2)':'rgba(255,60,60,.1)')+';color:'+(isOpen?'var(--grn)':'var(--red)')+';">'+(isOpen?'🟢 Activo':'🔴 Cerrado')+'</span>'
+        +'<span style="font-size:9px;padding:2px 8px;border-radius:8px;font-weight:700;background:'+(isOpen?'var(--grn2)':'rgba(255,60,60,.1)')+';color:'+(isOpen?'var(--grn)':'var(--red)')+';">'+(isOpen?'🟢 Active':'🔴 Closed')+'</span>'
         +(s.answer?'<span style="font-size:9px;background:var(--grn2);color:var(--grn);border-radius:8px;padding:2px 8px">✅ '+s.answer+'</span>':'')
         +'</div>'
         +'<div style="font-size:9px;color:var(--tx3);margin-top:3px">'+s.desc+'</div>'
@@ -3187,7 +3187,7 @@ function editSpecial(id){
   var s=(DB.specials||[]).find(function(x){return x.id===id;});if(!s)return;
   var n=prompt('Nombre:',s.name);if(n===null)return;
   var d=prompt('Pregunta:',s.desc);if(d===null)return;
-  var p=parseInt(prompt('Puntos:',s.pts));if(isNaN(p))return;
+  var p=parseInt(prompt('Points:',s.pts));if(isNaN(p))return;
   s.name=n.trim()||s.name;s.desc=d.trim()||s.desc;s.pts=p||s.pts;
   renderAdmEspeciales();saveDB();
 }
@@ -3205,7 +3205,7 @@ function renderPEspeciales(){
     var items=getSpecials(pol.id).filter(function(s){return s.status!=='closed'||s.answer;});
     if(!items.length)return;
     out+='<div class="card"><div class="ct"><div class="ct-dot ct-dot-o"></div>'+pol.name+'</div>';
-    out+='<div style="font-size:9px;color:var(--tx3);margin-bottom:10px">Predicciones especiales — gana puntos extra</div>';
+    out+='<div style="font-size:9px;color:var(--tx3);margin-bottom:10px">Special predictions — earn bonus points</div>';
     items.forEach(function(s){
       var myAns=(s.userAnswers||[]).find(function(a){return a.userId===CU.id;});
       var isClosed=s.status==='closed';
@@ -3548,7 +3548,7 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
 <div id="predModal" class="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal-box card">
     <div class="modal-hdr">
-      <div class="modal-title" id="modTitle">Predicciones</div>
+      <div class="modal-title" id="modTitle">Predictions</div>
       <button class="modal-x" onclick="closeModal()">✕</button>
     </div>
     <div id="modMeta" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap"></div>
