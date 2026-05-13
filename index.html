@@ -2792,11 +2792,12 @@ function saveOnePred(matchId){
   if(!h||!a||h.value===''||a.value===''){
     h&&h.focus();return;
   }
-  var pr={matchId:matchId,pollaId:activePolla,home:parseInt(h.value),away:parseInt(a.value),pts:0,correct:false,type:'pending'};
+  var pr={matchId:matchId,pollaId:activePolla,home:parseInt(h.value),away:parseInt(a.value),pts:0,correct:false,type:'pending',savedAt:Date.now()};
   var idx=CU.predictions.findIndex(function(p){return p.matchId===matchId;});
   if(idx>=0)CU.predictions[idx]=pr;else CU.predictions.push(pr);
+  // Write predictions into DB.users so saveDB() picks them up
   var u=DB.users.find(function(x){return x.id===CU.id;});
-  if(u)u.predictions=CU.predictions;
+  if(u){u.predictions=CU.predictions.slice();} // .slice() makes a copy so _fbOnUpdate can't mutate CU.predictions via reference
   saveDB();
   var btn=document.getElementById('btn_'+matchId);
   if(btn){btn.textContent='✅ Guardado';btn.style.background='var(--grn)';btn.style.color='#fff';btn.style.border='none';}
@@ -2954,15 +2955,14 @@ async function saveDB(){
   DB._ts=Date.now();
   lsSave();
   if(window._fbSave){
+    var sizeKB=Math.round(JSON.stringify(DB).length/1024);
     window._fbSave(DB).then(function(){
-      console.log('✅ Firebase saved OK, size ~'+Math.round(JSON.stringify(DB).length/1024)+'KB');
+      console.log('✅ Firebase saved OK, size ~'+sizeKB+'KB');
     }).catch(function(e){
-      console.error('❌ Firebase save FAILED:',e);
-      // Show visible error to admin
-      if(typeof CU!=='undefined'&&CU&&CU.role==='admin'){
-        var msg='⚠️ Cloud save failed — data saved locally only. Check console.';
-        try{showE(msg);}catch(ex){alert(msg);}
-      }
+      console.error('❌ Firebase save FAILED:',e.code,e.message,'size was ~'+sizeKB+'KB');
+      // Show error to everyone so no one loses data silently
+      var msg='⚠️ Could not save to cloud ('+( e.code||e.message||'unknown')+').\nYour data is saved locally. Try refreshing if the problem persists.';
+      try{alert(msg);}catch(ex){}
     });
   }
 }
@@ -3536,10 +3536,19 @@ window._fbOnUpdate=function(d){
   var localTs=DB._ts||0;
   var cloudTs=d._ts||0;
 
-  // ── USERS: always take cloud version ─────────────────────────────────────────
-  // Player's verified/payment status can change at any time via admin.
-  // Never let a stale localTs block these updates.
+  // ── USERS: take cloud version for all admin-controlled fields ────────────────
+  // But protect the current user's local predictions from being overwritten
+  // by a stale snapshot that arrived before their own Firebase write completed.
   DB.users=d.users;
+  // Re-inject local CU predictions into the cloud user object.
+  // CU.predictions is always the freshest (saveOnePred writes immediately to Firebase,
+  // but the snapshot may not have arrived yet when another update triggers _fbOnUpdate).
+  if(typeof CU!=='undefined'&&CU&&CU.id&&CU.predictions&&CU.predictions.length>0){
+    var myInCloud=DB.users.find(function(u){return u.id===CU.id;});
+    if(myInCloud&&CU.predictions.length>=(myInCloud.predictions||[]).length){
+      myInCloud.predictions=CU.predictions;
+    }
+  }
 
   // ── EVERYTHING ELSE: only replace if cloud is same age or newer ───────────
   if(cloudTs>=localTs){
