@@ -519,18 +519,17 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     </div>
   </nav>
   <div class="tabs">
-    <button class="stab on" onclick="pTab('inicio',this)" data-t="home">Inicio</button>
+    <button class="stab on" onclick="pTab('inicio',this)" data-t="home">Home</button>
     <button class="stab" onclick="pTab('pollas',this)" data-t="myPools">My Pools</button>
     <button class="stab" onclick="pTab('ranking',this)" data-t="ranking">Ranking</button>
-    <button class="stab" onclick="pTab('historial',this)" data-t="history">Historial</button>
-    <button class="stab" onclick="pTab('perfil',this)" data-t="profile">Perfil</button>
+    <button class="stab" onclick="pTab('historial',this)" data-t="history">History</button>
+    <button class="stab" onclick="pTab('perfil',this)" data-t="profile">Profile</button>
     <button class="stab" onclick="pTab('inscripcion',this)" data-t="joinPool">Join Pool</button>
-    <button class="stab" onclick="pTab('especiales',this)">⭐ Especiales</button>
+    <button class="stab" onclick="pTab('especiales',this)" data-t="specials">⭐ Specials</button>
   </div>
+  <!-- BANNER TOP -->
   <div class="bnr-wrap bnr-pc"><div class="bnr-slot" id="bnr1"><span class="bnr-lbl">Banner 1 — Desktop</span><img id="bnr1Img" src="" alt=""></div></div>
   <div class="bnr-wrap bnr-mob"><div class="bnr-slot" id="bnr1m" style="height:60px"><span class="bnr-lbl">Banner 1 — Mobile</span><img id="bnr1mImg" src="" alt=""></div></div>
-  <div class="bnr-wrap bnr-pc" style="padding-top:6px"><div class="bnr-slot" id="bnr2" style="height:54px"><span class="bnr-lbl">Banner 2 — Desktop</span><img id="bnr2Img" src="" alt=""></div></div>
-  <div class="bnr-wrap bnr-mob" style="padding-top:6px"><div class="bnr-slot" id="bnr2m" style="height:54px"><span class="bnr-lbl">Banner 2 — Mobile</span><img id="bnr2mImg" src="" alt=""></div></div>
   <div class="page">
 
     <div id="P_inicio">
@@ -580,7 +579,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           </div>
         </div>
         <button class="btn btn-p" onclick="saveProfile()">GUARDAR</button>
-        <div id="pfOK" class="msg-ok" style="margin-top:9px">Perfil actualizado ✓</div>
+        <div id="pfOK" class="msg-ok" style="margin-top:9px">Profile updated ✓</div>
       </div>
     </div>
 
@@ -594,7 +593,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <div id="payER" class="st-er"></div>
         <div style="display:flex;align-items:center;gap:7px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
           <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" style="height:14px;filter:grayscale(1) brightness(.5)">
-          <span style="font-size:8px;color:var(--tx3)">Pagos procesados de forma segura por Stripe</span>
+          <span style="font-size:8px;color:var(--tx3)">Payments securely processed by Stripe</span>
         </div>
       </div>
     </div>
@@ -603,12 +602,15 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
   <!-- ESPECIALES -->
   <div id="P_especiales" class="hidden">
     <div id="P_spec_content">
-      <div class="card"><p style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">Cargando...</p></div>
+      <div class="card"><p style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">Loading...</p></div>
     </div>
   </div>
 
 
   </div>
+  <!-- BANNER BOTTOM -->
+  <div class="bnr-wrap bnr-pc" style="padding:8px 0 4px"><div class="bnr-slot" id="bnr2" style="height:60px"><span class="bnr-lbl">Banner 2 — Desktop</span><img id="bnr2Img" src="" alt=""></div></div>
+  <div class="bnr-wrap bnr-mob" style="padding:8px 0 4px"><div class="bnr-slot" id="bnr2m" style="height:54px"><span class="bnr-lbl">Banner 2 — Mobile</span><img id="bnr2mImg" src="" alt=""></div></div>
 </div>
 
 <div id="S_admin" class="hidden">
@@ -1879,18 +1881,20 @@ function deleteUser(id){
 function openUserPay(userId){
   var u=DB.users.find(function(x){return x.id===userId;});
   if(!u)return;
-  document.getElementById('upTitle').textContent='💰 Pagos — '+u.name;
+  document.getElementById('upTitle').textContent='💰 Payments — '+u.name;
   var pollas=DB.pollas.filter(function(p){return p.status==='open'||p.fee>0;});
-  if(!pollas.length){document.getElementById('upBody').innerHTML='<p style="color:var(--tx3);font-size:11px">No hay pollas activas.</p>';document.getElementById('userPayModal').style.display='block';return;}
+  if(!pollas.length){document.getElementById('upBody').innerHTML='<p style="color:var(--tx3);font-size:11px">No active pools found.</p>';document.getElementById('userPayModal').style.display='block';return;}
   document.getElementById('upBody').innerHTML=pollas.map(function(pol){
     var hasPay=(u.payments||[]).find(function(p){return p.pollaId===pol.id&&p.status==='succeeded';});
-    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd1)">'
-      +'<div><div style="font-size:11px;font-weight:600">'+pol.name+'</div>'
-      +'<div style="font-size:9px;color:var(--tx3)">Fee: $'+pol.fee+' USD</div></div>'
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bd)">'
+      +'<div><div style="font-size:12px;font-weight:700;color:var(--tx)">'+pol.name+'</div>'
+      +'<div style="font-size:10px;color:var(--tx3);margin-top:2px">Entry Fee: $'+pol.fee+' USD</div></div>'
       +(hasPay
-        ?'<div style="display:flex;align-items:center;gap:8px"><span style="color:var(--grn);font-size:10px">✅ Pagado</span>'
-          +'<button class="btn-xs" style="background:var(--red);color:#fff" onclick="toggleUserPaid('+userId+','+pol.id+')">Quitar</button></div>'
-        :'<button class="btn btn-p" style="font-size:10px;padding:5px 12px" onclick="toggleUserPaid('+userId+','+pol.id+')">✅ Marcar Pagado</button>'
+        ?'<div style="display:flex;align-items:center;gap:8px">'
+          +'<span style="color:var(--grn);font-size:11px;font-weight:600">✅ Paid</span>'
+          +'<button class="btn-xs" style="background:var(--red2);color:var(--red);border:1px solid var(--red3);font-size:10px" onclick="toggleUserPaid('+userId+','+pol.id+')">Remove</button>'
+          +'</div>'
+        :'<button class="btn btn-p" style="font-size:10px;padding:7px 14px;background:var(--grn);border:none" onclick="toggleUserPaid('+userId+','+pol.id+')">✅ Mark as Paid</button>'
       )+'</div>';
   }).join('');
   document.getElementById('userPayModal').style.display='block';
@@ -2522,7 +2526,7 @@ function openModal(pollaId){
           +'</div>'
         +'</div>'
         +'<div style="text-align:center;margin-top:7px">'
-          +'<button onclick="document.getElementById(\'predModal\').style.display=\'none\';pTab(\'inscripcion\',document.querySelector(\'#S_player .stab:nth-child(6)\'))" style="padding:5px 20px;font-size:9px;border-radius:7px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-weight:600;cursor:pointer;letter-spacing:0.5px">🔒 Inscríbete</button>'
+          +'<button onclick="document.getElementById(\'predModal\').style.display=\'none\';pTab(\'inscripcion\',document.querySelector(\'#S_player .stab:nth-child(6)\'))" style="padding:5px 20px;font-size:9px;border-radius:7px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-weight:600;cursor:pointer;letter-spacing:0.5px">🔒 Join Pool</button>'
         +'</div>';
       } else {
         var canEdit=!pr||(DB.settings&&DB.settings.allowPredEdit);
@@ -2598,7 +2602,7 @@ function openModal(pollaId){
             +'</div>';
         }
       } else {
-        html+='<div style="font-size:9px;color:var(--tx3);padding:6px 0">🔒 Inscríbete para responder</div>';
+        html+='<div style="font-size:9px;color:var(--tx3);padding:6px 0">🔒 Join the pool to answer</div>';
       }
       html+='</div>';
     });
@@ -2708,7 +2712,7 @@ function saveSelfEdit(){
 var CL='en';
 var LD={
   en:{login:'Sign In',register:'Sign Up',logout:'Sign Out',home:'Home',myPools:'My Pools',ranking:'Ranking',history:'History',profile:'Profile',joinPool:'Join Pool',specials:'⭐ Specials',save:'Save',points:'Points',position:'Position',matches:'Matches',predictions:'Predictions',results:'Results',open:'Open',closed:'Closed',pool:'Pool'},
-  es:{login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Historial',profile:'Perfil',joinPool:'Join Pool',specials:'⭐ Especiales',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool'}
+  es:{login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Historial',profile:'Perfil',joinPool:'Unirse',specials:'⭐ Especiales',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool'}
 };
 function T(k){return(LD[CL]||LD.en)[k]||k;}
 function setLang(l){
@@ -2724,12 +2728,12 @@ function setLang(l){
       else{renderPInicio();}
     }
   }catch(e){}
-  try{localStorage.setItem('cfl_lang_v3',l);}catch(e){}
+  try{localStorage.setItem('cfl_lang_v4',l);}catch(e){}
 }
 function initLang(){
   var s='en';
   try{
-    var stored=localStorage.getItem('cfl_lang_v3');
+    var stored=localStorage.getItem('cfl_lang_v4');
     s=(stored==='es'||stored==='en')?stored:'en';
   }catch(e){}
   setLang(s);
@@ -2792,7 +2796,15 @@ function updateThemeBtns(){
 // ════ PERSISTENCE ════
 function lsSave(){try{localStorage.setItem('cfl_db',JSON.stringify(DB));}catch(e){}}
 function lsLoad(){try{var r=localStorage.getItem('cfl_db');return r?JSON.parse(r):null;}catch(e){return null;}}
-async function saveDB(){lsSave();if(window._fbSave)window._fbSave(DB).catch(function(){});}
+async function saveDB(){
+  DB._ts=Date.now();
+  lsSave();
+  if(window._fbSave){
+    window._fbSave(DB).catch(function(e){
+      console.error('Firebase save error:',e);
+    });
+  }
+}
 // fbSync: only used as fallback if onSnapshot hasn't fired yet (e.g. offline start)
 function fbSync(){
   // onSnapshot handles all real-time sync — this is now a no-op fallback
@@ -3360,6 +3372,14 @@ function startApp(){
 // Fires automatically whenever ANY user saves data to Firebase
 window._fbOnUpdate=function(d){
   if(!d||!d.users||!d.users.length)return;
+  // Don't overwrite local data that is newer than Firebase data
+  var localTs=DB._ts||0;
+  var cloudTs=d._ts||0;
+  if(localTs>cloudTs+2000){
+    // Local is newer — push local to Firebase instead
+    if(window._fbSave)window._fbSave(DB).catch(function(){});
+    return;
+  }
   // Don't process our own saves (avoid flicker) — skip if data matches what we just saved
   DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
   DB.banners=Object.assign({b1:'',b1url:'',b1m:'',b1murl:'',b2:'',b2url:'',b2m:'',b2murl:''},d.banners||{});
