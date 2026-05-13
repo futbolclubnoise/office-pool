@@ -1293,9 +1293,16 @@ function calcPool(pol){
   const paid=DB.users.filter(u=>u.payments&&u.payments.find(p=>p.pollaId===pol.id&&p.status==='succeeded'));
   return paid.length*(pol.fee||0);
 }
+// ── Central access check — ONE place for all paid/verified logic ──────────────
+function isPlayerPaid(u,pollaId){
+  if(!u)return false;
+  if(u.verified===true)return true;
+  return !!(u.payments&&u.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';}));
+}
 function calcPrizes(pol){
   const pool=calcPool(pol),pr=pol.prizes||{p1:60,p2:30,p3:10,com:0};
-  const inscribed=DB.users.filter(u=>u.payments&&u.payments.find(p=>p.pollaId===pol.id&&p.status==='succeeded')).length;
+  // Count verified players + paid players (deduplicated)
+  const inscribed=DB.users.filter(u=>u.role!=='admin'&&isPlayerPaid(u,pol.id)).length;
   return{pool,inscribed,p1:pool*(pr.p1||0)/100,p2:pool*(pr.p2||0)/100,p3:pool*(pr.p3||0)/100,com:pool*(pr.com||0)/100};
 }
 
@@ -2179,7 +2186,7 @@ function renderPInicio(){
       const isOpen=pol.status==='open';
       const prz=calcPrizes(pol);
       const sc=pol.scoring||{win:1,draw:1,exact:3,diff:2};
-      const isPaid=(CU.verified===true)||(CU.payments&&CU.payments.find(p=>p.pollaId===pol.id&&p.status==='succeeded'));
+      const isPaid=isPlayerPaid(CU,pol.id);
 
       // Player's stats in this pool
       const myPolPreds=CU.predictions.filter(pr=>ms.find(m=>m.id===pr.matchId));
@@ -2361,7 +2368,7 @@ function renderPPollas(){
     const ms=DB.matches.filter(m=>m.pollaId===p.id);
     const myPreds=CU.predictions.filter(pr=>ms.find(m=>m.id===pr.matchId));
     const prz=calcPrizes(p),on=p.status==='open';
-    const isPaid=(CU.verified===true)||(CU.payments&&CU.payments.find(py=>py.pollaId===p.id&&py.status==='succeeded'));
+    const isPaid=isPlayerPaid(CU,p.id);
     const matchIds=ms.map(m=>m.id);
     const players=DB.users.filter(u=>u.role!=='admin');
     const ranked=players.map(u=>({u,pts:u.predictions.filter(pr=>matchIds.includes(pr.matchId)).reduce((s,pr)=>s+(pr.pts||0),0)})).sort((a,b)=>b.pts-a.pts);
@@ -2526,7 +2533,7 @@ function updatePayPreview(){
   const id=parseInt(document.getElementById('payPolla')?.value);
   const pol=DB.pollas.find(p=>p.id===id);if(!pol)return;
   const prz=calcPrizes(pol);
-  const ya=CU.payments&&CU.payments.find(p=>p.pollaId===id&&p.status==='succeeded');
+  const ya=isPlayerPaid(CU,id);
   const link=DB.settings&&DB.settings.stripeLink?DB.settings.stripeLink:'';
   document.getElementById('payPreview').innerHTML=`
     <div class="pmg">
@@ -2539,7 +2546,7 @@ function updatePayPreview(){
     </div>`:''}`;
   const wrap=document.getElementById('payLinkWrap');
   if(ya){
-    wrap.innerHTML='<div class="res-correct" style="margin-top:12px">✅ Ya estás inscrito en esta polla. El admin verificará tu pago.</div>';
+    wrap.innerHTML='<div class="res-correct" style="margin-top:12px">✅ Access granted — you can enter predictions for this pool.</div>';
   } else if(link){
     wrap.innerHTML=`<a href="${link}?client_reference_id=${CU.id}_${id}" target="_blank" style="display:block;text-decoration:none;margin-top:14px">
       <button class="btn btn-p" style="background:var(--org);color:#fff;border:none;font-size:12px;letter-spacing:1px;padding:13px">💳 PAGAR INSCRIPCIÓN — ${usd(pol.fee)}</button>
@@ -2576,15 +2583,17 @@ function togglePredEdit(){
 // ═══════════ PREDICTION MODAL ═══════════
 function openModal(pollaId){
   const pol=DB.pollas.find(p=>p.id===pollaId);if(!pol)return;
+  // Always refresh CU from latest DB state so payment/verified changes are seen immediately
+  if(CU){var fresh=DB.users.find(function(u){return u.id===CU.id;});if(fresh)CU=fresh;}
   activePolla=pollaId;
   document.getElementById('modTitle').textContent=pol.name;
   const prz=calcPrizes(pol),sc=pol.scoring||{win:1,draw:1,exact:3,diff:2};
   const ms=DB.matches.filter(m=>m.pollaId===pollaId),now=new Date();
-  const isPaid=(CU&&CU.verified===true)||(CU&&CU.payments&&CU.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';}));
+  const isPaid=isPlayerPaid(CU,pollaId);
 
   var pollaMatchIds=ms.map(function(m){return m.id;});
   var myPts=CU?(CU.predictions||[]).filter(function(p){return pollaMatchIds.includes(p.matchId);}).reduce(function(s,p){return s+(p.pts||0);},0):0;
-  var paidPlayers=(DB.users||[]).filter(function(u){return u.role!=='admin'&&u.payments&&u.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';});});
+  var paidPlayers=(DB.users||[]).filter(function(u){return u.role!=='admin'&&isPlayerPaid(u,pollaId);});
   var rankedPlayers=paidPlayers.map(function(u){var pts=(u.predictions||[]).filter(function(p){return pollaMatchIds.includes(p.matchId);}).reduce(function(s,p){return s+(p.pts||0);},0);return{u:u,pts:pts};}).sort(function(a,b){return b.pts-a.pts;});
   var myRank=CU?rankedPlayers.findIndex(function(r){return r.u.id===CU.id;})+1:0;
   document.getElementById('modMeta').innerHTML=`
@@ -3526,50 +3535,53 @@ window._fbOnUpdate=function(d){
   if(!d||!d.users||!d.users.length)return;
   var localTs=DB._ts||0;
   var cloudTs=d._ts||0;
-  // ── ALWAYS apply admin-controlled fields (verified, payments) from cloud ──
-  // This ensures payment approvals and verify toggles reach players immediately,
-  // even if the player's local timestamp is newer (they used the app more recently).
-  if(d.users&&Array.isArray(d.users)){
-    d.users.forEach(function(cloudU){
-      var localU=DB.users.find(function(u){return u.id===cloudU.id;});
-      if(localU){
-        localU.verified=cloudU.verified||false;
-        localU.payments=cloudU.payments||[];
-        localU.status=cloudU.status||'active';
-        localU.points=cloudU.points||0;
-      }
-    });
-  }
-  // ── If cloud is newer overall, also update matches/pollas/etc. ─────────────
+
+  // ── USERS: always take cloud version ─────────────────────────────────────────
+  // Player's verified/payment status can change at any time via admin.
+  // Never let a stale localTs block these updates.
+  DB.users=d.users;
+
+  // ── EVERYTHING ELSE: only replace if cloud is same age or newer ───────────
   if(cloudTs>=localTs){
-    DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
+    DB.pollas=d.pollas||[];
+    DB.matches=d.matches||[];
     DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},d.banners||{});
     DB.stripe=d.stripe||{pub:'',secret:''};
     DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
     DB.nid=d.nid||{u:10,p:1,m:1};DB.bonusQuestions=d.bonusQuestions||[];DB.specials=d.specials||[];
-    // Seed if missing
     var changed=false;
     if(!DB.pollas.some(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;})){seedWC2026();changed=true;}
     if(!DB.specials.length){seedWC2026Specials();changed=true;}
     if(cleanOldSpecials())changed=true;
     if(changed&&window._fbSave)window._fbSave(DB).catch(function(){});
   }
-  // Always fix admin credentials
+
+  // Always guarantee admin credentials exist
   var adm=DB.users.find(function(u){return u.role==='admin';});
   if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
   else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';}
+
   lsSave();
-  // Re-render current view and refresh CU so isPaid picks up new values
+
+  // ── Refresh CU reference so all isPaid / verified checks see new data ──────
   if(typeof CU!=='undefined'&&CU){
+    var freshCU=DB.users.find(function(u){return u.id===CU.id;});
+    if(freshCU)CU=freshCU;
     var auth=document.getElementById('S_auth');
     if(auth&&auth.classList.contains('hidden')){
-      var freshCU=DB.users.find(function(u){return u.id===CU.id;});
-      if(freshCU)CU=freshCU;
       try{
         if(CU.role==='admin'){
           var cur=document.querySelector('#S_admin .stab.on');
           if(cur){var tab=cur.dataset.tab||'dash';var map={dash:renderAdmDash,pollas:renderAdmPollas,partidos:renderAdmPartidos,resultados:renderAdmRes,premios:renderAdmPremios,stripe:renderAdmStripe,banners:renderAdmBanners,especiales:renderAdmEspeciales,usuarios:renderAdmUsers};if(map[tab])map[tab]();}
-        }else{renderPInicio();}
+        }else{
+          // Re-render player home so pool cards reflect new access state
+          renderPInicio();
+          // If prediction modal is open, refresh it too
+          var mod=document.getElementById('predModal');
+          if(mod&&mod.style.display!=='none'&&activePolla){
+            try{openModal(activePolla);}catch(e){}
+          }
+        }
       }catch(e){}
     }
   }
