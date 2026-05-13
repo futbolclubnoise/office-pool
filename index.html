@@ -3524,37 +3524,47 @@ function startApp(){
 // Fires automatically whenever ANY user saves data to Firebase
 window._fbOnUpdate=function(d){
   if(!d||!d.users||!d.users.length)return;
-  // Don't overwrite local data that is newer than Firebase data
   var localTs=DB._ts||0;
   var cloudTs=d._ts||0;
-  if(localTs>cloudTs){
-    // Local is newer — push local to Firebase instead and keep local state
-    console.log('Local data newer ('+localTs+' > '+cloudTs+'), pushing to Firebase');
-    if(window._fbSave)window._fbSave(DB).catch(function(){});
-    return;
+  // ── ALWAYS apply admin-controlled fields (verified, payments) from cloud ──
+  // This ensures payment approvals and verify toggles reach players immediately,
+  // even if the player's local timestamp is newer (they used the app more recently).
+  if(d.users&&Array.isArray(d.users)){
+    d.users.forEach(function(cloudU){
+      var localU=DB.users.find(function(u){return u.id===cloudU.id;});
+      if(localU){
+        localU.verified=cloudU.verified||false;
+        localU.payments=cloudU.payments||[];
+        localU.status=cloudU.status||'active';
+        localU.points=cloudU.points||0;
+      }
+    });
   }
-  // Don't process our own saves (avoid flicker) — skip if data matches what we just saved
-  DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
-  DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},d.banners||{});
-  DB.stripe=d.stripe||{pub:'',secret:''};
-  DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
-  DB.nid=d.nid||{u:10,p:1,m:1};DB.bonusQuestions=d.bonusQuestions||[];DB.specials=d.specials||[];
+  // ── If cloud is newer overall, also update matches/pollas/etc. ─────────────
+  if(cloudTs>=localTs){
+    DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
+    DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},d.banners||{});
+    DB.stripe=d.stripe||{pub:'',secret:''};
+    DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
+    DB.nid=d.nid||{u:10,p:1,m:1};DB.bonusQuestions=d.bonusQuestions||[];DB.specials=d.specials||[];
+    // Seed if missing
+    var changed=false;
+    if(!DB.pollas.some(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;})){seedWC2026();changed=true;}
+    if(!DB.specials.length){seedWC2026Specials();changed=true;}
+    if(cleanOldSpecials())changed=true;
+    if(changed&&window._fbSave)window._fbSave(DB).catch(function(){});
+  }
   // Always fix admin credentials
   var adm=DB.users.find(function(u){return u.role==='admin';});
-  if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
+  if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
   else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';}
-  // Seed if missing
-  var changed=false;
-  if(!DB.pollas.some(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;})){seedWC2026();changed=true;}
-  if(!DB.specials.length){seedWC2026Specials();changed=true;}
-  if(cleanOldSpecials())changed=true;
-  if(changed&&window._fbSave)window._fbSave(DB).catch(function(){});
   lsSave();
-  // Re-render current view if user is logged in
+  // Re-render current view and refresh CU so isPaid picks up new values
   if(typeof CU!=='undefined'&&CU){
     var auth=document.getElementById('S_auth');
     if(auth&&auth.classList.contains('hidden')){
-      CU=DB.users.find(function(u){return u.id===CU.id;})||CU;
+      var freshCU=DB.users.find(function(u){return u.id===CU.id;});
+      if(freshCU)CU=freshCU;
       try{
         if(CU.role==='admin'){
           var cur=document.querySelector('#S_admin .stab.on');
