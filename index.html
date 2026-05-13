@@ -611,13 +611,20 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
   </div>
 </div>
 
-<!-- BANNER 2 — FIXED BOTTOM (all tabs) -->
+<!-- BANNER 2 — FIXED BOTTOM SLIDESHOW (all tabs) -->
 <div id="bnr2FixedWrap" style="position:fixed;bottom:0;left:0;right:0;z-index:200;display:none;background:var(--bg2);border-top:1px solid var(--bd)">
-  <div id="bnr2" style="width:100%;height:60px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;background:var(--bg3)">
-    <span class="bnr-lbl">Banner 2</span>
-    <img id="bnr2Img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
+  <div id="bnr2Carousel" style="width:100%;height:60px;overflow:hidden;position:relative;background:var(--bg3)">
+    <span class="bnr-lbl" id="bnr2EmptyLbl">Bottom Banner</span>
+    <img id="bnr2ImgA" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:1;transition:opacity 0.8s ease">
+    <img id="bnr2ImgB" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0;transition:opacity 0.8s ease">
+    <img id="bnr2ImgC" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0;transition:opacity 0.8s ease">
+    <!-- slide dots -->
+    <div id="bnr2Dots" style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);display:none;gap:5px;z-index:5;display:flex">
+      <span id="bnr2Dot0" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.9);display:inline-block"></span>
+      <span id="bnr2Dot1" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.35);display:inline-block"></span>
+      <span id="bnr2Dot2" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.35);display:inline-block"></span>
+    </div>
   </div>
-  <div id="bnr2m" style="display:none"></div>
 </div>
 
 <div id="S_admin" class="hidden">
@@ -1040,7 +1047,7 @@ var DB = {
   ],
   pollas: [],
   matches: [],
-  banners: {b1:'', b1url:'', b1m:'', b1murl:'', b2:'', b2url:'', b2m:'', b2murl:''},
+  banners: {b1:'', b1url:'', b1m:'', b1murl:'', b2a:'', b2aurl:'', b2b:'', b2burl:'', b2c:'', b2curl:''},
   stripe: {pub:'', secret:''},
   settings: {regCode:'POLLA2026', stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05', allowPredEdit:false},
   nid: {u:2, p:1, m:1},
@@ -1778,36 +1785,41 @@ function saveBanners(){
 }
 
 function renderAdmBanners(){
-  var slots=[
-    {k:'b1',  km:'b1m',  lbl:'Banner 1', dDesc:'Desktop — 1200×150px', mDesc:'Mobile — 750×200px'},
-    {k:'b2',  km:'b2m',  lbl:'Banner 2', dDesc:'Desktop — 1200×100px', mDesc:'Mobile — 750×150px'}
-  ];
   var rows='';
-  for(var i=0;i<slots.length;i++){
-    var s=slots[i];
-    rows+='<div class="card" style="margin-bottom:12px"><div class="ct"><div class="ct-dot ct-dot-o"></div>'+s.lbl+'</div>';
-    // Desktop
-    var hasD=DB.banners[s.k]&&DB.banners[s.k].length>10;
-    rows+='<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:700;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">🖥 '+s.dDesc+'</div>'
-      +(hasD?'<img src="'+DB.banners[s.k]+'" style="max-width:100%;max-height:60px;border-radius:6px;object-fit:contain;margin-bottom:6px;display:block">':'')
+  // ── Banner 1 (top, single image) ──────────────────────────────────
+  rows+='<div class="card" style="margin-bottom:12px"><div class="ct"><div class="ct-dot ct-dot-o"></div>Banner 1 — Top</div>';
+  var hasB1=DB.banners.b1&&DB.banners.b1.length>10;
+  rows+='<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:700;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">🖥 Desktop — 1200×150px</div>'
+    +(hasB1?'<img src="'+DB.banners.b1+'" style="max-width:100%;max-height:60px;border-radius:6px;object-fit:contain;margin-bottom:6px;display:block">':'')
+    +'<label style="border:2px dashed var(--bd2);border-radius:8px;padding:10px;display:block;text-align:center;cursor:pointer;position:relative">'
+    +'<div style="font-size:10px;color:var(--tx3)">'+(hasB1?'✅ Uploaded — click to change':'📁 Upload image')+'</div>'
+    +'<input type="file" accept="image/*" data-k="b1" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadBnrFile(event)"></label>'
+    +'<div class="fg" style="margin-top:8px"><input class="fi" id="url_b1" type="url" placeholder="https://... (click URL)" value="'+(DB.banners.b1url||'')+'" style="font-size:11px;padding:8px 10px" oninput="DB.banners[\'b1url\']=this.value;saveDB()"></div>'
+    +(hasB1?'<button class="btn-s" onclick="removeBnr(\'b1\')" style="font-size:10px;margin-top:4px">✕ Remove</button>':'')
+    +'</div></div>';
+
+  // ── Banner 2 (bottom slideshow — 3 slots) ─────────────────────────
+  rows+='<div class="card"><div class="ct"><div class="ct-dot ct-dot-b"></div>Banner 2 — Bottom Slideshow</div>';
+  rows+='<div style="font-size:11px;color:var(--tx3);margin-bottom:10px">Upload up to 3 images — they will rotate automatically every 4 seconds.</div>';
+  var b2slots=[
+    {k:'b2a',ku:'b2aurl',lbl:'Slide 1'},
+    {k:'b2b',ku:'b2burl',lbl:'Slide 2'},
+    {k:'b2c',ku:'b2curl',lbl:'Slide 3'}
+  ];
+  for(var bi=0;bi<b2slots.length;bi++){
+    var bs=b2slots[bi];
+    var has=DB.banners[bs.k]&&DB.banners[bs.k].length>10;
+    rows+=(bi>0?'<div style="border-top:1px solid var(--bd);padding-top:10px;margin-top:10px">':'<div>');
+    rows+='<div style="font-size:9px;font-weight:700;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">🖼 '+bs.lbl+'</div>'
+      +(has?'<img src="'+DB.banners[bs.k]+'" style="max-width:100%;max-height:50px;border-radius:6px;object-fit:contain;margin-bottom:6px;display:block">':'')
       +'<label style="border:2px dashed var(--bd2);border-radius:8px;padding:10px;display:block;text-align:center;cursor:pointer;position:relative">'
-      +'<div style="font-size:10px;color:var(--tx3)">'+(hasD?'✅ Uploaded — click to change':'📁 Upload desktop image')+'</div>'
-      +'<input type="file" accept="image/*" data-k="'+s.k+'" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadBnrFile(event)"></label>'
-      +'<div class="fg" style="margin-top:8px"><input class="fi" id="url_'+s.k+'" type="url" placeholder="https://... (URL al hacer clic)" value="'+(DB.banners[s.k+'url']||'')+'" style="font-size:11px;padding:8px 10px" oninput="DB.banners[\''+s.k+'url\']=this.value;saveDB()"></div>'
-      +(hasD?'<button class="btn-s" onclick="removeBnr(\''+s.k+'\')" style="font-size:10px;margin-top:4px">✕ Remove</button>':'')
+      +'<div style="font-size:10px;color:var(--tx3)">'+(has?'✅ Uploaded — click to change':'📁 Upload image (1200×100px)')+'</div>'
+      +'<input type="file" accept="image/*" data-k="'+bs.k+'" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadBnrFile(event)"></label>'
+      +'<div class="fg" style="margin-top:6px"><input class="fi" id="url_'+bs.k+'" type="url" placeholder="https://... (click URL)" value="'+(DB.banners[bs.ku]||'')+'" style="font-size:11px;padding:6px 10px" oninput="DB.banners[\''+bs.ku+'\']=this.value;saveDB()"></div>'
+      +(has?'<button class="btn-s" onclick="removeBnr(\''+bs.k+'\')" style="font-size:10px;margin-top:4px">✕ Remove</button>':'')
       +'</div>';
-    // Mobile
-    var hasM=DB.banners[s.km]&&DB.banners[s.km].length>10;
-    rows+='<div style="border-top:1px solid var(--bd);padding-top:10px"><div style="font-size:9px;font-weight:700;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">📱 '+s.mDesc+'</div>'
-      +(hasM?'<img src="'+DB.banners[s.km]+'" style="max-width:100%;max-height:60px;border-radius:6px;object-fit:contain;margin-bottom:6px;display:block">':'')
-      +'<label style="border:2px dashed var(--bd2);border-radius:8px;padding:10px;display:block;text-align:center;cursor:pointer;position:relative">'
-      +'<div style="font-size:10px;color:var(--tx3)">'+(hasM?'✅ Uploaded — click to change':'📁 Upload mobile image')+'</div>'
-      +'<input type="file" accept="image/*" data-k="'+s.km+'" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadBnrFile(event)"></label>'
-      +'<div class="fg" style="margin-top:8px"><input class="fi" id="url_'+s.km+'" type="url" placeholder="https://... (URL al hacer clic)" value="'+(DB.banners[s.km+'url']||'')+'" style="font-size:11px;padding:8px 10px" oninput="DB.banners[\''+s.km+'url\']=this.value;saveDB()"></div>'
-      +(hasM?'<button class="btn-s" onclick="removeBnr(\''+s.km+'\')" style="font-size:10px;margin-top:4px">✕ Remove</button>':'')
-      +'</div>';
-    rows+='</div>';
   }
+  rows+='</div>';
   document.getElementById('bnrAdm').innerHTML=rows;
 }
 function loadBnrFile(e){
@@ -1838,61 +1850,100 @@ function loadBnrFile(e){
 function removeBnr(k){DB.banners[k]='';applyBanners();renderAdmBanners();saveDB();}
 
 function applyBanners(){
-  var slots=[
-    {imgId:'bnr1Img', slotId:'bnr1', k:'b1'},
-    {imgId:'bnr1mImg', slotId:'bnr1m', k:'b1m'},
-    {imgId:'bnr2Img', slotId:'bnr2', k:'b2'},
-    {imgId:'bnr2mImg', slotId:'bnr2m', k:'b2m'}
-  ];
-  slots.forEach(function(s){
-    var img=document.getElementById(s.imgId);
-    var slot=document.getElementById(s.slotId);
-    if(!img||!slot)return;
-    var url=DB.banners[s.k]||'';
-    var linkUrl=DB.banners[s.k+'url']||'';
-    var lbl=slot.querySelector('.bnr-lbl');
-    if(url){
-      img.src=url;
-      img.style.display='block';
-      if(lbl)lbl.style.display='none';
-      // wrap in anchor if URL set
-      if(linkUrl&&slot.tagName!=='A'){
-        var a=document.createElement('a');
-        a.href=linkUrl;a.target='_blank';a.style.cssText='display:block;width:100%;height:100%;position:absolute;inset:0;z-index:2';
-        slot.appendChild(a);
-      }
-    }else{
-      img.style.display='none';
-      if(lbl)lbl.style.display='block';
+  // ── Banner 1 (top static — desktop + mobile share same image) ──────
+  var b1src=DB.banners.b1||'';
+  ['bnr1Img','bnr1mImg'].forEach(function(imgId){
+    var img=document.getElementById(imgId);
+    var slot=img?img.closest('.bnr-slot'):null;
+    var lbl=slot?slot.querySelector('.bnr-lbl'):null;
+    if(!img)return;
+    if(b1src){img.src=b1src;img.style.display='block';if(lbl)lbl.style.display='none';}
+    else{img.style.display='none';if(lbl)lbl.style.display='block';}
+    if(slot&&DB.banners.b1url&&!slot.dataset.linked){
+      slot.style.cursor='pointer';slot.onclick=function(){window.open(DB.banners.b1url,'_blank');};slot.dataset.linked='1';
     }
   });
-  // Fixed bottom banner (banner 2) — full width, always aligned
-  var b2src=DB.banners.b2||DB.banners.b2m||'';
-  var b2url=DB.banners.b2url||DB.banners.b2murl||'';
+
+  // ── Banner 2 (bottom slideshow — 3 images) ───────────────────────
   var fixedWrap=document.getElementById('bnr2FixedWrap');
-  var b2img=document.getElementById('bnr2Img');
-  var b2lbl=document.querySelector('#bnr2 .bnr-lbl');
-  if(fixedWrap){
-    if(b2src){
-      fixedWrap.style.display='block';
-      if(b2img){b2img.src=b2src;b2img.style.display='block';}
-      if(b2lbl)b2lbl.style.display='none';
-      // Wrap in clickable link if URL set
-      var b2slot=document.getElementById('bnr2');
-      if(b2url&&b2slot&&!b2slot.dataset.linked){
-        b2slot.style.cursor='pointer';
-        b2slot.onclick=function(){window.open(b2url,'_blank');};
-        b2slot.dataset.linked='1';
-      }
-    }else{
-      fixedWrap.style.display='none';
-      if(b2img){b2img.src='';b2img.style.display='none';}
-      if(b2lbl)b2lbl.style.display='block';
+  if(!fixedWrap)return;
+  var slides=[
+    {img:document.getElementById('bnr2ImgA'),src:DB.banners.b2a||'',url:DB.banners.b2aurl||''},
+    {img:document.getElementById('bnr2ImgB'),src:DB.banners.b2b||'',url:DB.banners.b2burl||''},
+    {img:document.getElementById('bnr2ImgC'),src:DB.banners.b2c||'',url:DB.banners.b2curl||''}
+  ];
+  var active=slides.filter(function(s){return s.src&&s.src.length>10;});
+  var emptyLbl=document.getElementById('bnr2EmptyLbl');
+  var dotsEl=document.getElementById('bnr2Dots');
+
+  // Stop any previous timer
+  if(window._bnrTimer){clearInterval(window._bnrTimer);window._bnrTimer=null;}
+
+  if(active.length===0){
+    fixedWrap.style.display='none';
+    slides.forEach(function(s){if(s.img){s.img.style.display='none';s.img.src='';}});
+    if(emptyLbl)emptyLbl.style.display='block';
+    if(dotsEl)dotsEl.style.display='none';
+    var page=document.querySelector('#S_player .page');
+    if(page)page.style.paddingBottom='0';
+    return;
+  }
+
+  // Show wrapper, hide empty label
+  fixedWrap.style.display='block';
+  if(emptyLbl)emptyLbl.style.display='none';
+  if(dotsEl)dotsEl.style.display=active.length>1?'flex':'none';
+
+  // Preload images & hide unused slots
+  slides.forEach(function(s){
+    if(!s.img)return;
+    if(s.src&&s.src.length>10){s.img.src=s.src;s.img.style.display='block';}
+    else{s.img.style.display='none';s.img.style.opacity='0';}
+  });
+
+  // Wire dot elements
+  var dotEls=[
+    document.getElementById('bnr2Dot0'),
+    document.getElementById('bnr2Dot1'),
+    document.getElementById('bnr2Dot2')
+  ];
+
+  // Map active slides to their dot index
+  var activeDots=active.map(function(s,i){return i;});
+
+  function goTo(idx){
+    window._bnrIdx=idx;
+    active.forEach(function(s,i){
+      if(!s.img)return;
+      s.img.style.opacity=i===idx?'1':'0';
+    });
+    // Update dots
+    dotEls.forEach(function(d,i){
+      if(!d)return;
+      if(i<active.length){d.style.display='inline-block';d.style.background=i===idx?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.35)';}
+      else{d.style.display='none';}
+    });
+    // Wire click URL for current slide
+    var carousel=document.getElementById('bnr2Carousel');
+    if(carousel){
+      var curUrl=active[idx].url||'';
+      carousel.style.cursor=curUrl?'pointer':'default';
+      carousel.onclick=curUrl?function(){window.open(curUrl,'_blank');}:null;
     }
   }
-  // Add bottom padding to player portal page so content isn't hidden behind fixed banner
+
+  goTo(0);
+
+  if(active.length>1){
+    window._bnrTimer=setInterval(function(){
+      var next=((window._bnrIdx||0)+1)%active.length;
+      goTo(next);
+    },4000);
+  }
+
+  // Bottom padding so content isn't hidden behind banner
   var page=document.querySelector('#S_player .page');
-  if(page)page.style.paddingBottom=b2src?'72px':'0';
+  if(page)page.style.paddingBottom='72px';
 }
 
 // ═══════════ SORTABLE USERS TABLE ═══════════
@@ -3406,7 +3457,7 @@ function startApp(){
   var local=lsLoad();
   if(local&&local.users&&local.users.length){
     DB.users=local.users;DB.pollas=local.pollas||[];DB.matches=local.matches||[];
-    DB.banners=Object.assign({b1:'',b1url:'',b1m:'',b1murl:'',b2:'',b2url:'',b2m:'',b2murl:''},local.banners||{});DB.stripe=local.stripe||{pub:'',secret:''};
+    DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},local.banners||{});DB.stripe=local.stripe||{pub:'',secret:''};
     DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},local.settings||{});
     DB.nid=local.nid||{u:10,p:1,m:1};DB.bonusQuestions=local.bonusQuestions||[];DB.specials=local.specials||[];
     // Ensure admin always exists with correct credentials
@@ -3441,7 +3492,7 @@ window._fbOnUpdate=function(d){
   }
   // Don't process our own saves (avoid flicker) — skip if data matches what we just saved
   DB.users=d.users;DB.pollas=d.pollas||[];DB.matches=d.matches||[];
-  DB.banners=Object.assign({b1:'',b1url:'',b1m:'',b1murl:'',b2:'',b2url:'',b2m:'',b2murl:''},d.banners||{});
+  DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},d.banners||{});
   DB.stripe=d.stripe||{pub:'',secret:''};
   DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
   DB.nid=d.nid||{u:10,p:1,m:1};DB.bonusQuestions=d.bonusQuestions||[];DB.specials=d.specials||[];
