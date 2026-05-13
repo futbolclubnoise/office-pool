@@ -476,8 +476,8 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <div id="ae" class="msg-e"></div>
         <div id="aok" class="msg-ok"></div>
         <div class="tab-row">
-          <button class="tabp on" onclick="swTab('login',this)">Ingresar</button>
-          <button class="tabp" onclick="swTab('reg',this)">Registrarse</button>
+          <button class="tabp on" onclick="swTab('login',this)" data-t="login">Sign In</button>
+          <button class="tabp" onclick="swTab('reg',this)" data-t="register">Sign Up</button>
         </div>
         <div id="fLogin">
           <div class="fg"><label class="fl">Usuario / Correo</label><input class="fi" id="lEmail" type="text" placeholder="tu@correo.com" autocomplete="username" autocapitalize="off"></div>
@@ -612,9 +612,12 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
 </div>
 
 <!-- BANNER 2 — FIXED BOTTOM (all tabs) -->
-<div id="bnr2FixedWrap" style="position:fixed;bottom:0;left:0;right:0;z-index:200;display:none">
-  <div class="bnr-wrap bnr-pc" style="margin:0;padding:0"><div class="bnr-slot" id="bnr2" style="height:60px;border-radius:0;border-left:none;border-right:none;border-bottom:none"><span class="bnr-lbl">Banner 2 — Desktop</span><img id="bnr2Img" src="" alt="" style="border-radius:0"></div></div>
-  <div class="bnr-wrap bnr-mob" style="margin:0;padding:0"><div class="bnr-slot" id="bnr2m" style="height:54px;border-radius:0;border-left:none;border-right:none;border-bottom:none"><span class="bnr-lbl">Banner 2 — Mobile</span><img id="bnr2mImg" src="" alt="" style="border-radius:0"></div></div>
+<div id="bnr2FixedWrap" style="position:fixed;bottom:0;left:0;right:0;z-index:200;display:none;background:var(--bg2);border-top:1px solid var(--bd)">
+  <div id="bnr2" style="width:100%;height:60px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;background:var(--bg3)">
+    <span class="bnr-lbl">Banner 2</span>
+    <img id="bnr2Img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
+  </div>
+  <div id="bnr2m" style="display:none"></div>
 </div>
 
 <div id="S_admin" class="hidden">
@@ -713,14 +716,14 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           </div>
           <div class="scoring-grid" style="margin-top:10px">
             <div class="sc-box">
-              <div class="sc-box-title"><div class="ct-dot ct-dot-g" style="width:5px;height:5px"></div>Resultado correcto</div>
-              <div class="sc-row-item"><span class="sc-label">Acierto ganador / perdedor</span><input class="sc-pts-inp" id="scWin" type="number" min="0" value="1" oninput="setPreset('custom')"></div>
-              <div class="sc-row-item"><span class="sc-label">Acierto empate</span><input class="sc-pts-inp" id="scDraw" type="number" min="0" value="1" oninput="setPreset('custom')"></div>
+              <div class="sc-box-title"><div class="ct-dot ct-dot-g" style="width:5px;height:5px"></div>Correct Result</div>
+              <div class="sc-row-item"><span class="sc-label">Correct winner/loser</span><input class="sc-pts-inp" id="scWin" type="number" min="0" value="1" oninput="setPreset('custom')"></div>
+              <div class="sc-row-item"><span class="sc-label">Correct draw</span><input class="sc-pts-inp" id="scDraw" type="number" min="0" value="1" oninput="setPreset('custom')"></div>
             </div>
             <div class="sc-box">
-              <div class="sc-box-title"><div class="ct-dot ct-dot-o" style="width:5px;height:5px"></div>Marcador exacto</div>
-              <div class="sc-row-item"><span class="sc-label">Marcador exacto</span><input class="sc-pts-inp" id="scExact" type="number" min="0" value="3" oninput="setPreset('custom')"></div>
-              <div class="sc-row-item"><span class="sc-label">Diferencia exacta</span><input class="sc-pts-inp" id="scDiff" type="number" min="0" value="2" oninput="setPreset('custom')"></div>
+              <div class="sc-box-title"><div class="ct-dot ct-dot-o" style="width:5px;height:5px"></div>Exact Score</div>
+              <div class="sc-row-item"><span class="sc-label">Exact score</span><input class="sc-pts-inp" id="scExact" type="number" min="0" value="3" oninput="setPreset('custom')"></div>
+              <div class="sc-row-item"><span class="sc-label">Goal difference</span><input class="sc-pts-inp" id="scDiff" type="number" min="0" value="2" oninput="setPreset('custom')"></div>
             </div>
           </div>
           <div id="scoringPreview" style="font-size:10px;color:var(--tx2);padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--bd);margin-top:8px;line-height:1.8"></div>
@@ -764,23 +767,23 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <div id="newMatchBody" class="collapsible-body" style="max-height:0;padding-top:0;overflow:hidden;">
         <div style="height:14px"></div>
         <div class="fr2">
-          <div class="fg"><label class="fl">Polla</label><select class="fi" id="mPo"></select></div>
-          <div class="fg"><label class="fl">Instancia / Etapa</label>
+          <div class="fg"><label class="fl">Pool</label><select class="fi" id="mPo"></select></div>
+          <div class="fg"><label class="fl">Stage</label>
             <select class="fi" id="mStage">
-              <option value="league">Liga Regular</option>
-              <option value="groups">Fase de Grupos</option>
-              <option value="r16">Ronda de 16 (Octavos)</option>
-              <option value="r8">Cuartos de Final</option>
-              <option value="r4">Semifinal</option>
-              <option value="3rd">Tercer Puesto</option>
-              <option value="final">Gran Final</option>
+              <option value="league">Regular Season</option>
+              <option value="groups">Group Stage</option>
+              <option value="r16">Round of 16</option>
+              <option value="r8">Quarterfinals</option>
+              <option value="r4">Semifinals</option>
+              <option value="3rd">Third Place</option>
+              <option value="final">Grand Final</option>
             </select>
           </div>
         </div>
-        <div class="fg"><label class="fl">Jornada / Fecha del torneo (opcional)</label><input class="fi" id="mRound" placeholder="Ej: Jornada 3 — Grupo A · Semana 12 · Playoff Round 1"></div>
+        <div class="fg"><label class="fl">Matchday / Round (optional)</label><input class="fi" id="mRound" placeholder="e.g. Week 3 — Group A · Week 12 · Playoff Round 1"></div>
         <div class="fr2">
-          <div class="fg"><label class="fl">Equipo Local</label><input class="fi" id="mHo" placeholder="Calgary Stampeders"></div>
-          <div class="fg"><label class="fl">Equipo Visitante</label><input class="fi" id="mAw" placeholder="Edmonton Elks"></div>
+          <div class="fg"><label class="fl">Home Team</label><input class="fi" id="mHo" placeholder="Calgary Stampeders"></div>
+          <div class="fg"><label class="fl">Away Team</label><input class="fi" id="mAw" placeholder="Edmonton Elks"></div>
         </div>
         <div class="fr2">
           <div class="fg"><label class="fl">Logo local (URL)</label><input class="fi" id="mHL" placeholder="https://..."></div>
@@ -881,14 +884,14 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     <!-- ════ ESPECIALES ════ -->
     <div id="A_especiales" class="hidden">
       <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-o"></div>Crear Ítem Especial</div>
+        <div class="ct"><div class="ct-dot ct-dot-o"></div>Create Special Item</div>
         <div class="fg">
-          <label class="fl">Polla</label>
+          <label class="fl">Pool</label>
           <select class="fi" id="spPolla" onchange="updateSpEquipos()"></select>
         </div>
         <div class="fg">
-          <label class="fl">Nombre del Ítem</label>
-          <input class="fi" id="spName" placeholder="Ej: Equipo Campeón, Goleador, Subcampeón...">
+          <label class="fl">Item Name</label>
+          <input class="fi" id="spName" placeholder="e.g. Champion Team, Top Scorer, Runner-up...">
         </div>
         <div class="fr2">
           <div class="fg">
@@ -904,19 +907,19 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Pregunta / Descripción</label>
-          <input class="fi" id="spDesc" placeholder="¿Qué equipo ganará el torneo?">
+          <label class="fl">Question / Description</label>
+          <input class="fi" id="spDesc" placeholder="Which team will win the tournament?">
         </div>
         <div class="fg">
-          <label class="fl">Opciones de respuesta (equipos de la polla)</label>
+          <label class="fl">Answer options (pool teams)</label>
           <div id="spEquiposWrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
-          <input class="fi" id="spOpciones" placeholder="O escribe opciones separadas por coma (opcional)" style="margin-top:6px">
+          <input class="fi" id="spOpciones" placeholder="Or type options separated by comma (optional)" style="margin-top:6px">
         </div>
-        <button class="btn btn-p" onclick="createEspecial()">CREAR ÍTEM</button>
+        <button class="btn btn-p" onclick="createEspecial()">CREATE ITEM</button>
       </div>
       <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-g"></div>Ítems Especiales creados</div>
-        <div id="spList"><p style="font-size:10px;color:var(--tx3)">No hay ítems creados</p></div>
+        <div class="ct"><div class="ct-dot ct-dot-g"></div>Special Items</div>
+        <div id="spList"><p style="font-size:10px;color:var(--tx3)">No items created yet</p></div>
       </div>
     </div>
   </div>
@@ -966,11 +969,11 @@ function getScoring() {
 function updateScoringPreview() {
   const s = getScoring();
   document.getElementById('scoringPreview').innerHTML =
-    `<strong>Sistema activo:</strong> ` +
-    `Aciertas el resultado (G/P): <span style="color:var(--grn)">${s.win} pts</span> &nbsp;·&nbsp; ` +
-    `Aciertas el empate: <span style="color:var(--grn)">${s.draw} pts</span> &nbsp;·&nbsp; ` +
-    `Marcador exacto: <span style="color:var(--org)">${s.exact} pts</span> &nbsp;·&nbsp; ` +
-    `Diferencia exacta: <span style="color:var(--g2)">${s.diff} pts</span>`;
+    `<strong>Active system:</strong> ` +
+    `Correct result (W/L): <span style="color:var(--grn)">${s.win} pts</span> &nbsp;·&nbsp; ` +
+    `Correct draw: <span style="color:var(--grn)">${s.draw} pts</span> &nbsp;·&nbsp; ` +
+    `Exact score: <span style="color:var(--org)">${s.exact} pts</span> &nbsp;·&nbsp; ` +
+    `Goal difference: <span style="color:var(--g2)">${s.diff} pts</span>`;
 }
 applyPreset('wc');
 
@@ -1479,7 +1482,7 @@ function renderAdmPollas(){
         <div class="polla-card-info">
           <div class="pr-nm">${p.name}</div>
           <div class="pr-mt">${p.type==='multi'?'Multi-partido':'Partido único'} · Fee: $${fee} · Pool: ${usd(prz.pool)} · ${prz.inscribed} inscritos</div>
-          <div style="font-size:9px;color:var(--tx3);margin-top:2px">Pts: G/P=${sc.win} · Empate=${sc.draw} · Exacto=${sc.exact} · Dif=${sc.diff}</div>
+          <div style="font-size:9px;color:var(--tx3);margin-top:2px">Pts: W/L=${sc.win} · Draw=${sc.draw} · Exact=${sc.exact} · Diff=${sc.diff}</div>
         </div>
         <div class="ios-toggle-wrap" style="flex-direction:column;align-items:center;gap:3px;">
           <label class="ios-toggle">
@@ -1495,7 +1498,7 @@ function renderAdmPollas(){
         <button class="btn-xs" style="background:var(--red2);color:var(--red);border:1px solid var(--red3)" onclick="confirmDeletePolla(${p.id},'${p.name.replace(/'/g,'\\\'')}')" title="Eliminar polla">🗑️</button>
       </div>
     </div>`;
-  }).join('')||empty('Sin pollas');
+  }).join('')||empty('No pools');
 }
 function togglePolla(id,isOpen){
   const p=DB.pollas.find(x=>x.id===id);
@@ -1539,7 +1542,7 @@ function renderAdmPartidos(){
   });
   let html='';
   const pollaIds=Object.keys(grouped).map(Number);
-  if(!pollaIds.length){html=empty('Sin partidos');}
+  if(!pollaIds.length){html=empty('No matches');}
   else{
     pollaIds.forEach(pollaId=>{
       const pol=DB.pollas.find(p=>p.id===pollaId);
@@ -1612,7 +1615,7 @@ function renderAdmRes(){
   const pollaIds=Object.keys(grouped).map(Number);
   let html='';
   if(!pollaIds.length){
-    html=done?`<p style="font-size:11px;color:var(--grn);margin:0">✅ Todos los partidos tienen resultado</p>`:`<p style="font-size:11px;color:var(--tx3)">Sin partidos pendientes</p>`;
+    html=done?`<p style="font-size:11px;color:var(--grn);margin:0">✅ All matches have results</p>`:`<p style="font-size:11px;color:var(--tx3)">No pending matches</p>`;
   } else {
     pollaIds.forEach(pollaId=>{
       const pol=DB.pollas.find(p=>p.id===pollaId);
@@ -1687,7 +1690,7 @@ function saveResult(mid){
     const allDone=DB.matches.filter(x=>x.pollaId===pol.id).every(x=>x.result);
     if(allDone)resolveSinglePrizes(pol);
   }
-  renderAdmRes();alert(`✅ Resultado guardado y puntos calculados`);
+  renderAdmRes();alert(`✅ Result saved and points calculated`);
 }
 function resolveSinglePrizes(pol){
   const ms=DB.matches.filter(m=>m.pollaId===pol.id);
@@ -1704,7 +1707,7 @@ function resolveSinglePrizes(pol){
 
 function renderAdmPremios(){
   var html='';
-  if(!DB.pollas.length){html=empty('Sin pollas creadas');}
+  if(!DB.pollas.length){html=empty('No pools created');}
   else{
     DB.pollas.forEach(function(pol){
       var ms=DB.matches.filter(function(m){return m.pollaId===pol.id;});
@@ -1788,20 +1791,20 @@ function renderAdmBanners(){
     rows+='<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:700;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">🖥 '+s.dDesc+'</div>'
       +(hasD?'<img src="'+DB.banners[s.k]+'" style="max-width:100%;max-height:60px;border-radius:6px;object-fit:contain;margin-bottom:6px;display:block">':'')
       +'<label style="border:2px dashed var(--bd2);border-radius:8px;padding:10px;display:block;text-align:center;cursor:pointer;position:relative">'
-      +'<div style="font-size:10px;color:var(--tx3)">'+(hasD?'✅ Subida — clic para cambiar':'📁 Subir imagen desktop')+'</div>'
+      +'<div style="font-size:10px;color:var(--tx3)">'+(hasD?'✅ Uploaded — click to change':'📁 Upload desktop image')+'</div>'
       +'<input type="file" accept="image/*" data-k="'+s.k+'" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadBnrFile(event)"></label>'
       +'<div class="fg" style="margin-top:8px"><input class="fi" id="url_'+s.k+'" type="url" placeholder="https://... (URL al hacer clic)" value="'+(DB.banners[s.k+'url']||'')+'" style="font-size:11px;padding:8px 10px" oninput="DB.banners[\''+s.k+'url\']=this.value;saveDB()"></div>'
-      +(hasD?'<button class="btn-s" onclick="removeBnr(\''+s.k+'\')" style="font-size:10px;margin-top:4px">✕ Quitar</button>':'')
+      +(hasD?'<button class="btn-s" onclick="removeBnr(\''+s.k+'\')" style="font-size:10px;margin-top:4px">✕ Remove</button>':'')
       +'</div>';
     // Mobile
     var hasM=DB.banners[s.km]&&DB.banners[s.km].length>10;
     rows+='<div style="border-top:1px solid var(--bd);padding-top:10px"><div style="font-size:9px;font-weight:700;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">📱 '+s.mDesc+'</div>'
       +(hasM?'<img src="'+DB.banners[s.km]+'" style="max-width:100%;max-height:60px;border-radius:6px;object-fit:contain;margin-bottom:6px;display:block">':'')
       +'<label style="border:2px dashed var(--bd2);border-radius:8px;padding:10px;display:block;text-align:center;cursor:pointer;position:relative">'
-      +'<div style="font-size:10px;color:var(--tx3)">'+(hasM?'✅ Subida — clic para cambiar':'📁 Subir imagen mobile')+'</div>'
+      +'<div style="font-size:10px;color:var(--tx3)">'+(hasM?'✅ Uploaded — click to change':'📁 Upload mobile image')+'</div>'
       +'<input type="file" accept="image/*" data-k="'+s.km+'" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadBnrFile(event)"></label>'
       +'<div class="fg" style="margin-top:8px"><input class="fi" id="url_'+s.km+'" type="url" placeholder="https://... (URL al hacer clic)" value="'+(DB.banners[s.km+'url']||'')+'" style="font-size:11px;padding:8px 10px" oninput="DB.banners[\''+s.km+'url\']=this.value;saveDB()"></div>'
-      +(hasM?'<button class="btn-s" onclick="removeBnr(\''+s.km+'\')" style="font-size:10px;margin-top:4px">✕ Quitar</button>':'')
+      +(hasM?'<button class="btn-s" onclick="removeBnr(\''+s.km+'\')" style="font-size:10px;margin-top:4px">✕ Remove</button>':'')
       +'</div>';
     rows+='</div>';
   }
@@ -1863,13 +1866,33 @@ function applyBanners(){
       if(lbl)lbl.style.display='block';
     }
   });
-  // Show/hide fixed bottom banner + add padding so content isn't hidden behind it
-  var hasB2=!!(DB.banners.b2||DB.banners.b2m);
+  // Fixed bottom banner (banner 2) — full width, always aligned
+  var b2src=DB.banners.b2||DB.banners.b2m||'';
+  var b2url=DB.banners.b2url||DB.banners.b2murl||'';
   var fixedWrap=document.getElementById('bnr2FixedWrap');
-  if(fixedWrap)fixedWrap.style.display=hasB2?'block':'none';
+  var b2img=document.getElementById('bnr2Img');
+  var b2lbl=document.querySelector('#bnr2 .bnr-lbl');
+  if(fixedWrap){
+    if(b2src){
+      fixedWrap.style.display='block';
+      if(b2img){b2img.src=b2src;b2img.style.display='block';}
+      if(b2lbl)b2lbl.style.display='none';
+      // Wrap in clickable link if URL set
+      var b2slot=document.getElementById('bnr2');
+      if(b2url&&b2slot&&!b2slot.dataset.linked){
+        b2slot.style.cursor='pointer';
+        b2slot.onclick=function(){window.open(b2url,'_blank');};
+        b2slot.dataset.linked='1';
+      }
+    }else{
+      fixedWrap.style.display='none';
+      if(b2img){b2img.src='';b2img.style.display='none';}
+      if(b2lbl)b2lbl.style.display='block';
+    }
+  }
   // Add bottom padding to player portal page so content isn't hidden behind fixed banner
   var page=document.querySelector('#S_player .page');
-  if(page)page.style.paddingBottom=hasB2?'72px':'0';
+  if(page)page.style.paddingBottom=b2src?'72px':'0';
 }
 
 // ═══════════ SORTABLE USERS TABLE ═══════════
@@ -1909,7 +1932,7 @@ function renderAdmUsers(){
       <td><span style="color:${paid?'var(--grn)':'var(--tx3)'};cursor:pointer" onclick="openUserPay(${u.id})">${paid} 💰</span></td>
       <td><span class="bdg ${isAdmin?'bdg-adm':'bdg-on'}">${u.role}</span></td>
       <td style="white-space:nowrap">
-        <button class="btn-xs" onclick="openUserPay(${u.id})" title="Ver/Verificar pagos">💰</button>
+        <button class="btn-xs" onclick="openUserPay(${u.id})" title="Manage Payments">💰</button>
         ${!isAdmin?`<button class="btn-xs" style="background:var(--red);color:#fff;margin-left:4px" onclick="deleteUser(${u.id})" title="Eliminar jugador">🗑</button>`:''}
       </td>
     </tr>`;
@@ -1980,7 +2003,7 @@ function showPollaDetail(pollaId){
     html+='<div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-g"></div>Matches ('+matches.length+')</div>';
     Object.keys(byStage).forEach(function(stage){
       var label=STAGE_LABELS[stage]||stage;
-      html+='<div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px">'+label+'</div>';
+      html+='<div style="font-size:9px;color:var(--tx2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px">'+label+'</div>';
       byStage[stage].forEach(function(m){
         var res=m.result?m.result.home+' - '+m.result.away:'No result';
         var locked=matchIsLocked(m);
@@ -1992,11 +2015,11 @@ function showPollaDetail(pollaId){
       });
     });
   } else {
-    html+='<p style="color:var(--tx3);font-size:11px">No hay partidos en esta polla.</p>';
+    html+='<p style="color:var(--tx3);font-size:11px">No matches in this pool.</p>';
   }
 
   if(specials.length){
-    html+='<div class="ct" style="margin:14px 0 8px"><div class="ct-dot ct-dot-o"></div>Ítems Especiales ('+specials.length+')</div>';
+    html+='<div class="ct" style="margin:14px 0 8px"><div class="ct-dot ct-dot-o"></div>Special Items ('+specials.length+')</div>';
     specials.forEach(function(s){
       var ans=s.answer?'✅ '+s.answer:'Sin respuesta aún';
       var votes=(s.userAnswers||[]).length;
@@ -2402,7 +2425,7 @@ function saveProfile(){
 
 function renderPInscripcion(){
   const open=DB.pollas.filter(p=>p.status==='open');
-  document.getElementById('payPolla').innerHTML=open.map(p=>`<option value="${p.id}">${p.name} — ${usd(p.fee)}</option>`).join('')||'<option>Sin pollas abiertas</option>';
+  document.getElementById('payPolla').innerHTML=open.map(p=>`<option value="${p.id}">${p.name} — ${usd(p.fee)}</option>`).join('')||'<option>No open pools</option>';
   updatePayPreview();
 }
 function updatePayPreview(){
@@ -2446,14 +2469,14 @@ function renderAdmStripe(){
   document.getElementById('stripeLink').value=DB.settings&&DB.settings.stripeLink?DB.settings.stripeLink:'';
   document.getElementById('regCodeInp').value=DB.settings&&DB.settings.regCode?DB.settings.regCode:'';
   var btn=document.getElementById('toggleEditBtn');
-  if(btn)btn.textContent=(DB.settings&&DB.settings.allowPredEdit)?'✅ Permitido (clic para bloquear)':'🔒 Bloqueado (clic para permitir)';
+  if(btn)btn.textContent=(DB.settings&&DB.settings.allowPredEdit)?'✅ Allowed (click to lock)':'🔒 Locked (click to allow)';
 }
 function togglePredEdit(){
   if(!DB.settings)DB.settings={};
   DB.settings.allowPredEdit=!DB.settings.allowPredEdit;
   saveDB();
   var btn=document.getElementById('toggleEditBtn');
-  if(btn)btn.textContent=DB.settings.allowPredEdit?'✅ Permitido (clic para bloquear)':'🔒 Bloqueado (clic para permitir)';
+  if(btn)btn.textContent=DB.settings.allowPredEdit?'✅ Allowed (click to lock)':'🔒 Locked (click to allow)';
 }
 
 // ═══════════ PREDICTION MODAL ═══════════
@@ -2479,8 +2502,8 @@ function openModal(pollaId){
     '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">'
     +'<span class="scl-item">Res. correcto <span class="scl-pts">'+sc.win+'</span></span>'
     +'<span class="scl-item">Empate <span class="scl-pts">'+sc.draw+'</span></span>'
-    +'<span class="scl-item">Diferencia <span class="scl-pts">'+sc.diff+'</span></span>'
-    +'<span class="scl-item" style="border-color:var(--org3)">Exacto 🎯 <span class="scl-pts">'+sc.exact+'</span></span>'
+    +'<span class="scl-item">Diff <span class="scl-pts">'+sc.diff+'</span></span>'
+    +'<span class="scl-item" style="border-color:var(--org3)">Exact 🎯 <span class="scl-pts">'+sc.exact+'</span></span>'
     +'</div>';
 
   var byStage={};
@@ -2712,7 +2735,7 @@ function savePreds(){
   });
   closeModal();renderPInicio();
   if(saved)alert(`✅ ${saved} predicción(es) guardada(s)`);
-  else alert('No hay predicciones nuevas o los partidos ya cerraron');
+  else alert('No new predictions or all matches are locked');
 }
 
 // ═══════════ SELF EDIT ═══════════
@@ -3010,7 +3033,7 @@ function renderAdmBonus(){
       +(bq.answer?'':'<button class="btn-xs" onclick="promptBonusAnswer('+bq.id+')">Set Answer</button>')
       +'<button class="btn-xs" style="background:var(--red2);color:var(--red)" onclick="deleteBonus('+bq.id+')">✕</button>'
       +'</div></div></div>';
-  }).join(''):'<p style="font-size:10px;color:var(--tx3)">No hay preguntas bonus</p>';
+  }).join(''):'<p style="font-size:10px;color:var(--tx3)">No bonus questions yet</p>';
 }
 function createBonus(){
   var q=(document.getElementById('bqQ')||{}).value;
@@ -3096,7 +3119,7 @@ function updateSpEquipos(){
       return'<button type="button" class="team-chip" onclick="pickTeam(this)" data-team="'+t+'">'+t+'</button>';
     }).join('');
   }else{
-    wrap.innerHTML='<span style="font-size:9px;color:var(--tx3)">No hay equipos confirmados en esta polla aún</span>';
+    wrap.innerHTML='<span style="font-size:9px;color:var(--tx3)">No teams confirmed in this pool yet</span>';
   }
 }
 
@@ -3523,7 +3546,7 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
       <div class="fg"><label class="fl">Empate (pts)</label><input class="fi" type="number" id="epDraw" min="0"></div>
     </div>
     <div class="fr2">
-      <div class="fg"><label class="fl">Diferencia (pts)</label><input class="fi" type="number" id="epDiff" min="0"></div>
+      <div class="fg"><label class="fl">Diff (pts)</label><input class="fi" type="number" id="epDiff" min="0"></div>
       <div class="fg"><label class="fl">Exacto (pts)</label><input class="fi" type="number" id="epExact" min="0"></div>
     </div>
     <div class="ct" style="margin:10px 0 6px"><div class="ct-dot ct-dot-g"></div>Premios (%)</div>
