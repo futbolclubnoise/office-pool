@@ -443,7 +443,7 @@ body{font-size:14px;}
 
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import{getFirestore,doc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-try{const app=initializeApp({apiKey:"AIzaSyAmsEX2VJRytF9Sw8NOySPD80K9gzv6hRc",authDomain:"cfl-office-pool.firebaseapp.com",projectId:"cfl-office-pool",storageBucket:"cfl-office-pool.firebasestorage.app",messagingSenderId:"670177533526",appId:"1:670177533526:web:7107c4c54701c49a1125f7"});const db=getFirestore(app),ref=doc(db,"cfl","data");window._fbSave=async function(d){try{await setDoc(ref,JSON.parse(JSON.stringify(d)));}catch(e){}};onSnapshot(ref,function(snap){if(snap.exists()&&window._fbOnUpdate)window._fbOnUpdate(snap.data());});window._fbReady=true;document.dispatchEvent(new Event('firebase-ready'));}catch(e){console.warn('Firebase:',e);}
+try{const app=initializeApp({apiKey:"AIzaSyAmsEX2VJRytF9Sw8NOySPD80K9gzv6hRc",authDomain:"cfl-office-pool.firebaseapp.com",projectId:"cfl-office-pool",storageBucket:"cfl-office-pool.firebasestorage.app",messagingSenderId:"670177533526",appId:"1:670177533526:web:7107c4c54701c49a1125f7"});const db=getFirestore(app),ref=doc(db,"cfl","data");window._fbSave=async function(d){try{await setDoc(ref,JSON.parse(JSON.stringify(d)));return true;}catch(e){console.error('FB write error:',e.code,e.message);throw e;}};onSnapshot(ref,function(snap){if(snap.exists()&&window._fbOnUpdate)window._fbOnUpdate(snap.data());},function(err){console.error('FB snapshot error:',err);});window._fbReady=true;document.dispatchEvent(new Event('firebase-ready'));}catch(e){console.warn('Firebase:',e);}
 
 </script>
 <script>
@@ -1811,7 +1811,25 @@ function loadBnrFile(e){
   var file=e.target.files[0];if(!file)return;
   var k=e.target.dataset.k;
   var rd=new FileReader();
-  rd.onload=function(ev){DB.banners[k]=ev.target.result;applyBanners();renderAdmBanners();saveDB();};
+  rd.onload=function(ev){
+    // Compress banner: max 900px wide, JPEG 0.55 — keeps it under ~60KB
+    var rawImg=new Image();
+    rawImg.onload=function(){
+      var MAX_W=900,MAX_H=200;
+      var w=rawImg.width,h=rawImg.height;
+      var ratio=Math.min(MAX_W/w,MAX_H/h,1);
+      w=Math.round(w*ratio);h=Math.round(h*ratio);
+      var canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(rawImg,0,0,w,h);
+      var compressed=canvas.toDataURL('image/jpeg',0.55);
+      var sizeKB=Math.round(compressed.length*0.75/1024);
+      console.log('Banner compressed: '+sizeKB+'KB (key: '+k+')');
+      DB.banners[k]=compressed;
+      applyBanners();renderAdmBanners();saveDB();
+    };
+    rawImg.src=ev.target.result;
+  };
   rd.readAsDataURL(file);
 }
 function removeBnr(k){DB.banners[k]='';applyBanners();renderAdmBanners();saveDB();}
@@ -2810,8 +2828,15 @@ async function saveDB(){
   DB._ts=Date.now();
   lsSave();
   if(window._fbSave){
-    window._fbSave(DB).catch(function(e){
-      console.error('Firebase save error:',e);
+    window._fbSave(DB).then(function(){
+      console.log('✅ Firebase saved OK, size ~'+Math.round(JSON.stringify(DB).length/1024)+'KB');
+    }).catch(function(e){
+      console.error('❌ Firebase save FAILED:',e);
+      // Show visible error to admin
+      if(typeof CU!=='undefined'&&CU&&CU.role==='admin'){
+        var msg='⚠️ Cloud save failed — data saved locally only. Check console.';
+        try{showE(msg);}catch(ex){alert(msg);}
+      }
     });
   }
 }
@@ -3385,8 +3410,9 @@ window._fbOnUpdate=function(d){
   // Don't overwrite local data that is newer than Firebase data
   var localTs=DB._ts||0;
   var cloudTs=d._ts||0;
-  if(localTs>cloudTs+2000){
-    // Local is newer — push local to Firebase instead
+  if(localTs>cloudTs){
+    // Local is newer — push local to Firebase instead and keep local state
+    console.log('Local data newer ('+localTs+' > '+cloudTs+'), pushing to Firebase');
     if(window._fbSave)window._fbSave(DB).catch(function(){});
     return;
   }
