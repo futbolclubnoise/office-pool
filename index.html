@@ -613,16 +613,16 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
 
 <!-- BANNER 2 — FIXED BOTTOM SLIDESHOW (all tabs) -->
 <div id="bnr2FixedWrap" style="position:fixed;bottom:0;left:0;right:0;z-index:200;display:none;background:var(--bg2);border-top:1px solid var(--bd)">
-  <div id="bnr2Carousel" style="width:100%;height:60px;overflow:hidden;position:relative;background:var(--bg3)">
+  <div id="bnr2Carousel" style="width:100%;height:80px;overflow:hidden;position:relative;background:var(--bg3)">
     <span class="bnr-lbl" id="bnr2EmptyLbl">Bottom Banner</span>
-    <img id="bnr2ImgA" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:1;transition:opacity 0.8s ease">
-    <img id="bnr2ImgB" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0;transition:opacity 0.8s ease">
-    <img id="bnr2ImgC" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;opacity:0;transition:opacity 0.8s ease">
+    <img id="bnr2ImgA" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transform:translateX(0);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
+    <img id="bnr2ImgB" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transform:translateX(100%);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
+    <img id="bnr2ImgC" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transform:translateX(100%);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
     <!-- slide dots -->
-    <div id="bnr2Dots" style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);display:none;gap:5px;z-index:5;display:flex">
-      <span id="bnr2Dot0" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.9);display:inline-block"></span>
-      <span id="bnr2Dot1" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.35);display:inline-block"></span>
-      <span id="bnr2Dot2" style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.35);display:inline-block"></span>
+    <div id="bnr2Dots" style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);gap:5px;z-index:5;display:flex">
+      <span id="bnr2Dot0" style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.9);display:inline-block;transition:background .3s"></span>
+      <span id="bnr2Dot1" style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.35);display:inline-block;transition:background .3s"></span>
+      <span id="bnr2Dot2" style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.35);display:inline-block;transition:background .3s"></span>
     </div>
   </div>
 </div>
@@ -880,6 +880,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
                 <th onclick="sortUsers('preds')" id="th-preds">Picks</th>
                 <th onclick="sortUsers('payments')" id="th-payments">Payments</th>
                 <th onclick="sortUsers('role')" id="th-role">Role</th>
+                <th title="Verified players can enter predictions">✓ Access</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -1042,8 +1043,8 @@ updatePrizePreview();
 // prediction: {matchId, pollaId, home, away, pts, breakdown}
 var DB = {
   users: [
-    {id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',points:0,photo:'',phone:'',country:'',predictions:[],payments:[]},
-    {id:2,name:'Jugador Test',email:'JUGADOR',pass:'123456',role:'user',status:'active',points:0,photo:'',phone:'',country:'Colombia',predictions:[],payments:[]}
+    {id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]},
+    {id:2,name:'Jugador Test',email:'JUGADOR',pass:'123456',role:'user',status:'active',verified:false,points:0,photo:'',phone:'',country:'Colombia',predictions:[],payments:[]}
   ],
   pollas: [],
   matches: [],
@@ -1363,7 +1364,7 @@ function doRegister(){
   if(!name||!email||!pass)return showE('Completa todos los campos');
   if(pass.length<6)return showE('Contraseña mínimo 6 caracteres');
   if(DB.users.find(u=>u.email===email))return showE('Correo ya registrado');
-  DB.users.push({id:DB.nid.u++,name,email,pass,phone,role:'user',points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
+  DB.users.push({id:DB.nid.u++,name,email,pass,phone,role:'user',status:'active',verified:false,points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
   saveDB();
   showOK('¡Cuenta creada! Ya puedes ingresar.');
   setTimeout(()=>document.querySelector('.tabp').click(),1500);
@@ -1794,6 +1795,7 @@ function renderAdmBanners(){
     +'<label style="border:2px dashed var(--bd2);border-radius:8px;padding:10px;display:block;text-align:center;cursor:pointer;position:relative">'
     +'<div style="font-size:10px;color:var(--tx3)">'+(hasB1?'✅ Uploaded — click to change':'📁 Upload image')+'</div>'
     +'<input type="file" accept="image/*" data-k="b1" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadBnrFile(event)"></label>'
+    +'<div style="font-size:9px;color:var(--tx3);margin-top:5px">📐 Recommended: <strong>1400×180px</strong> (landscape, max ~200KB)</div>'
     +'<div class="fg" style="margin-top:8px"><input class="fi" id="url_b1" type="url" placeholder="https://... (click URL)" value="'+(DB.banners.b1url||'')+'" style="font-size:11px;padding:8px 10px" oninput="DB.banners[\'b1url\']=this.value;saveDB()"></div>'
     +(hasB1?'<button class="btn-s" onclick="removeBnr(\'b1\')" style="font-size:10px;margin-top:4px">✕ Remove</button>':'')
     +'</div></div>';
@@ -1815,6 +1817,7 @@ function renderAdmBanners(){
       +'<label style="border:2px dashed var(--bd2);border-radius:8px;padding:10px;display:block;text-align:center;cursor:pointer;position:relative">'
       +'<div style="font-size:10px;color:var(--tx3)">'+(has?'✅ Uploaded — click to change':'📁 Upload image (1200×100px)')+'</div>'
       +'<input type="file" accept="image/*" data-k="'+bs.k+'" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="loadBnrFile(event)"></label>'
+      +'<div style="font-size:9px;color:var(--tx3);margin-top:5px">📐 Recommended: <strong>1400×120px</strong> (landscape, max ~200KB)</div>'
       +'<div class="fg" style="margin-top:6px"><input class="fi" id="url_'+bs.k+'" type="url" placeholder="https://... (click URL)" value="'+(DB.banners[bs.ku]||'')+'" style="font-size:11px;padding:6px 10px" oninput="DB.banners[\''+bs.ku+'\']=this.value;saveDB()"></div>'
       +(has?'<button class="btn-s" onclick="removeBnr(\''+bs.k+'\')" style="font-size:10px;margin-top:4px">✕ Remove</button>':'')
       +'</div>';
@@ -1827,17 +1830,17 @@ function loadBnrFile(e){
   var k=e.target.dataset.k;
   var rd=new FileReader();
   rd.onload=function(ev){
-    // Compress banner: max 900px wide, JPEG 0.55 — keeps it under ~60KB
+    // Compress banner: 1400px wide max, 120px tall max, JPEG 0.65 — sharp on retina
     var rawImg=new Image();
     rawImg.onload=function(){
-      var MAX_W=900,MAX_H=200;
+      var MAX_W=1400,MAX_H=120;
       var w=rawImg.width,h=rawImg.height;
       var ratio=Math.min(MAX_W/w,MAX_H/h,1);
       w=Math.round(w*ratio);h=Math.round(h*ratio);
       var canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(rawImg,0,0,w,h);
-      var compressed=canvas.toDataURL('image/jpeg',0.55);
+      var compressed=canvas.toDataURL('image/jpeg',0.65);
       var sizeKB=Math.round(compressed.length*0.75/1024);
       console.log('Banner compressed: '+sizeKB+'KB (key: '+k+')');
       DB.banners[k]=compressed;
@@ -1894,11 +1897,17 @@ function applyBanners(){
   if(emptyLbl)emptyLbl.style.display='none';
   if(dotsEl)dotsEl.style.display=active.length>1?'flex':'none';
 
-  // Preload images & hide unused slots
-  slides.forEach(function(s){
+  // Preload images, position off-screen to the right (except first = index 0)
+  active.forEach(function(s,i){
     if(!s.img)return;
-    if(s.src&&s.src.length>10){s.img.src=s.src;s.img.style.display='block';}
-    else{s.img.style.display='none';s.img.style.opacity='0';}
+    s.img.src=s.src;
+    s.img.style.display='block';
+    s.img.style.transition='none';
+    s.img.style.transform=i===0?'translateX(0)':'translateX(100%)';
+  });
+  // Hide unused slide slots
+  slides.forEach(function(s){
+    if(active.indexOf(s)<0&&s.img){s.img.style.display='none';s.img.src='';}
   });
 
   // Wire dot elements
@@ -1908,42 +1917,61 @@ function applyBanners(){
     document.getElementById('bnr2Dot2')
   ];
 
-  // Map active slides to their dot index
-  var activeDots=active.map(function(s,i){return i;});
+  window._bnrIdx=0;
 
-  function goTo(idx){
-    window._bnrIdx=idx;
-    active.forEach(function(s,i){
-      if(!s.img)return;
-      s.img.style.opacity=i===idx?'1':'0';
-    });
+  function goTo(nextIdx){
+    var prevIdx=window._bnrIdx;
+    if(nextIdx===prevIdx)return;
+    var entering=active[nextIdx].img;
+    var leaving=active[prevIdx].img;
+    // Position entering off-screen right (no transition yet)
+    entering.style.transition='none';
+    entering.style.transform='translateX(100%)';
+    // Force reflow so the starting position registers
+    entering.getBoundingClientRect();
+    // Now slide both with transition
+    entering.style.transition='transform 0.55s cubic-bezier(.4,0,.2,1)';
+    leaving.style.transition='transform 0.55s cubic-bezier(.4,0,.2,1)';
+    entering.style.transform='translateX(0)';
+    leaving.style.transform='translateX(-100%)';
+    window._bnrIdx=nextIdx;
     // Update dots
     dotEls.forEach(function(d,i){
       if(!d)return;
-      if(i<active.length){d.style.display='inline-block';d.style.background=i===idx?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.35)';}
+      if(i<active.length){d.style.display='inline-block';d.style.background=i===nextIdx?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.35)';}
       else{d.style.display='none';}
     });
     // Wire click URL for current slide
     var carousel=document.getElementById('bnr2Carousel');
     if(carousel){
-      var curUrl=active[idx].url||'';
+      var curUrl=active[nextIdx].url||'';
       carousel.style.cursor=curUrl?'pointer':'default';
       carousel.onclick=curUrl?function(){window.open(curUrl,'_blank');}:null;
     }
   }
 
-  goTo(0);
+  // Init dot state for slide 0
+  dotEls.forEach(function(d,i){
+    if(!d)return;
+    if(i<active.length){d.style.display='inline-block';d.style.background=i===0?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.35)';}
+    else{d.style.display='none';}
+  });
+  // Init click for slide 0
+  (function(){
+    var carousel=document.getElementById('bnr2Carousel');
+    if(carousel){var u=active[0].url||'';carousel.style.cursor=u?'pointer':'default';carousel.onclick=u?function(){window.open(u,'_blank');}:null;}
+  })();
 
   if(active.length>1){
     window._bnrTimer=setInterval(function(){
-      var next=((window._bnrIdx||0)+1)%active.length;
+      var next=(window._bnrIdx+1)%active.length;
       goTo(next);
     },4000);
   }
 
-  // Bottom padding so content isn't hidden behind banner
+  // Bottom padding so content isn't hidden behind fixed banner (80px height + border)
   var page=document.querySelector('#S_player .page');
-  if(page)page.style.paddingBottom='72px';
+  if(page)page.style.paddingBottom='88px';
 }
 
 // ═══════════ SORTABLE USERS TABLE ═══════════
@@ -1975,6 +2003,7 @@ function renderAdmUsers(){
   document.getElementById('admUT').innerHTML=sorted.map(u=>{
     const paid=(u.payments||[]).filter(p=>p.status==='succeeded').length;
     const isAdmin=u.role==='admin';
+    const verified=u.verified||false;
     return`<tr>
       <td><div style="display:flex;align-items:center;gap:7px">${avEl(u)} ${u.name}</div></td>
       <td style="color:var(--tx2);font-size:10px">${u.email}</td>
@@ -1982,18 +2011,32 @@ function renderAdmUsers(){
       <td>${u.predictions.length}</td>
       <td><span style="color:${paid?'var(--grn)':'var(--tx3)'};cursor:pointer" onclick="openUserPay(${u.id})">${paid} 💰</span></td>
       <td><span class="bdg ${isAdmin?'bdg-adm':'bdg-on'}">${u.role}</span></td>
+      <td style="text-align:center">
+        ${isAdmin?'<span style="font-size:11px;color:var(--tx3)">—</span>'
+          :`<button onclick="toggleVerified(${u.id})" title="${verified?'Revoke access':'Grant prediction access'}"
+            style="font-size:13px;background:${verified?'var(--grn2)':'var(--bg4)'};border:1.5px solid ${verified?'var(--grn3)':'var(--bd2)'};color:${verified?'var(--grn)':'var(--tx3)'};border-radius:8px;padding:3px 10px;cursor:pointer;font-weight:700;min-width:38px">
+            ${verified?'✓':'✗'}
+          </button>`}
+      </td>
       <td style="white-space:nowrap">
         <button class="btn-xs" onclick="openUserPay(${u.id})" title="Manage Payments">💰</button>
-        ${!isAdmin?`<button class="btn-xs" style="background:var(--red);color:#fff;margin-left:4px" onclick="deleteUser(${u.id})" title="Eliminar jugador">🗑</button>`:''}
+        ${!isAdmin?`<button class="btn-xs" style="background:var(--red);color:#fff;margin-left:4px" onclick="deleteUser(${u.id})" title="Delete player">🗑</button>`:''}
       </td>
     </tr>`;
   }).join('');
 }
 
+function toggleVerified(id){
+  var u=DB.users.find(function(x){return x.id===id;});
+  if(!u||u.role==='admin')return;
+  u.verified=!u.verified;
+  saveDB();renderAdmUsers();
+}
+
 function deleteUser(id){
   var u=DB.users.find(function(x){return x.id===id;});
   if(!u)return;
-  if(!confirm('¿Eliminar a '+u.name+'? Esta acción no se puede deshacer.'))return;
+  if(!confirm('Delete '+u.name+'? This cannot be undone.'))return;
   DB.users=DB.users.filter(function(x){return x.id!==id;});
   saveDB(); renderAdmUsers();
 }
@@ -2136,7 +2179,7 @@ function renderPInicio(){
       const isOpen=pol.status==='open';
       const prz=calcPrizes(pol);
       const sc=pol.scoring||{win:1,draw:1,exact:3,diff:2};
-      const isPaid=CU.payments&&CU.payments.find(p=>p.pollaId===pol.id&&p.status==='succeeded');
+      const isPaid=(CU.verified===true)||(CU.payments&&CU.payments.find(p=>p.pollaId===pol.id&&p.status==='succeeded'));
 
       // Player's stats in this pool
       const myPolPreds=CU.predictions.filter(pr=>ms.find(m=>m.id===pr.matchId));
@@ -2318,7 +2361,7 @@ function renderPPollas(){
     const ms=DB.matches.filter(m=>m.pollaId===p.id);
     const myPreds=CU.predictions.filter(pr=>ms.find(m=>m.id===pr.matchId));
     const prz=calcPrizes(p),on=p.status==='open';
-    const isPaid=CU.payments&&CU.payments.find(py=>py.pollaId===p.id&&py.status==='succeeded');
+    const isPaid=(CU.verified===true)||(CU.payments&&CU.payments.find(py=>py.pollaId===p.id&&py.status==='succeeded'));
     const matchIds=ms.map(m=>m.id);
     const players=DB.users.filter(u=>u.role!=='admin');
     const ranked=players.map(u=>({u,pts:u.predictions.filter(pr=>matchIds.includes(pr.matchId)).reduce((s,pr)=>s+(pr.pts||0),0)})).sort((a,b)=>b.pts-a.pts);
@@ -2537,7 +2580,7 @@ function openModal(pollaId){
   document.getElementById('modTitle').textContent=pol.name;
   const prz=calcPrizes(pol),sc=pol.scoring||{win:1,draw:1,exact:3,diff:2};
   const ms=DB.matches.filter(m=>m.pollaId===pollaId),now=new Date();
-  const isPaid=CU&&CU.payments&&CU.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';});
+  const isPaid=(CU&&CU.verified===true)||(CU&&CU.payments&&CU.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';}));
 
   var pollaMatchIds=ms.map(function(m){return m.id;});
   var myPts=CU?(CU.predictions||[]).filter(function(p){return pollaMatchIds.includes(p.matchId);}).reduce(function(s,p){return s+(p.pts||0);},0):0;
