@@ -487,7 +487,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <div id="fReg" class="hidden">
           <div class="fg" style="display:flex;align-items:center;gap:14px">
             <div class="ph-ring" id="rPhRing" onclick="document.getElementById('rPhFile').click()">
-              <img id="rPhPrev" src="" alt=""><span class="ph-lbl">Foto<br>opcional</span>
+              <img id="rPhPrev" src="" alt=""><span class="ph-lbl">Photo<br>optional</span>
               <input type="file" id="rPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'rPhPrev','rPhRing')">
             </div>
             <div style="flex:1"><div class="fg"><label class="fl">Nombre completo</label><input class="fi" id="rName" type="text" placeholder="Tu nombre"></div></div>
@@ -567,7 +567,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <div class="ct"><div class="ct-dot ct-dot-g"></div>My Profile</div>
         <div style="display:flex;align-items:flex-start;gap:18px;margin-bottom:18px">
           <div class="ph-ring" id="pfPhRing" style="width:82px;height:82px" onclick="document.getElementById('pfPhFile').click()">
-            <img id="pfPhPrev" src="" alt=""><span class="ph-lbl">Cambiar<br>foto</span>
+            <img id="pfPhPrev" src="" alt=""><span class="ph-lbl">Change<br>photo</span>
             <input type="file" id="pfPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'pfPhPrev','pfPhRing')">
           </div>
           <div style="flex:1">
@@ -608,9 +608,13 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
 
 
   </div>
-  <!-- BANNER BOTTOM -->
-  <div class="bnr-wrap bnr-pc" style="padding:8px 0 4px"><div class="bnr-slot" id="bnr2" style="height:60px"><span class="bnr-lbl">Banner 2 — Desktop</span><img id="bnr2Img" src="" alt=""></div></div>
-  <div class="bnr-wrap bnr-mob" style="padding:8px 0 4px"><div class="bnr-slot" id="bnr2m" style="height:54px"><span class="bnr-lbl">Banner 2 — Mobile</span><img id="bnr2mImg" src="" alt=""></div></div>
+  </div>
+</div>
+
+<!-- BANNER 2 — FIXED BOTTOM (all tabs) -->
+<div id="bnr2FixedWrap" style="position:fixed;bottom:0;left:0;right:0;z-index:200;display:none">
+  <div class="bnr-wrap bnr-pc" style="margin:0;padding:0"><div class="bnr-slot" id="bnr2" style="height:60px;border-radius:0;border-left:none;border-right:none;border-bottom:none"><span class="bnr-lbl">Banner 2 — Desktop</span><img id="bnr2Img" src="" alt="" style="border-radius:0"></div></div>
+  <div class="bnr-wrap bnr-mob" style="margin:0;padding:0"><div class="bnr-slot" id="bnr2m" style="height:54px;border-radius:0;border-left:none;border-right:none;border-bottom:none"><span class="bnr-lbl">Banner 2 — Mobile</span><img id="bnr2mImg" src="" alt="" style="border-radius:0"></div></div>
 </div>
 
 <div id="S_admin" class="hidden">
@@ -1288,9 +1292,24 @@ function prevPh(ev,imgId,ringId){
   const file=ev.target.files[0];if(!file)return;
   const rd=new FileReader();
   rd.onload=e=>{
-    const img=document.getElementById(imgId);
-    const lbl=document.querySelector('#'+ringId+' .ph-lbl');
-    img.src=e.target.result;img.style.display='block';if(lbl)lbl.style.display='none';
+    // Compress image to max 200x200px, JPEG 0.75 — keeps it tiny for Firebase
+    const rawImg=new Image();
+    rawImg.onload=function(){
+      const MAX=200;
+      var w=rawImg.width,h=rawImg.height;
+      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
+      else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+      var canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(rawImg,0,0,w,h);
+      var compressed=canvas.toDataURL('image/jpeg',0.75);
+      var img=document.getElementById(imgId);
+      var lbl=document.querySelector('#'+ringId+' .ph-lbl');
+      img.src=compressed;img.style.display='block';if(lbl)lbl.style.display='none';
+      // Store compressed version on the input element for retrieval
+      ev.target._compressed=compressed;
+    };
+    rawImg.src=e.target.result;
   };
   rd.readAsDataURL(file);
 }
@@ -1328,7 +1347,9 @@ function doRegister(){
   const pass=document.getElementById('rPass').value;
   const phone=document.getElementById('rPhone').value.trim();
 
-  const ph=document.getElementById('rPhPrev').src||'';
+  // Use compressed version if available, else fall back to src
+  const _phInput=document.getElementById('rPhFile');
+  const ph=(_phInput&&_phInput._compressed)||document.getElementById('rPhPrev').src||'';
   if(!name||!email||!pass)return showE('Completa todos los campos');
   if(pass.length<6)return showE('Contraseña mínimo 6 caracteres');
   if(DB.users.find(u=>u.email===email))return showE('Correo ya registrado');
@@ -1824,6 +1845,13 @@ function applyBanners(){
       if(lbl)lbl.style.display='block';
     }
   });
+  // Show/hide fixed bottom banner + add padding so content isn't hidden behind it
+  var hasB2=!!(DB.banners.b2||DB.banners.b2m);
+  var fixedWrap=document.getElementById('bnr2FixedWrap');
+  if(fixedWrap)fixedWrap.style.display=hasB2?'block':'none';
+  // Add bottom padding to player portal page so content isn't hidden behind fixed banner
+  var page=document.querySelector('#S_player .page');
+  if(page)page.style.paddingBottom=hasB2?'72px':'0';
 }
 
 // ═══════════ SORTABLE USERS TABLE ═══════════
@@ -1993,16 +2021,6 @@ function renderPInicio(){
   const el=document.getElementById('porInicioContent');
   if(!el)return;
   const displayName=u=>u.nickname||u.name;
-
-  // ── Banner 1 — TOP ──
-  let topHtml='';
-  const _b1=DB.banners&&(DB.banners.b1||DB.banners.b1m);
-  const _b1url=DB.banners&&DB.banners.b1url;
-  if(_b1){
-    const _b1wrap=_b1url?'<a href="'+_b1url+'" target="_blank" style="display:block">':'<div>';
-    const _b1end=_b1url?'</a>':'</div>';
-    topHtml+=_b1wrap+'<img src="'+_b1+'" style="width:100%;display:block;border-radius:10px;max-height:90px;object-fit:cover;margin-bottom:10px">'+_b1end;
-  }
 
   let html='';
 
@@ -2179,16 +2197,7 @@ function renderPInicio(){
     </div>`;
   }
 
-  // ── Banner 2 — BOTTOM (below all content) ──
-  const _b2=DB.banners&&(DB.banners.b2||DB.banners.b2m);
-  const _b2url=DB.banners&&DB.banners.b2url;
-  if(_b2){
-    const _b2wrap=_b2url?'<a href="'+_b2url+'" target="_blank" style="display:block">':'<div>';
-    const _b2end=_b2url?'</a>':'</div>';
-    html+=_b2wrap+'<img src="'+_b2+'" style="width:100%;display:block;border-radius:10px;max-height:90px;object-fit:cover;margin-top:10px">'+_b2end;
-  }
-
-  el.innerHTML=topHtml+html;
+  el.innerHTML=html;
 }
 
 function fmtDate(d){
@@ -2355,7 +2364,8 @@ function saveProfile(){
   const email=document.getElementById('pfEmail').value.trim();
   const phone=(document.getElementById('pfPhone')||{}).value?.trim()||'';
   const pass=document.getElementById('pfPass').value;
-  const src=document.getElementById('pfPhPrev').src;
+  const _pfInput=document.getElementById('pfPhFile');
+  const src=(_pfInput&&_pfInput._compressed)||document.getElementById('pfPhPrev').src;
   if(!email){alert('Email is required');return;}
   if(!phone){alert('Phone is required');return;}
   if(name)CU.name=name;
