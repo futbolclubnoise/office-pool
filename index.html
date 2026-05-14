@@ -2773,9 +2773,6 @@ function openModal(pollaId){
     +'<span class="scl-item" style="border-color:var(--org3)">Exact 🎯 <span class="scl-pts">'+sc.exact+'</span></span>'
     +'</div>';
 
-  var byStage={};
-  ms.forEach(function(m){var s=m.stage||'group';if(!byStage[s])byStage[s]=[];byStage[s].push(m);});
-  var stageOrder=['group','r32','r16','qf','sf','final'];
   var html='';
 
   // Helper: build match card HTML (shared between flat and jornada views)
@@ -2830,64 +2827,50 @@ function openModal(pollaId){
     return c;
   }
 
-  stageOrder.forEach(function(stage){
-    var group=byStage[stage];if(!group)return;
-    group=group.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-
-    if(stage==='group'){
-      // ── Split group stage by calendar date ───────────────────────────────
-      var byDate={};
-      group.forEach(function(m){
-        var d=m.date?(m.date+'').split('T')[0]:'sin-fecha';
-        if(!byDate[d])byDate[d]=[];
-        byDate[d].push(m);
-      });
-      var dates=Object.keys(byDate).sort();
-      // Sort matches within each date by time
-      dates.forEach(function(d){byDate[d].sort(function(a,b){return new Date(a.date)-new Date(b.date);});});
-      // Auto-open: first date with pending unlocked matches; else last date
-      var autoDate='';
-      for(var di=0;di<dates.length;di++){
-        var hasOpen=byDate[dates[di]].some(function(m){return!m.result&&!matchIsLocked(m);});
-        if(hasOpen){autoDate=dates[di];break;}
-      }
-      if(!autoDate)autoDate=dates[dates.length-1];
-      // Render each date as collapsible accordion
-      dates.forEach(function(dateKey){
-        var dayMatches=byDate[dateKey];
-        var dayId='day_'+pollaId+'_'+dateKey;
-        var isOpen=(dateKey===autoDate);
-        var dt=new Date(dateKey+'T12:00:00'); // noon to avoid TZ shift
-        var dayLabel=dt.toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'});
-        // Capitalize first letter
-        dayLabel=dayLabel.charAt(0).toUpperCase()+dayLabel.slice(1);
-        var done=dayMatches.filter(function(m){return m.result;}).length;
-        var allDone=done===dayMatches.length;
-        var noneLocked=dayMatches.every(function(m){return!m.result&&!matchIsLocked(m);});
-        var statusDot=allDone
-          ?'<span style="width:7px;height:7px;border-radius:50%;background:var(--grn);display:inline-block;margin-right:6px;flex-shrink:0"></span>'
-          :isOpen
-            ?'<span style="width:7px;height:7px;border-radius:50%;background:var(--org);display:inline-block;margin-right:6px;flex-shrink:0"></span>'
-            :'<span style="width:7px;height:7px;border-radius:50%;background:var(--bd3,#555);display:inline-block;margin-right:6px;flex-shrink:0"></span>';
-        html+='<div onclick="(function(){var c=document.getElementById(\''+dayId+'\');var open=c.style.display!==\'none\';c.style.display=open?\'none\':\'block\';document.getElementById(\'arr_'+dayId+'\').textContent=open?\'▼\':\'▶\';})()" '
-          +'style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid '+(isOpen?'var(--org3)':'var(--bd)')+';border-radius:10px;padding:10px 14px;margin:8px 0 5px;cursor:pointer;user-select:none">'
-          +'<div style="display:flex;align-items:center">'+statusDot
-            +'<span style="font-size:12px;font-weight:700;color:var(--tx)">'+dayLabel+'</span>'
-          +'</div>'
-          +'<div style="display:flex;align-items:center;gap:8px">'
-            +'<span style="font-size:9px;color:var(--tx3)">'+dayMatches.length+(dayMatches.length===1?' partido':' partidos')+(done>0?' · '+done+'/'+dayMatches.length+' ✓':'')+'</span>'
-            +'<span id="arr_'+dayId+'" style="font-size:10px;color:var(--tx3)">'+(isOpen?'▼':'▶')+'</span>'
-          +'</div>'
-        +'</div>';
-        html+='<div id="'+dayId+'" style="display:'+(isOpen?'block':'none')+'">';
-        dayMatches.forEach(function(m){html+=matchCard(m);});
-        html+='</div>';
-      });
-    } else {
-      // ── Knockout stages: flat list with stage label ──────────────────────
-      html+='<div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 6px;padding-left:2px">'+(STAGE_LABELS[stage]||stage)+'</div>';
-      group.forEach(function(m){html+=matchCard(m);});
-    }
+  // ── Group ALL matches by calendar date (group stage + knockout) ──────────
+  var byDate={};
+  ms.forEach(function(m){
+    var d=m.date?(m.date+'').split('T')[0]:'sin-fecha';
+    if(!byDate[d])byDate[d]=[];
+    byDate[d].push(m);
+  });
+  var allDates=Object.keys(byDate).sort();
+  allDates.forEach(function(d){byDate[d].sort(function(a,b){return new Date(a.date)-new Date(b.date);});});
+  // Auto-open: first date with pending unlocked matches; else last date
+  var autoDate='';
+  for(var di=0;di<allDates.length;di++){
+    var hasOpen=byDate[allDates[di]].some(function(m){return!m.result&&!matchIsLocked(m);});
+    if(hasOpen){autoDate=allDates[di];break;}
+  }
+  if(!autoDate)autoDate=allDates[allDates.length-1];
+  // Render each date as collapsible accordion
+  allDates.forEach(function(dateKey){
+    var dayMatches=byDate[dateKey];
+    var dayId='day_'+pollaId+'_'+dateKey;
+    var isOpen=(dateKey===autoDate);
+    var dt=new Date(dateKey+'T12:00:00');
+    var dayLabel=dt.toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'});
+    dayLabel=dayLabel.charAt(0).toUpperCase()+dayLabel.slice(1);
+    var done=dayMatches.filter(function(m){return m.result;}).length;
+    var allDone=done===dayMatches.length;
+    var statusDot=allDone
+      ?'<span style="width:7px;height:7px;border-radius:50%;background:var(--grn);display:inline-block;margin-right:6px;flex-shrink:0"></span>'
+      :isOpen
+        ?'<span style="width:7px;height:7px;border-radius:50%;background:var(--org);display:inline-block;margin-right:6px;flex-shrink:0"></span>'
+        :'<span style="width:7px;height:7px;border-radius:50%;background:var(--bd3,#555);display:inline-block;margin-right:6px;flex-shrink:0"></span>';
+    html+='<div onclick="(function(){var c=document.getElementById(\''+dayId+'\');var open=c.style.display!==\'none\';c.style.display=open?\'none\':\'block\';document.getElementById(\'arr_'+dayId+'\').textContent=open?\'▼\':\'▶\';})()" '
+      +'style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid '+(isOpen?'var(--org3)':'var(--bd)')+';border-radius:10px;padding:10px 14px;margin:8px 0 5px;cursor:pointer;user-select:none">'
+      +'<div style="display:flex;align-items:center">'+statusDot
+        +'<span style="font-size:12px;font-weight:700;color:var(--tx)">'+dayLabel+'</span>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<span style="font-size:9px;color:var(--tx3)">'+dayMatches.length+(dayMatches.length===1?' partido':' partidos')+(done>0?' · '+done+'/'+dayMatches.length+' ✓':'')+'</span>'
+        +'<span id="arr_'+dayId+'" style="font-size:10px;color:var(--tx3)">'+(isOpen?'▼':'▶')+'</span>'
+      +'</div>'
+    +'</div>';
+    html+='<div id="'+dayId+'" style="display:'+(isOpen?'block':'none')+'">';
+    dayMatches.forEach(function(m){html+=matchCard(m);});
+    html+='</div>';
   });
   // Especiales for this polla
   var specials=(DB.specials||[]).filter(function(s){return s.pollaId===pollaId&&(s.status!=='closed'||s.answer);});
@@ -3193,12 +3176,20 @@ function seedWC2026(){
   var m1=DB.matches.find(function(m){return m.pollaId===pid&&m.stage==='group';});
   if(m1&&m1.home==='Mexico'&&m1.away==='South Africa')return false; // already correct
 
+  // ── Safety guard: never wipe data if real scores or predictions exist ────
+  var wcMatchIds=DB.matches.filter(function(m){return m.pollaId===pid;}).map(function(m){return m.id;});
+  var hasResults=DB.matches.some(function(m){return m.pollaId===pid&&m.result;});
+  var hasPreds=DB.users.some(function(u){return(u.predictions||[]).some(function(pr){return wcMatchIds.indexOf(pr.matchId)>=0;});});
+  if(hasResults||hasPreds){
+    console.warn('⚠️ seedWC2026 aborted — real data exists (results:'+hasResults+' preds:'+hasPreds+')');
+    return false;
+  }
   console.log('🔄 Seeding official WC 2026 matches...');
-  // Remove old WC matches and clear predictions (pre-tournament, no scores yet)
+  // Remove old WC matches only — no predictions to clear (guard above ensures this)
   DB.matches=DB.matches.filter(function(m){return m.pollaId!==pid;});
   DB.users.forEach(function(u){
-    u.predictions=(u.predictions||[]).filter(function(pr){return pr.pollaId!==pid;});
-    u.points=0;
+    u.predictions=(u.predictions||[]).filter(function(pr){return wcMatchIds.indexOf(pr.matchId)<0;});
+    // Do NOT reset u.points — other pollas may have points too
   });
   // Create polla if it doesn't exist
   if(wcIdx<0){
