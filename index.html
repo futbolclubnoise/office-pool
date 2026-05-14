@@ -591,10 +591,10 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
   </nav>
   <div class="tabs">
     <button class="stab on" onclick="pTab('inicio',this)" data-t="home">Home</button>
-    <button class="stab" onclick="pTab('pollas',this)" data-t="myPools">My Pools</button>
     <button class="stab" onclick="pTab('historial',this)" data-t="history">My Predictions</button>
-    <button class="stab" onclick="pTab('especiales',this)" data-t="specials">⭐ Specials</button>
+    <button class="stab" onclick="pTab('especiales',this)" data-t="specials">My Top 3</button>
     <button class="stab" onclick="pTab('ranking',this)" data-t="ranking">Ranking</button>
+    <button class="stab" onclick="pTab('pollas',this)" data-t="myPools">My Pools</button>
     <button class="stab" onclick="pTab('inscripcion',this)" data-t="joinPool">Join Pool</button>
     <button class="stab" onclick="pTab('perfil',this)" data-t="profile">Profile</button>
   </div>
@@ -2439,7 +2439,7 @@ function renderPInicio(){
             <div style="font-family:'Kallisto',sans-serif;font-size:13px;color:${isMe?'var(--org)':'var(--tx2)'};">${r.pts}<span style="font-size:7px;color:var(--tx3);font-family:'Poppins',sans-serif"> pts</span></div>
           </div>`;
         });
-        if(top15.length>8)html+=`<div style="text-align:center;font-size:10px;color:var(--tx3);padding:6px 0;cursor:pointer" onclick="pTab('ranking',document.querySelector('#S_player .stab:nth-child(5)'))">See full ranking →</div>`;
+        if(top15.length>8)html+=`<div style="text-align:center;font-size:10px;color:var(--tx3);padding:6px 0;cursor:pointer" onclick="pTab('ranking',document.querySelector('#S_player .stab:nth-child(4)'))">See full ranking →</div>`;
       } else {
         html+=`<div style="font-size:11px;color:var(--tx3);text-align:center;padding:10px">No scores yet</div>`;
       }
@@ -2514,7 +2514,7 @@ function renderPInicio(){
             <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:var(--tx)">⭐ Choose Your Podium</div>
             <div style="font-size:11px;color:var(--tx2)">Pick your top 3 teams — earn bonus points!</div>
           </div>
-          <button onclick="pTab('especiales',document.querySelector('#S_player .stab:nth-child(4)'))" style="width:100%;padding:10px 14px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px">Pick Now ✨</button>
+          <button onclick="pTab('especiales',document.querySelector('#S_player .stab:nth-child(3)'))" style="width:100%;padding:10px 14px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px">Pick Now ✨</button>
           <div class="podium-row" style="opacity:.4">
             ${['🥇','🥈','🥉'].map((medal,i)=>`<div class="podium-item ${i===0?'p1':i===1?'p2':'p3'}"><span class="podium-medal">${medal}</span><div class="podium-team">?</div></div>`).join('')}
           </div>
@@ -3069,8 +3069,8 @@ function saveSelfEdit(){
 // ════ i18n ════
 var CL='en';
 var LD={
-  en:{login:'Sign In',register:'Sign Up',logout:'Sign Out',home:'Home',myPools:'My Pools',ranking:'Ranking',history:'My Predictions',profile:'Profile',joinPool:'Join Pool',specials:'⭐ Specials',save:'Save',points:'Points',position:'Position',matches:'Matches',predictions:'Predictions',results:'Results',open:'Open',closed:'Closed',pool:'Pool'},
-  es:{login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Mis Predicciones',profile:'Perfil',joinPool:'Unirse',specials:'⭐ Especiales',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool'}
+  en:{login:'Sign In',register:'Sign Up',logout:'Sign Out',home:'Home',myPools:'My Pools',ranking:'Ranking',history:'My Predictions',profile:'Profile',joinPool:'Join Pool',specials:'My Top 3',save:'Save',points:'Points',position:'Position',matches:'Matches',predictions:'Predictions',results:'Results',open:'Open',closed:'Closed',pool:'Pool'},
+  es:{login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Mis Predicciones',profile:'Perfil',joinPool:'Unirse',specials:'Mi Top 3',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool'}
 };
 function T(k){return(LD[CL]||LD.en)[k]||k;}
 function setLang(l){
