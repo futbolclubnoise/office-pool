@@ -2056,6 +2056,7 @@ function renderAdmUsers(){
     const paid=(u.payments||[]).filter(p=>p.status==='succeeded').length;
     const isAdmin=u.role==='admin';
     const verified=u.verified||false;
+    const hasAccess=verified||paid>0;
     return`<tr>
       <td><div style="display:flex;align-items:center;gap:7px">${avEl(u)} ${u.name}</div></td>
       <td style="color:var(--tx2);font-size:10px">${u.email}</td>
@@ -2065,9 +2066,9 @@ function renderAdmUsers(){
       <td><span class="bdg ${isAdmin?'bdg-adm':'bdg-on'}">${u.role}</span></td>
       <td style="text-align:center">
         ${isAdmin?'<span style="font-size:11px;color:var(--tx3)">—</span>'
-          :`<button onclick="toggleVerified(${u.id})" title="${verified?'Revoke access':'Grant prediction access'}"
-            style="font-size:13px;background:${verified?'var(--grn2)':'var(--bg4)'};border:1.5px solid ${verified?'var(--grn3)':'var(--bd2)'};color:${verified?'var(--grn)':'var(--tx3)'};border-radius:8px;padding:3px 10px;cursor:pointer;font-weight:700;min-width:38px">
-            ${verified?'✓':'✗'}
+          :`<button onclick="toggleVerified(${u.id})" title="${verified?'Quitar acceso manual':'Dar acceso manual'}${paid?' (ya tiene acceso por pago)':''}"
+            style="font-size:13px;background:${hasAccess?'var(--grn2)':'var(--bg4)'};border:1.5px solid ${hasAccess?'var(--grn3)':'var(--bd2)'};color:${hasAccess?'var(--grn)':'var(--tx3)'};border-radius:8px;padding:3px 10px;cursor:pointer;font-weight:700;min-width:38px">
+            ${hasAccess?'✓':'✗'}
           </button>`}
       </td>
       <td style="white-space:nowrap">
