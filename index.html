@@ -2442,72 +2442,91 @@ function renderPInicio(){
       }
       html+='</div></div>';
 
-      // ── Upcoming matches ──
+      // ── 2-col: Upcoming/Results LEFT + Podium RIGHT ──
       const upcoming=ms.filter(m=>!m.result&&new Date(m.date)>=new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,5);
       const latest=ms.filter(m=>m.result).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,3);
+      const mySpecials=getMyPodiumData();
+
+      html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">`;
+
+      // LEFT: Upcoming + Latest Results
+      html+=`<div style="display:flex;flex-direction:column;gap:8px">`;
       if(upcoming.length){
-        html+=`<div class="card" style="padding:14px;margin-bottom:14px">
-          <div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-o"></div>Upcoming Matches</div>`;
+        html+=`<div class="card" style="padding:12px">
+          <div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-o"></div><span style="color:var(--tx);font-weight:700;font-size:12px">Upcoming Matches</span></div>`;
         upcoming.forEach(m=>{
           const tz=m.tz||pol.tz||'America/New_York';
           const myPr=CU.predictions.find(p=>p.matchId===m.id);
           html+=`<div class="up-match">
-            <div class="up-teams">${m.home} <span style="color:var(--tx3)">vs</span> ${m.away}</div>
-            <div class="up-time">${fmt(m.date,tz)}</div>
-            ${myPr?`<div class="up-pred">⚽ ${myPr.home}–${myPr.away}</div>`:
+            <div class="up-teams" style="font-size:11px;color:var(--tx);font-weight:600">${m.home} <span style="color:var(--tx3);font-weight:400">vs</span> ${m.away}</div>
+            <div class="up-time" style="font-size:10px;color:var(--tx2)">${fmt(m.date,tz)}</div>
+            ${myPr?`<div class="up-pred" style="color:var(--org);font-size:10px;font-weight:700">⚽ ${myPr.home}–${myPr.away}</div>`:
               isOpen?`<button onclick="openModal(${pol.id})" style="font-size:10px;border:none;background:var(--org2);color:var(--org);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:700">Predict</button>`:''}
           </div>`;
         });
         html+='</div>';
       }
       if(latest.length){
-        html+=`<div class="card" style="padding:14px;margin-bottom:14px">
-          <div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-r"></div>Latest Results</div>`;
+        html+=`<div class="card" style="padding:12px">
+          <div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-r"></div><span style="color:var(--tx);font-weight:700;font-size:12px">Latest Results</span></div>`;
         latest.forEach(m=>{
           const myPr=CU.predictions.find(p=>p.matchId===m.id);
           const isCorrect=myPr&&myPr.pts>0;
           const isWrong=myPr&&myPr.pts===0&&myPr.type;
           html+=`<div class="up-match">
-            <div class="up-teams" style="font-size:11px">${m.home} <span style="font-weight:700;color:var(--g1)">${m.result.home}–${m.result.away}</span> ${m.away}</div>
-            ${myPr?`<div class="up-pred" style="color:${isCorrect?'var(--grn)':'var(--red)'};font-size:10px">${isCorrect?'✅':isWrong?'❌':''} ${myPr.pts||0} pts</div>`:'<div style="font-size:9px;color:var(--tx3)">No pred</div>'}
+            <div class="up-teams" style="font-size:11px;color:var(--tx);font-weight:600">${m.home} <span style="font-weight:700;color:var(--g1)">${m.result.home}–${m.result.away}</span> ${m.away}</div>
+            ${myPr?`<div class="up-pred" style="color:${isCorrect?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700">${isCorrect?'✅':isWrong?'❌':''} ${myPr.pts||0} pts</div>`:'<div style="font-size:9px;color:var(--tx2)">No pred</div>'}
           </div>`;
         });
         html+='</div>';
       }
-    });
-  }
+      if(!upcoming.length&&!latest.length){
+        html+=`<div class="card" style="padding:14px;text-align:center">
+          <div style="font-size:11px;color:var(--tx2)">No matches yet</div>
+        </div>`;
+      }
+      html+='</div>';
 
-  // ── My Podium (Specials) ──
-  const mySpecials=getMyPodiumData();
-  if(mySpecials.filled){
-    html+=`<div class="podium-card">
-      <div class="ct" style="margin-bottom:4px"><div class="ct-dot ct-dot-o"></div>My Podium 🏆</div>
-      <div style="font-size:10px;color:var(--tx2);margin-bottom:8px">Your special picks — locked in</div>
-      <div class="podium-row">
-        ${mySpecials.picks.map((pk,i)=>{
-          const medals=['🥇','🥈','🥉'];
-          const cls=i===0?'p1':i===1?'p2':'p3';
-          return`<div class="podium-item ${cls}">
-            <span class="podium-medal">${medals[i]||'⭐'}</span>
-            <div class="podium-team">${pk.answer||'—'}</div>
-            <div class="podium-pts">${pk.pts} pts</div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  } else if(mySpecials.hasSpecials){
-    html+=`<div class="podium-card glow-cta">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:4px">⭐ Choose Your Podium</div>
-          <div style="font-size:11px;color:var(--tx2)">Pick your top 3 teams — earn bonus points!</div>
-        </div>
-        <button onclick="pTab('especiales',document.querySelector('#S_player .stab:nth-child(7)'))" style="padding:8px 14px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Pick Now ✨</button>
-      </div>
-      <div class="podium-row" style="opacity:.4">
-        ${['🥇','🥈','🥉'].map((m,i)=>`<div class="podium-item ${i===0?'p1':i===1?'p2':'p3'}"><span class="podium-medal">${m}</span><div class="podium-team">?</div></div>`).join('')}
-      </div>
-    </div>`;
+      // RIGHT: Podium
+      html+=`<div>`;
+      if(mySpecials.filled){
+        html+=`<div class="podium-card">
+          <div class="ct" style="margin-bottom:4px"><div class="ct-dot ct-dot-o"></div><span style="color:var(--tx);font-weight:700;font-size:12px">My Podium 🏆</span></div>
+          <div style="font-size:10px;color:var(--tx2);margin-bottom:8px">Your special picks — locked in</div>
+          <div class="podium-row">
+            ${mySpecials.picks.map((pk,i)=>{
+              const medals=['🥇','🥈','🥉'];
+              const cls=i===0?'p1':i===1?'p2':'p3';
+              return`<div class="podium-item ${cls}">
+                <span class="podium-medal">${medals[i]||'⭐'}</span>
+                <div class="podium-team" style="color:var(--tx);font-weight:700">${pk.answer||'—'}</div>
+                <div class="podium-pts">${pk.pts} pts</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      } else if(mySpecials.hasSpecials){
+        html+=`<div class="podium-card glow-cta">
+          <div style="margin-bottom:10px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:var(--tx)">⭐ Choose Your Podium</div>
+            <div style="font-size:11px;color:var(--tx2)">Pick your top 3 teams — earn bonus points!</div>
+          </div>
+          <button onclick="pTab('especiales',document.querySelector('#S_player .stab:nth-child(7)'))" style="width:100%;padding:10px 14px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px">Pick Now ✨</button>
+          <div class="podium-row" style="opacity:.4">
+            ${['🥇','🥈','🥉'].map((medal,i)=>`<div class="podium-item ${i===0?'p1':i===1?'p2':'p3'}"><span class="podium-medal">${medal}</span><div class="podium-team">?</div></div>`).join('')}
+          </div>
+        </div>`;
+      } else {
+        html+=`<div class="card" style="padding:14px;text-align:center">
+          <div style="font-size:24px;margin-bottom:8px">🏆</div>
+          <div style="font-size:11px;color:var(--tx2)">Podium picks coming soon</div>
+        </div>`;
+      }
+      html+='</div>';
+
+      html+='</div>'; // end 2-col grid
+
+    });
   }
 
   el.innerHTML=html;
