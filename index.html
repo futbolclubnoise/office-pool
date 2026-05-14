@@ -348,6 +348,9 @@ code{background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:10px;}
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;}
 .auth-body{width:100%;max-width:400px;}
 @media(max-width:600px){.fr2,.fr3{grid-template-columns:1fr;}.modal-box{max-width:100%;}}
+/* ════ RESPONSIVE 2-COL GRID ════ */
+.two-col-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px;}
+@media(min-width:640px){.two-col-grid{grid-template-columns:1fr 1fr;gap:12px;}}
 
 
 /* ════ READABILITY BOOST ════ */
@@ -449,7 +452,8 @@ body{font-size:14px;}
 .polla-card:hover{border-color:var(--bd3);}
 .polla-card-top{display:flex;align-items:center;gap:9px;}
 .polla-card-info{flex:1;min-width:0;}
-.polla-card-actions{display:flex;gap:5px;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--bd);}
+.polla-card-actions{display:flex;gap:6px;align-items:stretch;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd);}
+.polla-card-actions .btn-xs{flex:1;text-align:center;display:flex;align-items:center;justify-content:center;}
 
 </style>
 <!-- Firebase -->
@@ -2405,7 +2409,7 @@ function renderPInicio(){
 
       // ── My Position + Ranking (2-col) ──
       const top15=ranked.slice(0,15);
-      html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">`;
+      html+=`<div class="two-col-grid">`;
       // Left: My Position
       html+=`<div class="card" style="padding:14px">
         <div class="ct" style="margin-bottom:10px"><div class="ct-dot ct-dot-g"></div>My Position</div>`;
@@ -2447,7 +2451,7 @@ function renderPInicio(){
       const latest=ms.filter(m=>m.result).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,3);
       const mySpecials=getMyPodiumData();
 
-      html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">`;
+      html+=`<div class="two-col-grid">`;
 
       // LEFT: Upcoming + Latest Results
       html+=`<div style="display:flex;flex-direction:column;gap:8px">`;
@@ -2583,7 +2587,7 @@ function renderPPollas(){
         <div class="stat-pill"><div class="sp-val" style="color:var(--grn)">${myResult}</div><div class="sp-lbl">Result</div></div>
       </div>`:''}
       <div class="polla-card-actions">
-        ${on?`<button class="btn-xs" style="flex:1;background:var(--org);color:#fff;border:none;padding:8px;letter-spacing:.8px;font-size:10px;font-weight:700" onclick="openModal(${p.id})">ENTER SCORES</button>`:''}
+        ${on?`<button class="btn-xs" style="flex:1;padding:8px;letter-spacing:1px;font-size:10px;font-weight:700;border-color:var(--org)" onclick="openModal(${p.id})">ENTER SCORES</button>`:''}
         <button class="btn-xs" onclick="openModal(${p.id})">${on?'':'📋 '} View Pool</button>
         ${!isPaid&&prz.pool>0&&on?`<button class="btn-xs" style="color:var(--org);border-color:var(--org3)" onclick="pTab('inscripcion',document.querySelector('#S_player .stab:nth-child(6)'))">💳 Join</button>`:''}
       </div>
