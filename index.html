@@ -3081,43 +3081,157 @@ function fbSync(){
 
 // ════ WORLD CUP 2026 SEED ════
 function seedWC2026(){
-  // Only seed if no WC2026 polla exists yet
-  var hasWC=DB.pollas.some(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;});
-  if(hasWC)return;
-  var pid=1;
-  DB.pollas=[{id:pid,name:'FIFA World Cup 2026',status:'open',start:'2026-06-11',end:'2026-07-19',fee:20,type:'multi',scoring:{win:1,draw:1,exact:5,diff:2},prizes:{p1:50,p2:30,p3:15,org:5}}];
+  // ── Official FIFA World Cup 2026 draw (Dec 5, 2025) ──────────────────────────
+  // Auto-detects wrong/old matches and replaces them.
+  // Returns true if (re)seeded, false if already correct.
+  var wcIdx=DB.pollas.findIndex(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;});
+  var pid=wcIdx>=0?DB.pollas[wcIdx].id:1;
+  // Fingerprint: first group match must be Mexico vs South Africa (official Group A opener)
+  var m1=DB.matches.find(function(m){return m.pollaId===pid&&m.stage==='group';});
+  if(m1&&m1.home==='Mexico'&&m1.away==='South Africa')return false; // already correct
+
+  console.log('🔄 Seeding official WC 2026 matches...');
+  // Remove old WC matches and clear predictions (pre-tournament, no scores yet)
+  DB.matches=DB.matches.filter(function(m){return m.pollaId!==pid;});
+  DB.users.forEach(function(u){
+    u.predictions=(u.predictions||[]).filter(function(pr){return pr.pollaId!==pid;});
+    u.points=0;
+  });
+  // Create polla if it doesn't exist
+  if(wcIdx<0){
+    DB.pollas.push({id:pid,name:'FIFA World Cup 2026',status:'open',start:'2026-06-11',end:'2026-07-19',fee:20,type:'multi',scoring:{win:1,draw:1,exact:5,diff:2},prizes:{p1:50,p2:30,p3:15,org:5}});
+  }
   DB.bonusQuestions=[
     {id:1,pollaId:pid,question:'🏆 Champion — Who wins the World Cup 2026?',pts:20,answer:null,userAnswers:[]},
     {id:2,pollaId:pid,question:'🥈 Runner-up — Who reaches the Final?',pts:10,answer:null,userAnswers:[]}
   ];
-  DB.specials=[
-    {id:Date.now()+1,pollaId:pid,name:'🏆 Equipo Campeón',desc:'¿Qué equipo ganará el Mundial 2026?',pts:20,status:'open',opciones:[],answer:null,userAnswers:[],orden:1},
-    {id:Date.now()+2,pollaId:pid,name:'🥈 Equipo Subcampeón',desc:'¿Qué equipo llegará a la Final?',pts:10,status:'open',opciones:[],answer:null,userAnswers:[],orden:2}
-  ];
+
   var gid=1;
   function gm(h,a,dt,grp){DB.matches.push({id:gid++,pollaId:pid,home:h,away:a,date:dt,stage:'group',round:'Group '+grp,result:null,homeLogo:'',awayLogo:''});}
-  // Groups
-  gm('USA','Bolivia','2026-06-12T20:00','A');gm('Panama','Uruguay','2026-06-13T17:00','A');gm('USA','Panama','2026-06-17T20:00','A');gm('Bolivia','Uruguay','2026-06-17T17:00','A');gm('USA','Uruguay','2026-06-22T21:00','A');gm('Bolivia','Panama','2026-06-22T21:00','A');
-  gm('Mexico','Jamaica','2026-06-13T21:00','B');gm('Ecuador','Venezuela','2026-06-13T18:00','B');gm('Mexico','Ecuador','2026-06-18T20:00','B');gm('Venezuela','Jamaica','2026-06-18T17:00','B');gm('Mexico','Venezuela','2026-06-23T21:00','B');gm('Jamaica','Ecuador','2026-06-23T21:00','B');
-  gm('Argentina','Morocco','2026-06-14T21:00','C');gm('Ukraine','Slovakia','2026-06-14T18:00','C');gm('Argentina','Ukraine','2026-06-19T21:00','C');gm('Slovakia','Morocco','2026-06-19T18:00','C');gm('Argentina','Slovakia','2026-06-24T21:00','C');gm('Morocco','Ukraine','2026-06-24T21:00','C');
-  gm('Brazil','Nigeria','2026-06-15T18:00','D');gm('Japan','Croatia','2026-06-15T21:00','D');gm('Brazil','Japan','2026-06-20T20:00','D');gm('Croatia','Nigeria','2026-06-20T17:00','D');gm('Brazil','Croatia','2026-06-25T21:00','D');gm('Nigeria','Japan','2026-06-25T21:00','D');
-  gm('Spain','Serbia','2026-06-15T20:00','E');gm('China','Chile','2026-06-15T17:00','E');gm('Spain','China','2026-06-20T21:00','E');gm('Chile','Serbia','2026-06-20T18:00','E');gm('Spain','Chile','2026-06-25T18:00','E');gm('Serbia','China','2026-06-25T18:00','E');
-  gm('France','Australia','2026-06-16T17:00','F');gm('Portugal','Peru','2026-06-16T20:00','F');gm('France','Portugal','2026-06-21T21:00','F');gm('Peru','Australia','2026-06-21T18:00','F');gm('France','Peru','2026-06-26T21:00','F');gm('Australia','Portugal','2026-06-26T21:00','F');
-  gm('Germany','Colombia','2026-06-16T21:00','G');gm('Belgium','Guatemala','2026-06-16T18:00','G');gm('Germany','Belgium','2026-06-21T20:00','G');gm('Guatemala','Colombia','2026-06-21T17:00','G');gm('Germany','Guatemala','2026-06-26T18:00','G');gm('Colombia','Belgium','2026-06-26T18:00','G');
-  gm('England','Cameroon','2026-06-17T18:00','H');gm('Netherlands','Saudi Arabia','2026-06-17T21:00','H');gm('England','Netherlands','2026-06-22T20:00','H');gm('Saudi Arabia','Cameroon','2026-06-22T17:00','H');gm('England','Saudi Arabia','2026-06-27T21:00','H');gm('Cameroon','Netherlands','2026-06-27T21:00','H');
-  gm('Italy','Algeria','2026-06-18T21:00','I');gm('Paraguay','Canada','2026-06-18T18:00','I');gm('Italy','Paraguay','2026-06-23T20:00','I');gm('Canada','Algeria','2026-06-23T17:00','I');gm('Italy','Canada','2026-06-28T21:00','I');gm('Algeria','Paraguay','2026-06-28T21:00','I');
-  gm('S. Korea','Poland','2026-06-19T20:00','J');gm('Senegal','Costa Rica','2026-06-19T17:00','J');gm('S. Korea','Senegal','2026-06-24T20:00','J');gm('Costa Rica','Poland','2026-06-24T17:00','J');gm('S. Korea','Costa Rica','2026-06-29T18:00','J');gm('Poland','Senegal','2026-06-29T18:00','J');
-  gm('IR Iran','Congo DR','2026-06-20T18:00','K');gm('Switzerland','New Zealand','2026-06-20T21:00','K');gm('IR Iran','Switzerland','2026-06-25T17:00','K');gm('New Zealand','Congo DR','2026-06-25T20:00','K');gm('IR Iran','New Zealand','2026-06-30T17:00','K');gm('Congo DR','Switzerland','2026-06-30T17:00','K');
-  gm('Turkey','S. Africa','2026-06-21T17:00','L');gm('Taiwan','TBD','2026-06-21T20:00','L');gm('Turkey','TBD','2026-06-26T18:00','L');gm('S. Africa','Taiwan','2026-06-26T18:00','L');gm('Turkey','Taiwan','2026-07-01T18:00','L');gm('S. Africa','TBD','2026-07-01T18:00','L');
-  // KO rounds — all TBD, editable
   function ko(dt,stage,round){DB.matches.push({id:gid++,pollaId:pid,home:'TBD',away:'TBD',date:dt,stage:stage,round:round,result:null,homeLogo:'',awayLogo:''});}
-  ['2026-07-02T18:00','2026-07-02T22:00','2026-07-03T18:00','2026-07-03T22:00','2026-07-04T18:00','2026-07-04T22:00','2026-07-05T18:00','2026-07-05T22:00','2026-07-06T18:00','2026-07-06T22:00','2026-07-07T18:00','2026-07-07T22:00','2026-07-08T18:00','2026-07-08T22:00','2026-07-09T18:00','2026-07-09T22:00'].forEach(function(d,i){ko(d,'r32','Round of 32 #'+(i+1));});
-  ['2026-07-11T18:00','2026-07-11T22:00','2026-07-12T18:00','2026-07-12T22:00','2026-07-13T18:00','2026-07-13T22:00','2026-07-14T18:00','2026-07-14T22:00'].forEach(function(d,i){ko(d,'r16','Round of 16 #'+(i+1));});
-  ['2026-07-17T18:00','2026-07-17T22:00','2026-07-18T18:00','2026-07-18T22:00','2026-07-19T18:00','2026-07-19T22:00','2026-07-20T18:00','2026-07-20T22:00'].forEach(function(d,i){ko(d,'qf','Quarter-Final #'+(i+1));});
-  ['2026-07-22T22:00','2026-07-23T22:00','2026-07-25T22:00','2026-07-26T22:00'].forEach(function(d,i){ko(d,'sf','Semi-Final #'+(i+1));});
-  ko('2026-07-18T18:00','final','3rd Place');
-  ko('2026-07-19T21:00','final','🏆 FINAL');
+
+  // ── GROUP A: Mexico · South Africa · South Korea · Czechia ───────────────────
+  gm('Mexico','South Africa','2026-06-11T15:00','A');
+  gm('South Korea','Czechia','2026-06-11T22:00','A');
+  gm('Czechia','South Africa','2026-06-18T12:00','A');
+  gm('Mexico','South Korea','2026-06-18T21:00','A');
+  gm('Czechia','Mexico','2026-06-24T21:00','A');
+  gm('South Africa','South Korea','2026-06-24T21:00','A');
+
+  // ── GROUP B: Canada · Bosnia-Herzegovina · Qatar · Switzerland ───────────────
+  gm('Canada','Bosnia-Herzegovina','2026-06-12T15:00','B');
+  gm('Qatar','Switzerland','2026-06-13T15:00','B');
+  gm('Switzerland','Bosnia-Herzegovina','2026-06-18T15:00','B');
+  gm('Canada','Qatar','2026-06-18T18:00','B');
+  gm('Switzerland','Canada','2026-06-24T15:00','B');
+  gm('Bosnia-Herzegovina','Qatar','2026-06-24T15:00','B');
+
+  // ── GROUP C: Brazil · Morocco · Haiti · Scotland ─────────────────────────────
+  gm('Brazil','Morocco','2026-06-13T18:00','C');
+  gm('Haiti','Scotland','2026-06-13T21:00','C');
+  gm('Scotland','Morocco','2026-06-19T18:00','C');
+  gm('Brazil','Haiti','2026-06-19T21:00','C');
+  gm('Scotland','Brazil','2026-06-24T18:00','C');
+  gm('Morocco','Haiti','2026-06-24T18:00','C');
+
+  // ── GROUP D: USA · Paraguay · Australia · Türkiye ────────────────────────────
+  gm('USA','Paraguay','2026-06-12T21:00','D');
+  gm('Australia','Türkiye','2026-06-14T00:00','D');
+  gm('USA','Australia','2026-06-19T15:00','D');
+  gm('Türkiye','Paraguay','2026-06-20T00:00','D');
+  gm('Türkiye','USA','2026-06-25T22:00','D');
+  gm('Paraguay','Australia','2026-06-25T22:00','D');
+
+  // ── GROUP E: Germany · Curacao · Ivory Coast · Ecuador ───────────────────────
+  gm('Germany','Curacao','2026-06-14T13:00','E');
+  gm('Ivory Coast','Ecuador','2026-06-14T19:00','E');
+  gm('Germany','Ivory Coast','2026-06-20T16:00','E');
+  gm('Ecuador','Curacao','2026-06-20T20:00','E');
+  gm('Ecuador','Germany','2026-06-25T16:00','E');
+  gm('Curacao','Ivory Coast','2026-06-25T16:00','E');
+
+  // ── GROUP F: Netherlands · Japan · Sweden · Tunisia ──────────────────────────
+  gm('Netherlands','Japan','2026-06-14T16:00','F');
+  gm('Sweden','Tunisia','2026-06-14T22:00','F');
+  gm('Netherlands','Sweden','2026-06-20T13:00','F');
+  gm('Tunisia','Japan','2026-06-21T00:00','F');
+  gm('Japan','Sweden','2026-06-25T19:00','F');
+  gm('Tunisia','Netherlands','2026-06-25T19:00','F');
+
+  // ── GROUP G: Belgium · Egypt · Iran · New Zealand ────────────────────────────
+  gm('Belgium','Egypt','2026-06-15T15:00','G');
+  gm('Iran','New Zealand','2026-06-15T21:00','G');
+  gm('Belgium','Iran','2026-06-21T15:00','G');
+  gm('New Zealand','Egypt','2026-06-21T21:00','G');
+  gm('Egypt','Iran','2026-06-26T23:00','G');
+  gm('New Zealand','Belgium','2026-06-26T23:00','G');
+
+  // ── GROUP H: Spain · Cape Verde · Saudi Arabia · Uruguay ─────────────────────
+  gm('Spain','Cape Verde','2026-06-15T12:00','H');
+  gm('Saudi Arabia','Uruguay','2026-06-15T18:00','H');
+  gm('Spain','Saudi Arabia','2026-06-21T12:00','H');
+  gm('Uruguay','Cape Verde','2026-06-21T18:00','H');
+  gm('Cape Verde','Saudi Arabia','2026-06-26T20:00','H');
+  gm('Uruguay','Spain','2026-06-26T20:00','H');
+
+  // ── GROUP I: France · Senegal · Iraq · Norway ────────────────────────────────
+  gm('France','Senegal','2026-06-16T15:00','I');
+  gm('Iraq','Norway','2026-06-16T18:00','I');
+  gm('France','Iraq','2026-06-22T17:00','I');
+  gm('Norway','Senegal','2026-06-22T20:00','I');
+  gm('Norway','France','2026-06-26T15:00','I');
+  gm('Senegal','Iraq','2026-06-26T15:00','I');
+
+  // ── GROUP J: Argentina · Algeria · Austria · Jordan ──────────────────────────
+  gm('Argentina','Algeria','2026-06-16T21:00','J');
+  gm('Austria','Jordan','2026-06-17T00:00','J');
+  gm('Argentina','Austria','2026-06-22T13:00','J');
+  gm('Jordan','Algeria','2026-06-22T23:00','J');
+  gm('Algeria','Austria','2026-06-27T22:00','J');
+  gm('Jordan','Argentina','2026-06-27T22:00','J');
+
+  // ── GROUP K: Portugal · DR Congo · Uzbekistan · Colombia ─────────────────────
+  gm('Portugal','DR Congo','2026-06-17T13:00','K');
+  gm('Uzbekistan','Colombia','2026-06-17T22:00','K');
+  gm('Portugal','Uzbekistan','2026-06-23T13:00','K');
+  gm('Colombia','DR Congo','2026-06-23T22:00','K');
+  gm('Colombia','Portugal','2026-06-27T19:30','K');
+  gm('DR Congo','Uzbekistan','2026-06-27T19:30','K');
+
+  // ── GROUP L: England · Croatia · Ghana · Panama ───────────────────────────────
+  gm('England','Croatia','2026-06-17T16:00','L');
+  gm('Ghana','Panama','2026-06-17T19:00','L');
+  gm('England','Ghana','2026-06-23T16:00','L');
+  gm('Panama','Croatia','2026-06-23T19:00','L');
+  gm('Panama','England','2026-06-27T17:00','L');
+  gm('Croatia','Ghana','2026-06-27T17:00','L');
+
+  // ── KNOCKOUT ROUNDS (TBD — editable in admin) ────────────────────────────────
+  // Round of 32 (June 28 – July 3): 16 matches
+  ['2026-06-28T14:00','2026-06-28T18:00','2026-06-28T22:00',
+   '2026-06-29T14:00','2026-06-29T18:00','2026-06-29T22:00',
+   '2026-06-30T14:00','2026-06-30T18:00','2026-06-30T22:00',
+   '2026-07-01T14:00','2026-07-01T18:00','2026-07-01T22:00',
+   '2026-07-02T15:00','2026-07-02T19:00',
+   '2026-07-03T15:00','2026-07-03T19:00'].forEach(function(d,i){ko(d,'r32','Round of 32 #'+(i+1));});
+  // Round of 16 (July 4–7): 8 matches
+  ['2026-07-04T15:00','2026-07-04T19:00',
+   '2026-07-05T15:00','2026-07-05T19:00',
+   '2026-07-06T15:00','2026-07-06T19:00',
+   '2026-07-07T15:00','2026-07-07T19:00'].forEach(function(d,i){ko(d,'r16','Round of 16 #'+(i+1));});
+  // Quarterfinals (July 9–11): 4 matches
+  ['2026-07-09T15:00','2026-07-09T19:00',
+   '2026-07-11T15:00','2026-07-11T19:00'].forEach(function(d,i){ko(d,'qf','Quarter-Final #'+(i+1));});
+  // Semifinals (July 14–15): 2 matches
+  ko('2026-07-14T19:00','sf','Semi-Final #1');
+  ko('2026-07-15T19:00','sf','Semi-Final #2');
+  // Final weekend
+  ko('2026-07-18T15:00','final','3rd Place');
+  ko('2026-07-19T15:00','final','🏆 FINAL');
+
   DB.nid.m=gid;
+  console.log('✅ WC 2026 seeded: '+DB.matches.filter(function(m){return m.pollaId===pid;}).length+' matches');
+  return true;
 }
 
 // ════ EDIT POLLA ════
@@ -3645,10 +3759,11 @@ function startApp(){
     var adm=DB.users.find(function(u){return u.role==='admin';});
     if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
     else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';adm.verified=true;}
-    seedWC2026();
+    var wcFixed=seedWC2026();
     seedWC2026Specials();
     cleanOldSpecials();
     lsSave();
+    if(wcFixed)saveDB(); // push corrected matches to Firebase immediately
   }else{
     seedWC2026();
     seedWC2026Specials();
@@ -3724,9 +3839,9 @@ window._fbOnUpdate=function(d){
     DB.nid=d.nid||{u:10,p:1,m:1};
     DB.bonusQuestions=d.bonusQuestions||[];
     DB.specials=d.specials||[];
-    // Seed only on very first load (no pollas ever) — prevents write loop with 50 clients
+    // Seed on first load OR if matches are wrong (auto-fix official schedule)
     var changed=false;
-    if(!DB.pollas.length){seedWC2026();changed=true;}
+    if(seedWC2026()){changed=true;}
     if(changed&&!DB.specials.length){seedWC2026Specials();changed=true;}
     if(changed&&!window._bnrSeeding){window._bnrSeeding=true;saveDB().catch(function(){}).then(function(){window._bnrSeeding=false;});}
   }
