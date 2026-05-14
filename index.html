@@ -3851,12 +3851,14 @@ window._fbOnUpdate=function(d){
     DB.nid=d.nid||{u:10,p:1,m:1};
     DB.bonusQuestions=d.bonusQuestions||[];
     DB.specials=d.specials||[];
-    // Seed on first load OR if matches are wrong (auto-fix official schedule)
-    var changed=false;
-    if(seedWC2026()){changed=true;}
-    if(changed&&!DB.specials.length){seedWC2026Specials();changed=true;}
-    if(changed&&!window._bnrSeeding){window._bnrSeeding=true;saveDB().catch(function(){}).then(function(){window._bnrSeeding=false;});}
   }
+
+  // Always check and fix WC 2026 matches — runs regardless of timestamp guard
+  // so Firebase gets updated even when localTs > cloudTs
+  var changed=false;
+  if(seedWC2026()){changed=true;}
+  if(changed&&!DB.specials.length){seedWC2026Specials();changed=true;}
+  if(changed&&!window._bnrSeeding){window._bnrSeeding=true;saveDB().catch(function(){}).then(function(){window._bnrSeeding=false;});}
 
   // Register listeners for extra user chunks (if > 100 players)
   var numChunks=d.userChunks||1;
