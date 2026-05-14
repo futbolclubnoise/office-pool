@@ -702,7 +702,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     </div>
   </nav>
   <div class="tabs">
-    <button class="stab on"  onclick="aTab('dash',this)" data-tab="dash">Dashboard</button>
+    <button class="stab on"  onclick="aTab('dash',this)" data-tab="dash">Dashboard<span id="notifBadge" style="display:none;background:var(--red,#e74c3c);color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;padding:0 3px;margin-left:5px;align-items:center;justify-content:center;font-family:Poppins,sans-serif;vertical-align:middle"></span></button>
     <button class="stab"     onclick="aTab('pollas',this)" data-tab="pollas">Pollas</button>
     <button class="stab"     onclick="aTab('partidos',this)" data-tab="partidos">Matches</button>
     <button class="stab"     onclick="aTab('resultados',this)" data-tab="resultados">Results</button>
@@ -1113,7 +1113,8 @@ var DB = {
   settings: {regCode:'POLLA2026', stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05', allowPredEdit:false},
   nid: {u:10, p:1, m:1},
   userSortCol: 'points',
-  userSortDir: 'desc'
+  userSortDir: 'desc',
+  notifications: []
 };
 ;
 
@@ -1441,6 +1442,7 @@ function doRegister(){
   if(pass.length<6)return showE('Contraseña mínimo 6 caracteres');
   if(DB.users.find(u=>(u.email||'').toLowerCase()===email.toLowerCase()))return showE('Email already registered');
   DB.users.push({id:DB.nid.u++,name,email,pass,phone,role:'user',status:'active',verified:false,points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
+  addNotif('register',{name:name,email:email});
   saveDB();
   showOK('¡Cuenta creada! Ya puedes ingresar.');
   setTimeout(()=>document.querySelector('.tabp').click(),1500);
@@ -1449,6 +1451,43 @@ function doLogout(){
   CU=null;
   ['S_admin','S_player'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('S_auth').classList.remove('hidden');
+}
+
+// ═══════════ NOTIFICATIONS ═══════════
+function addNotif(type, data){
+  if(!DB.notifications)DB.notifications=[];
+  DB.notifications.unshift({
+    id: Date.now(),
+    type: type,        // 'register' | 'payment'
+    data: data,        // {name, email, pollaName?}
+    ts: new Date().toISOString(),
+    read: false
+  });
+  // Keep last 100
+  if(DB.notifications.length>100)DB.notifications=DB.notifications.slice(0,100);
+  _updateNotifBadge();
+}
+
+function _updateNotifBadge(){
+  var badge=document.getElementById('notifBadge');
+  if(!badge)return;
+  var unread=(DB.notifications||[]).filter(function(n){return!n.read;}).length;
+  badge.textContent=unread||'';
+  badge.style.display=unread?'inline-flex':'none';
+}
+
+function markAllNotifsRead(){
+  (DB.notifications||[]).forEach(function(n){n.read=true;});
+  saveDB();
+  _updateNotifBadge();
+  renderAdmDash();
+}
+
+function clearAllNotifs(){
+  DB.notifications=[];
+  saveDB();
+  _updateNotifBadge();
+  renderAdmDash();
 }
 
 // ═══════════ ADMIN ═══════════
@@ -1480,6 +1519,44 @@ function renderAdmDash(){
   document.getElementById('stP').textContent=DB.pollas.length;
   document.getElementById('stM').textContent=DB.matches.length;
   document.getElementById('stPr').textContent=DB.users.reduce((s,u)=>s+u.predictions.length,0);
+  _updateNotifBadge();
+
+  // ── Notifications panel ───────────────────────────────────────────────────
+  var notifs=DB.notifications||[];
+  var notifHtml='';
+  if(notifs.length){
+    var unread=notifs.filter(function(n){return!n.read;}).length;
+    notifHtml='<div class="card" style="margin-bottom:14px;border-left:3px solid var(--org)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--tx)">🔔 Notificaciones'
+          +(unread?'<span style="background:var(--red,#e74c3c);color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;padding:0 4px;margin-left:7px;display:inline-flex;align-items:center;justify-content:center">'+unread+'</span>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:6px">'
+          +(unread?'<button class="btn-xs" onclick="markAllNotifsRead()" style="font-size:9px">✓ Marcar leídas</button>':'')
+          +'<button class="btn-xs" onclick="clearAllNotifs()" style="font-size:9px;background:var(--red2,#fdf0ef);color:var(--red,#e74c3c);border-color:var(--red3,#f5c6c3)">Limpiar</button>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:6px">';
+    notifs.slice(0,20).forEach(function(n){
+      var icon=n.type==='register'?'👤':'💳';
+      var title=n.type==='register'?'Nuevo jugador registrado':'Pago confirmado';
+      var sub=n.type==='register'
+        ?(n.data.name+' · '+n.data.email)
+        :(n.data.name+' inscrito en '+n.data.pollaName);
+      var d=new Date(n.ts);
+      var timeStr=d.toLocaleDateString('es',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+      notifHtml+='<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;background:'+(n.read?'var(--bg3)':'var(--bg2)')+';border:1px solid '+(n.read?'var(--bd)':'var(--org3,#ffe5cc)')+'">'
+        +'<div style="font-size:18px;flex-shrink:0;line-height:1.2">'+icon+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:11px;font-weight:700;color:var(--tx);margin-bottom:2px">'+title+'</div>'
+          +'<div style="font-size:10px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+sub+'</div>'
+        +'</div>'
+        +'<div style="font-size:9px;color:var(--tx3);flex-shrink:0;text-align:right">'+timeStr+'</div>'
+      +'</div>';
+    });
+    notifHtml+='</div></div>';
+  }
+
   // Per-polla sections: active first, then closed
   var sorted=[...DB.pollas].sort(function(a,b){return(a.status==='open'?0:1)-(b.status==='open'?0:1);});
   var dashHtml='';
@@ -1540,7 +1617,7 @@ function renderAdmDash(){
   }
   document.getElementById('admAP').innerHTML='';
   document.getElementById('admLb').innerHTML='';
-  document.getElementById('admDashContent').innerHTML=dashHtml;
+  document.getElementById('admDashContent').innerHTML=notifHtml+dashHtml;
 }
 
 function selType(t){
@@ -2165,6 +2242,7 @@ function toggleUserPaid(userId, pollaId){
   } else {
     var pol=DB.pollas.find(function(p){return p.id===pollaId;});
     u.payments.push({id:Date.now(),pollaId:pollaId,amount:pol?pol.fee:0,date:new Date().toISOString(),status:'succeeded',manual:true});
+    addNotif('payment',{name:u.name,email:u.email,pollaName:pol?pol.name:'Pool'});
   }
   saveDB(); renderAdmUsers(); openUserPay(userId);
 }
@@ -3069,6 +3147,7 @@ async function saveDB(){
       specials:DB.specials||[],
       bonusQuestions:DB.bonusQuestions||[],
       nid:DB.nid||{u:10,p:1,m:1},
+      notifications:DB.notifications||[],
       userChunks:Math.max(1,Math.ceil((DB.users||[]).length/100)),
       _ts:DB._ts
     };
@@ -3769,7 +3848,7 @@ function startApp(){
     DB.users=local.users;DB.pollas=local.pollas||[];DB.matches=local.matches||[];
     DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},local.banners||{});DB.stripe=local.stripe||{pub:'',secret:''};
     DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},local.settings||{});
-    DB.nid=local.nid||{u:10,p:1,m:1};DB.bonusQuestions=local.bonusQuestions||[];DB.specials=local.specials||[];
+    DB.nid=local.nid||{u:10,p:1,m:1};DB.bonusQuestions=local.bonusQuestions||[];DB.specials=local.specials||[];DB.notifications=local.notifications||[];
     // Ensure admin always exists with correct credentials
     var adm=DB.users.find(function(u){return u.role==='admin';});
     if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
@@ -3854,7 +3933,9 @@ window._fbOnUpdate=function(d){
     DB.nid=d.nid||{u:10,p:1,m:1};
     DB.bonusQuestions=d.bonusQuestions||[];
     DB.specials=d.specials||[];
+    DB.notifications=d.notifications||[];
   }
+  _updateNotifBadge();
 
   // Always check and fix WC 2026 matches — runs regardless of timestamp guard
   // so Firebase gets updated even when localTs > cloudTs
