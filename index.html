@@ -205,6 +205,10 @@ body.light .band-mid{background:#fff;}
 .t-nm{font-size:12px;font-weight:600;}
 .vs{font-family:'Kallisto',sans-serif;font-weight:300;font-size:11px;color:var(--tx3);letter-spacing:2px;flex-shrink:0;padding:0 4px;}
 .sc-row{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--bd);}
+/* Hide number input spinners everywhere */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]{-moz-appearance:textfield;}
 .sc-inp{width:50px;padding:7px;background:var(--inp);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-family:'Kallisto',sans-serif;font-weight:500;font-size:20px;text-align:center;outline:none;transition:border .2s;}
 .sc-inp:focus{border-color:var(--bd3);}
 .sc-sep{font-size:16px;color:var(--tx3);}
@@ -1628,7 +1632,7 @@ function renderAdmPartidos(){
       const pol=DB.pollas.find(p=>p.id===pollaId);
       const polNm=pol?pol.name:`Polla #${pollaId}`;
       const polOn=pol&&pol.status==='open';
-      const matches=grouped[pollaId];
+      const matches=grouped[pollaId].slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
       const gid='pg_m_'+pollaId;
       html+=`<div class="pool-group-hdr open" id="pgh_m_${pollaId}" onclick="togglePoolGroup('${gid}',this)">
         <div class="dot ${polOn?'dot-on':'dot-off'}" style="flex-shrink:0"></div>
