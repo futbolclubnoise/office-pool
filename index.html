@@ -2835,17 +2835,38 @@ function openModal(pollaId){
     group=group.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
 
     if(stage==='group'){
-      // ── Split group stage into Jornadas by date clustering ──────────────
-      // Cluster: new jornada when gap > 2 days between consecutive matches
-      var matchdays=[];var curDay=[];
-      for(var i=0;i<group.length;i++){
-        if(i===0){curDay.push(group[i]);continue;}
-        var gap=(new Date(group[i].date)-new Date(group[i-1].date))/(1000*60*60*24);
-        if(gap>2&&curDay.length){matchdays.push(curDay);curDay=[];}
-        curDay.push(group[i]);
-      }
-      if(curDay.length)matchdays.push(curDay);
-      // If only one cluster (e.g. short polla), just render flat with label
+      // ── Split group stage into Jornadas by position within each group ────
+      // Strategy: within each round (Group A, B, ...) sort by date and assign
+      // matchday = index of distinct calendar date within that group.
+      // This is robust regardless of gaps between matchdays.
+      var roundGroups={};
+      group.forEach(function(m){
+        var r=m.round||'default';
+        if(!roundGroups[r])roundGroups[r]=[];
+        roundGroups[r].push(m);
+      });
+      var matchdayMap={};
+      Object.keys(roundGroups).forEach(function(r){
+        var rm=roundGroups[r].slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+        var seenDates=[];
+        rm.forEach(function(m){
+          var d=m.date?(m.date+'').split('T')[0]:'';
+          var di=seenDates.indexOf(d);
+          if(di<0){seenDates.push(d);di=seenDates.length-1;}
+          matchdayMap[m.id]=di+1;
+        });
+      });
+      var jornadasMap={};
+      group.forEach(function(m){
+        var md=matchdayMap[m.id]||1;
+        if(!jornadasMap[md])jornadasMap[md]=[];
+        jornadasMap[md].push(m);
+      });
+      var mdNums=Object.keys(jornadasMap).map(Number).sort(function(a,b){return a-b;});
+      var matchdays=mdNums.map(function(n){
+        return jornadasMap[n].slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+      });
+      // If only one jornada detected, render flat
       if(matchdays.length<=1){
         html+='<div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 6px;padding-left:2px">'+STAGE_LABELS['group']+'</div>';
         group.forEach(function(m){html+=matchCard(m);});
