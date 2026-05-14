@@ -3872,8 +3872,10 @@ function seedWC2026Specials(){
 function startApp(){
   if(window._appStarted)return;
   window._appStarted=true;
+  window._fbCloudResponded=false; // track whether Firebase has replied yet
   var local=lsLoad();
   if(local&&local.users&&local.users.length){
+    // ── Case A: We have local data — load it, trust Firebase sync to reconcile ──
     DB.users=local.users;DB.pollas=local.pollas||[];DB.matches=local.matches||[];
     DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},local.banners||{});DB.stripe=local.stripe||{pub:'',secret:''};
     DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},local.settings||{});
@@ -3882,16 +3884,27 @@ function startApp(){
     var adm=DB.users.find(function(u){return u.role==='admin';});
     if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
     else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';adm.verified=true;}
-    var wcFixed=seedWC2026();
+    seedWC2026();
     seedWC2026Specials();
     cleanOldSpecials();
     lsSave();
-    if(wcFixed)saveDB(); // push corrected matches to Firebase immediately
+    // ⚠️ NEVER call saveDB() here — Firebase _fbOnUpdate will handle sync.
+    // Calling saveDB() before Firebase responds would overwrite cloud data
+    // with local/seeded data, destroying any changes made from other devices.
   }else{
+    // ── Case B: No local data — seed defaults, but WAIT for Firebase first ──
+    // Firebase may have real data (different browser, incognito, new device).
+    // Only push seeded data to Firebase if cloud is ALSO empty after 6 seconds.
     seedWC2026();
     seedWC2026Specials();
     lsSave();
-    saveDB();
+    setTimeout(function(){
+      if(!window._fbCloudResponded){
+        // Firebase never responded with data → truly first-time setup → safe to save
+        console.log('⚡ No Firebase response after 6s — pushing initial seed');
+        saveDB();
+      }
+    },6000);
   }
   initLang();initTheme();
   setTimeout(fbSync,1000);
@@ -3941,6 +3954,7 @@ function _fbRefreshUI(){
 // ── cfl/data snapshot: app content (pollas, matches, banners, settings) ───────
 window._fbOnUpdate=function(d){
   if(!d)return;
+  window._fbCloudResponded=true; // Firebase has real data — cancel any pending seed-save
   var localTs=DB._ts||0;
   var cloudTs=d._ts||0;
 
