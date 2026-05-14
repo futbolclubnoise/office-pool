@@ -1705,7 +1705,7 @@ function renderAdmRes(){
       const pol=DB.pollas.find(p=>p.id===pollaId);
       const polNm=pol?pol.name:`Polla #${pollaId}`;
       const polOn=pol&&pol.status==='open';
-      const matches=grouped[pollaId];
+      const matches=grouped[pollaId].slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
       const gid='pg_r_'+pollaId;
       html+=`<div class="pool-group-hdr open" id="pgh_r_${pollaId}" onclick="togglePoolGroup('${gid}',this)">
         <div class="dot ${polOn?'dot-on':'dot-off'}" style="flex-shrink:0"></div>
@@ -2187,10 +2187,11 @@ function showPollaDetail(pollaId){
     var byStage={};
     matches.forEach(function(m){var s=m.stage||'group';if(!byStage[s])byStage[s]=[];byStage[s].push(m);});
     html+='<div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-g"></div>Matches ('+matches.length+')</div>';
-    Object.keys(byStage).forEach(function(stage){
+    var stageOrd=['group','r32','r16','qf','sf','final'];
+    stageOrd.filter(function(s){return byStage[s];}).forEach(function(stage){
       var label=STAGE_LABELS[stage]||stage;
       html+='<div style="font-size:9px;color:var(--tx2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px">'+label+'</div>';
-      byStage[stage].forEach(function(m){
+      byStage[stage].slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);}).forEach(function(m){
         var res=m.result?m.result.home+' - '+m.result.away:'No result';
         var locked=matchIsLocked(m);
         html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:var(--c2);border-radius:8px;margin-bottom:4px;font-size:10px">'
@@ -2700,6 +2701,8 @@ function openModal(pollaId){
   var html='';
   stageOrder.forEach(function(stage){
     var group=byStage[stage];if(!group)return;
+    // Sort by date within each stage (so group stage shows Jun 11, Jun 12... not Group A, B, C)
+    group=group.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
     html+='<div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 6px;padding-left:2px">'+(STAGE_LABELS[stage]||stage)+'</div>';
     group.forEach(function(m){
       var locked=matchIsLocked(m);
