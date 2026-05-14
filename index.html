@@ -1043,15 +1043,14 @@ updatePrizePreview();
 // prediction: {matchId, pollaId, home, away, pts, breakdown}
 var DB = {
   users: [
-    {id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]},
-    {id:2,name:'Jugador Test',email:'JUGADOR',pass:'123456',role:'user',status:'active',verified:false,points:0,photo:'',phone:'',country:'Colombia',predictions:[],payments:[]}
+    {id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]}
   ],
   pollas: [],
   matches: [],
   banners: {b1:'', b1url:'', b1m:'', b1murl:'', b2a:'', b2aurl:'', b2b:'', b2burl:'', b2c:'', b2curl:''},
   stripe: {pub:'', secret:''},
   settings: {regCode:'POLLA2026', stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05', allowPredEdit:false},
-  nid: {u:2, p:1, m:1},
+  nid: {u:10, p:1, m:1},
   userSortCol: 'points',
   userSortDir: 'desc'
 };
@@ -1067,7 +1066,7 @@ function toggleTheme(){
 }
 
 // ═══════════ UTILS ═══════════
-const ini = n=>n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const ini = n=>(n||'?').split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?';
 const usd = v=>`$${Number(v).toFixed(2)}`;
 function fmt(iso,tz){
   if(!iso)return'';
@@ -1310,17 +1309,17 @@ function prevPh(ev,imgId,ringId){
   const file=ev.target.files[0];if(!file)return;
   const rd=new FileReader();
   rd.onload=e=>{
-    // Compress image to max 200x200px, JPEG 0.75 — keeps it tiny for Firebase
+    // Compress image to max 100x100px, JPEG 0.60 — critical: 50 users×photo must fit in 1MB Firebase doc
     const rawImg=new Image();
     rawImg.onload=function(){
-      const MAX=200;
+      const MAX=100;
       var w=rawImg.width,h=rawImg.height;
       if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
       else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
       var canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(rawImg,0,0,w,h);
-      var compressed=canvas.toDataURL('image/jpeg',0.75);
+      var compressed=canvas.toDataURL('image/jpeg',0.60);
       var img=document.getElementById(imgId);
       var lbl=document.querySelector('#'+ringId+' .ph-lbl');
       img.src=compressed;img.style.display='block';if(lbl)lbl.style.display='none';
@@ -1346,11 +1345,12 @@ const showOK=m=>{const e=document.getElementById('aok');e.textContent=m;e.style.
 
 function doLogin(){
   try{
-    var email=document.getElementById('lEmail').value.trim();
+    var email=document.getElementById('lEmail').value.trim().toLowerCase();
     var pass=document.getElementById('lPass').value;
-    if(!email||!pass)return showE('Completa usuario y contraseña');
-    var u=DB.users.find(function(x){return x.email===email&&x.pass===pass;});
-    if(!u)return showE('Usuario o contraseña incorrectos ('+DB.users.length+' usuarios en DB)');
+    if(!email||!pass)return showE('Enter username and password');
+    var u=DB.users.find(function(x){return (x.email||'').toLowerCase()===email&&x.pass===pass;});
+    if(!u)return showE('Incorrect username or password');
+    if(u.status==='disabled')return showE('This account has been suspended. Contact the admin.');
     CU=u;
     document.getElementById('S_auth').classList.add('hidden');
     if(u.role==='admin')initAdmin();else initPlayer();
@@ -1370,7 +1370,7 @@ function doRegister(){
   const ph=(_phInput&&_phInput._compressed)||document.getElementById('rPhPrev').src||'';
   if(!name||!email||!pass)return showE('Completa todos los campos');
   if(pass.length<6)return showE('Contraseña mínimo 6 caracteres');
-  if(DB.users.find(u=>u.email===email))return showE('Correo ya registrado');
+  if(DB.users.find(u=>(u.email||'').toLowerCase()===email.toLowerCase()))return showE('Email already registered');
   DB.users.push({id:DB.nid.u++,name,email,pass,phone,role:'user',status:'active',verified:false,points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
   saveDB();
   showOK('¡Cuenta creada! Ya puedes ingresar.');
@@ -1690,22 +1690,33 @@ function saveResult(mid){
   const av=document.getElementById('ra'+mid).value;
   if(hv===''||av==='')return alert('Enter both scores');
   const m=DB.matches.find(x=>x.id===mid);
+  if(!m)return alert('Match not found');
+  // Idempotency: if result already set, reverse old points before re-scoring
+  if(m.result){
+    const pol0=DB.pollas.find(p=>p.id===m.pollaId);
+    const sc0=pol0?pol0.scoring||{win:1,draw:1,exact:5,diff:2}:{win:1,draw:1,exact:5,diff:2};
+    DB.users.forEach(u=>{
+      const pr=u.predictions.find(p=>p.matchId===mid);
+      if(pr&&pr.pts){u.points=Math.max(0,(u.points||0)-pr.pts);pr.pts=0;pr.type='pending';pr.correct=false;}
+    });
+  }
   m.result={home:parseInt(hv),away:parseInt(av)};
   const pol=DB.pollas.find(p=>p.id===m.pollaId);
-  const sc=pol?.scoring||{win:1,draw:1,exact:3,diff:2};
+  const sc=pol?pol.scoring||{win:1,draw:1,exact:5,diff:2}:{win:1,draw:1,exact:5,diff:2};
   DB.users.forEach(u=>{
     const pr=u.predictions.find(p=>p.matchId===mid);
     if(pr){
       const {pts,type}=calcPts(pr.home,pr.away,m.result.home,m.result.away,sc);
       pr.pts=pts; pr.type=type; pr.correct=(type==='exact');
-      u.points+=pts;
+      u.points=(u.points||0)+pts;
     }
   });
   if(pol&&pol.type==='single'){
     const allDone=DB.matches.filter(x=>x.pollaId===pol.id).every(x=>x.result);
     if(allDone)resolveSinglePrizes(pol);
   }
-  renderAdmRes();alert(`✅ Result saved and points calculated`);
+  saveDB(); // CRITICAL: persist result + points to Firebase
+  renderAdmRes();alert('✅ Result saved and points calculated');
 }
 function resolveSinglePrizes(pol){
   const ms=DB.matches.filter(m=>m.pollaId===pol.id);
@@ -1774,8 +1785,12 @@ function renderAdmPremios(){
 }
 
 function saveStripe(){
+  // Note: only store the PUBLIC key in Firebase (never the secret — it gets broadcast to all clients)
   DB.stripe.pub=document.getElementById('skPub')?.value.trim()||'';
-  DB.stripe.secret=document.getElementById('skSec').value.trim();
+  // Secret key: keep in localStorage only, never push to Firebase
+  var sec=document.getElementById('skSec').value.trim();
+  if(sec)try{localStorage.setItem('cfl_stripe_sec',sec);}catch(e){}
+  saveDB();
   const ok=document.getElementById('stripeOK');ok.style.display='block';setTimeout(()=>ok.style.display='none',3000);
 }
 function saveRegCode(){
@@ -2406,7 +2421,7 @@ function renderPRanking(){
   var sel=document.getElementById('rankingPolla');
   if(!sel)return;
   // Populate selector if empty
-  if(!sel.options.length||sel.dataset.populated!=='1'){
+  if(true){// always repopulate so new pools are visible
     sel.innerHTML=DB.pollas.map(function(p){return'<option value="'+p.id+'">'+p.name+'</option>';}).join('');
     sel.dataset.populated='1';
   }
@@ -2826,20 +2841,28 @@ function timeUntilLock(m){
 function savePreds(){
   if(!activePolla)return;
   const ms=DB.matches.filter(m=>m.pollaId===activePolla);
-  const now=new Date();let saved=0;
+  let saved=0;
   ms.forEach(m=>{
-    const ct=new Date(new Date(m.date).getTime()-3600000);
-    if(now>ct||m.result)return;
+    if(matchIsLocked(m))return; // use same 2h cutoff as saveOnePred
     const h=document.getElementById('ph_'+m.id),a=document.getElementById('pa_'+m.id);
     if(!h||!a||h.value===''||a.value==='')return;
-    const pr={matchId:m.id,pollaId:activePolla,home:parseInt(h.value),away:parseInt(a.value),pts:0,correct:false,type:'pending'};
+    const existingPr=CU.predictions.find(p=>p.matchId===m.id);
+    if(existingPr&&!(DB.settings&&DB.settings.allowPredEdit))return;
+    const pr={matchId:m.id,pollaId:activePolla,home:parseInt(h.value),away:parseInt(a.value),pts:0,correct:false,type:'pending',savedAt:Date.now()};
     const idx=CU.predictions.findIndex(p=>p.matchId===m.id);
     if(idx>=0)CU.predictions[idx]=pr;else CU.predictions.push(pr);
     saved++;
   });
+  if(saved){
+    // Write back to DB.users so saveDB() captures everything
+    var dbU=DB.users.find(function(x){return x.id===CU.id;});
+    if(dbU)dbU.predictions=CU.predictions.slice();
+    saveDB();
+    alert('✅ '+saved+' prediction(s) saved');
+  }else{
+    alert('No predictions to save — check values or matches may be locked');
+  }
   closeModal();renderPInicio();
-  if(saved)alert(`✅ ${saved} predicción(es) guardada(s)`);
-  else alert('No new predictions or all matches are locked');
 }
 
 // ═══════════ SELF EDIT ═══════════
@@ -2854,11 +2877,19 @@ function openSelfEdit(){
 }
 function saveSelfEdit(){
   const name=document.getElementById('selfName').value.trim(),pass=document.getElementById('selfPass').value;
-  const src=document.getElementById('selfPhPrev').src;
-  if(name)CU.name=name;
+  const inp=document.getElementById('selfPhFile');
+  const src=inp&&inp._compressed?inp._compressed:document.getElementById('selfPhPrev').src;
+  if(!name)return alert('Name cannot be empty');
+  if(pass&&pass.length>0&&pass.length<6)return alert('Password must be at least 6 characters');
+  // Update CU in memory
+  CU.name=name;
   if(pass&&pass.length>=6)CU.pass=pass;
   if(src&&src.startsWith('data:image'))CU.photo=src;
+  // Write back to DB.users so saveDB() persists to Firebase
+  var dbU=DB.users.find(function(x){return x.id===CU.id;});
+  if(dbU){dbU.name=CU.name;dbU.pass=CU.pass;dbU.photo=CU.photo;}
   setNav(CU.role==='admin'?'admAv':'porAv',CU.role==='admin'?'admNm':'porNm');
+  saveDB();
   const ok=document.getElementById('selfOK');ok.style.display='block';
   setTimeout(()=>{ok.style.display='none';document.getElementById('selfModal').style.display='none';},1600);
 }
@@ -2955,12 +2986,18 @@ async function saveDB(){
   DB._ts=Date.now();
   lsSave();
   if(window._fbSave){
-    var sizeKB=Math.round(JSON.stringify(DB).length/1024);
+    var json=JSON.stringify(DB);
+    var sizeKB=Math.round(json.length/1024);
+    if(sizeKB>900){
+      console.warn('⚠️ DB size '+sizeKB+'KB — approaching Firebase 1MB limit!');
+      if(CU&&CU.role==='admin'){
+        try{showE('⚠️ Database is '+sizeKB+'KB (limit ~1000KB). Consider removing large images.');}catch(e){}
+      }
+    }
     window._fbSave(DB).then(function(){
       console.log('✅ Firebase saved OK, size ~'+sizeKB+'KB');
     }).catch(function(e){
       console.error('❌ Firebase save FAILED:',e.code,e.message,'size was ~'+sizeKB+'KB');
-      // Show error to everyone so no one loses data silently
       var msg='⚠️ Could not save to cloud ('+( e.code||e.message||'unknown')+').\nYour data is saved locally. Try refreshing if the problem persists.';
       try{alert(msg);}catch(ex){}
     });
@@ -3154,16 +3191,28 @@ function deleteBonus(id){
 }
 function promptBonusAnswer(id){
   var bq=(DB.bonusQuestions||[]).find(function(b){return b.id===id;});if(!bq)return;
+  // Idempotency: reverse previous points if re-grading
+  if(bq.answer){
+    if(!confirm('This bonus was already answered ("'+bq.answer+'"). Re-grading will REVERSE old points first. Continue?'))return;
+    (bq.userAnswers||[]).forEach(function(ua){
+      if(ua.answer.toLowerCase()===bq.answer.toLowerCase()){
+        var u=DB.users.find(function(x){return x.id===ua.userId;});
+        if(u)u.points=Math.max(0,(u.points||0)-bq.pts);
+      }
+    });
+    bq.answer=null;
+  }
   var ans=prompt('Correct answer for:\n"'+bq.question+'"');
   if(ans===null||!ans.trim())return;
   bq.answer=ans.trim();
+  var awarded=0;
   (bq.userAnswers||[]).forEach(function(ua){
     if(ua.answer.toLowerCase()===ans.trim().toLowerCase()){
       var u=DB.users.find(function(x){return x.id===ua.userId;});
-      if(u)u.points=(u.points||0)+bq.pts;
+      if(u){u.points=(u.points||0)+bq.pts;awarded++;}
     }
   });
-  renderAdmBonus();saveDB();alert('✅ Points awarded!');
+  renderAdmBonus();saveDB();alert('✅ Points awarded to '+awarded+' player(s)!');
 }
 function submitBonusAnswer(bqId){
   var el=document.getElementById('bqAns_'+bqId);
@@ -3335,12 +3384,23 @@ function deleteSpecial(id){
 
 function setSpecialAnswer(id){
   var s=(DB.specials||[]).find(function(x){return x.id===id;});if(!s)return;
+  // Idempotency: reverse previous points if re-grading
+  if(s.answer){
+    if(!confirm('Answer already set ("'+s.answer+'"). Re-grading will REVERSE old points first. Continue?'))return;
+    (s.userAnswers||[]).forEach(function(ua){
+      if(ua.answer.trim().toLowerCase()===s.answer.trim().toLowerCase()){
+        var u=DB.users.find(function(x){return x.id===ua.userId;});
+        if(u)u.points=Math.max(0,(u.points||0)-s.pts);
+      }
+    });
+    s.answer=null;s.status='open';
+  }
   var ans;
   if(s.opciones&&s.opciones.length){
     var opts=s.opciones.map(function(o,i){return(i+1)+'. '+o;}).join('\n');
-    ans=prompt('Respuesta correcta para:\n"'+s.desc+'"\nOpciones:\n'+opts+'\n\nEscribe la respuesta exacta:');
+    ans=prompt('Correct answer for:\n"'+s.desc+'"\nOptions:\n'+opts+'\n\nType the exact answer:');
   }else{
-    ans=prompt('Respuesta correcta para: '+s.desc);
+    ans=prompt('Correct answer for: '+s.desc);
   }
   if(ans===null||!ans.trim())return;
   s.answer=ans.trim();
@@ -3353,7 +3413,7 @@ function setSpecialAnswer(id){
     }
   });
   renderAdmEspeciales();saveDB();
-  alert('✅ Respuesta: "'+s.answer+'" — '+awarded+' jugador(es) ganaron +'+s.pts+' pts');
+  alert('✅ Answer: "'+s.answer+'" — '+awarded+' player(s) earned +'+s.pts+' pts');
 }
 
 function editSpecial(id){
@@ -3514,8 +3574,8 @@ function startApp(){
     DB.nid=local.nid||{u:10,p:1,m:1};DB.bonusQuestions=local.bonusQuestions||[];DB.specials=local.specials||[];
     // Ensure admin always exists with correct credentials
     var adm=DB.users.find(function(u){return u.role==='admin';});
-    if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
-    else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';}
+    if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
+    else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';adm.verified=true;}
     seedWC2026();
     seedWC2026Specials();
     cleanOldSpecials();
@@ -3558,11 +3618,11 @@ window._fbOnUpdate=function(d){
     DB.stripe=d.stripe||{pub:'',secret:''};
     DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
     DB.nid=d.nid||{u:10,p:1,m:1};DB.bonusQuestions=d.bonusQuestions||[];DB.specials=d.specials||[];
+    // Only seed on first-ever load (no pollas at all) — avoid write-on-read loop with 50 clients
     var changed=false;
-    if(!DB.pollas.some(function(p){return p.name&&p.name.indexOf('World Cup 2026')>-1;})){seedWC2026();changed=true;}
-    if(!DB.specials.length){seedWC2026Specials();changed=true;}
-    if(cleanOldSpecials())changed=true;
-    if(changed&&window._fbSave)window._fbSave(DB).catch(function(){});
+    if(!DB.pollas.length){seedWC2026();changed=true;}
+    if(changed&&!DB.specials.length){seedWC2026Specials();changed=true;}
+    if(changed&&!window._bnrSeeding){window._bnrSeeding=true;window._fbSave(DB).catch(function(){}).then(function(){window._bnrSeeding=false;});}
   }
 
   // Always guarantee admin credentials exist
