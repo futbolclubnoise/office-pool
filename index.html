@@ -2835,76 +2835,51 @@ function openModal(pollaId){
     group=group.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
 
     if(stage==='group'){
-      // ── Split group stage into Jornadas by position within each group ────
-      // Strategy: within each round (Group A, B, ...) sort by date and assign
-      // matchday = index of distinct calendar date within that group.
-      // This is robust regardless of gaps between matchdays.
-      var roundGroups={};
+      // ── Split group stage by calendar date ───────────────────────────────
+      var byDate={};
       group.forEach(function(m){
-        var r=m.round||'default';
-        if(!roundGroups[r])roundGroups[r]=[];
-        roundGroups[r].push(m);
+        var d=m.date?(m.date+'').split('T')[0]:'sin-fecha';
+        if(!byDate[d])byDate[d]=[];
+        byDate[d].push(m);
       });
-      var matchdayMap={};
-      Object.keys(roundGroups).forEach(function(r){
-        var rm=roundGroups[r].slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-        var seenDates=[];
-        rm.forEach(function(m){
-          var d=m.date?(m.date+'').split('T')[0]:'';
-          var di=seenDates.indexOf(d);
-          if(di<0){seenDates.push(d);di=seenDates.length-1;}
-          matchdayMap[m.id]=di+1;
-        });
-      });
-      var jornadasMap={};
-      group.forEach(function(m){
-        var md=matchdayMap[m.id]||1;
-        if(!jornadasMap[md])jornadasMap[md]=[];
-        jornadasMap[md].push(m);
-      });
-      var mdNums=Object.keys(jornadasMap).map(Number).sort(function(a,b){return a-b;});
-      var matchdays=mdNums.map(function(n){
-        return jornadasMap[n].slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-      });
-      // If only one jornada detected, render flat
-      if(matchdays.length<=1){
-        html+='<div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 6px;padding-left:2px">'+STAGE_LABELS['group']+'</div>';
-        group.forEach(function(m){html+=matchCard(m);});
-        return;
+      var dates=Object.keys(byDate).sort();
+      // Sort matches within each date by time
+      dates.forEach(function(d){byDate[d].sort(function(a,b){return new Date(a.date)-new Date(b.date);});});
+      // Auto-open: first date with pending unlocked matches; else last date
+      var autoDate='';
+      for(var di=0;di<dates.length;di++){
+        var hasOpen=byDate[dates[di]].some(function(m){return!m.result&&!matchIsLocked(m);});
+        if(hasOpen){autoDate=dates[di];break;}
       }
-      // Find which jornada to auto-open (first with pending/open matches)
-      var autoOpen=-1;
-      matchdays.forEach(function(md,idx){
-        if(autoOpen>=0)return;
-        var hasOpen=md.some(function(m){return!m.result&&!matchIsLocked(m);});
-        if(hasOpen)autoOpen=idx;
-      });
-      if(autoOpen<0)autoOpen=matchdays.length-1; // all done → open last
-      // Render each jornada as collapsible accordion
-      matchdays.forEach(function(dayMatches,idx){
-        var mdNum=idx+1;
-        var mdId='jornada_'+pollaId+'_'+mdNum;
-        var isOpen=(idx===autoOpen);
-        var d1=dayMatches[0].date?new Date(dayMatches[0].date):null;
-        var d2=dayMatches[dayMatches.length-1].date?new Date(dayMatches[dayMatches.length-1].date):null;
-        var opts={month:'short',day:'numeric'};
-        var dateRange=d1?(d1.toLocaleDateString('en',opts)+(d2&&d2.toDateString()!==d1.toDateString()?(' – '+d2.toLocaleDateString('en',opts)):'')):'';
+      if(!autoDate)autoDate=dates[dates.length-1];
+      // Render each date as collapsible accordion
+      dates.forEach(function(dateKey){
+        var dayMatches=byDate[dateKey];
+        var dayId='day_'+pollaId+'_'+dateKey;
+        var isOpen=(dateKey===autoDate);
+        var dt=new Date(dateKey+'T12:00:00'); // noon to avoid TZ shift
+        var dayLabel=dt.toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'});
+        // Capitalize first letter
+        dayLabel=dayLabel.charAt(0).toUpperCase()+dayLabel.slice(1);
         var done=dayMatches.filter(function(m){return m.result;}).length;
-        var pct=Math.round(done/dayMatches.length*100);
-        var progressBar=done>0?'<div style="width:40px;height:3px;background:var(--bd);border-radius:2px;overflow:hidden;margin-left:8px;display:inline-block;vertical-align:middle"><div style="width:'+pct+'%;height:100%;background:var(--grn);border-radius:2px"></div></div>':'';
-        html+='<div onclick="(function(){var c=document.getElementById(\''+mdId+'\');var open=c.style.display!==\'none\';c.style.display=open?\'none\':\'block\';document.getElementById(\'arr_'+mdId+'\').textContent=open?\'▶\':\'▼\';})()" '
-          +'style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid '+(isOpen?'var(--org3)':'var(--bd)')+';border-radius:10px;padding:10px 14px;margin:10px 0 6px;cursor:pointer;user-select:none">'
-          +'<div style="display:flex;align-items:center;gap:0">'
-            +'<span style="font-size:12px;font-weight:700;color:var(--tx)">Jornada '+mdNum+'</span>'
-            +(dateRange?'<span style="font-size:9px;color:var(--tx3);margin-left:8px">'+dateRange+'</span>':'')
-            +progressBar
+        var allDone=done===dayMatches.length;
+        var noneLocked=dayMatches.every(function(m){return!m.result&&!matchIsLocked(m);});
+        var statusDot=allDone
+          ?'<span style="width:7px;height:7px;border-radius:50%;background:var(--grn);display:inline-block;margin-right:6px;flex-shrink:0"></span>'
+          :isOpen
+            ?'<span style="width:7px;height:7px;border-radius:50%;background:var(--org);display:inline-block;margin-right:6px;flex-shrink:0"></span>'
+            :'<span style="width:7px;height:7px;border-radius:50%;background:var(--bd3,#555);display:inline-block;margin-right:6px;flex-shrink:0"></span>';
+        html+='<div onclick="(function(){var c=document.getElementById(\''+dayId+'\');var open=c.style.display!==\'none\';c.style.display=open?\'none\':\'block\';document.getElementById(\'arr_'+dayId+'\').textContent=open?\'▼\':\'▶\';})()" '
+          +'style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid '+(isOpen?'var(--org3)':'var(--bd)')+';border-radius:10px;padding:10px 14px;margin:8px 0 5px;cursor:pointer;user-select:none">'
+          +'<div style="display:flex;align-items:center">'+statusDot
+            +'<span style="font-size:12px;font-weight:700;color:var(--tx)">'+dayLabel+'</span>'
           +'</div>'
           +'<div style="display:flex;align-items:center;gap:8px">'
-            +'<span style="font-size:9px;color:var(--tx3)">'+dayMatches.length+' partidos</span>'
-            +'<span id="arr_'+mdId+'" style="font-size:10px;color:var(--tx3)">'+(isOpen?'▼':'▶')+'</span>'
+            +'<span style="font-size:9px;color:var(--tx3)">'+dayMatches.length+(dayMatches.length===1?' partido':' partidos')+(done>0?' · '+done+'/'+dayMatches.length+' ✓':'')+'</span>'
+            +'<span id="arr_'+dayId+'" style="font-size:10px;color:var(--tx3)">'+(isOpen?'▼':'▶')+'</span>'
           +'</div>'
         +'</div>';
-        html+='<div id="'+mdId+'" style="display:'+(isOpen?'block':'none')+'">';
+        html+='<div id="'+dayId+'" style="display:'+(isOpen?'block':'none')+'">';
         dayMatches.forEach(function(m){html+=matchCard(m);});
         html+='</div>';
       });
