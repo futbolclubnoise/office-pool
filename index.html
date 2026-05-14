@@ -443,7 +443,37 @@ body{font-size:14px;}
 
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import{getFirestore,doc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-try{const app=initializeApp({apiKey:"AIzaSyAmsEX2VJRytF9Sw8NOySPD80K9gzv6hRc",authDomain:"cfl-office-pool.firebaseapp.com",projectId:"cfl-office-pool",storageBucket:"cfl-office-pool.firebasestorage.app",messagingSenderId:"670177533526",appId:"1:670177533526:web:7107c4c54701c49a1125f7"});const db=getFirestore(app),ref=doc(db,"cfl","data");window._fbSave=async function(d){try{await setDoc(ref,JSON.parse(JSON.stringify(d)));return true;}catch(e){console.error('FB write error:',e.code,e.message);throw e;}};onSnapshot(ref,function(snap){if(snap.exists()&&window._fbOnUpdate)window._fbOnUpdate(snap.data());},function(err){console.error('FB snapshot error:',err);});window._fbReady=true;document.dispatchEvent(new Event('firebase-ready'));}catch(e){console.warn('Firebase:',e);}
+try{
+const app=initializeApp({apiKey:"AIzaSyAmsEX2VJRytF9Sw8NOySPD80K9gzv6hRc",authDomain:"cfl-office-pool.firebaseapp.com",projectId:"cfl-office-pool",storageBucket:"cfl-office-pool.firebasestorage.app",messagingSenderId:"670177533526",appId:"1:670177533526:web:7107c4c54701c49a1125f7"});
+const db=getFirestore(app);
+const refData=doc(db,"cfl","data");
+const refUsers=doc(db,"cfl","users");
+
+// Save app data (pollas, matches, banners, settings — NO users, NO photos)
+window._fbSaveData=async function(payload){
+  try{await setDoc(refData,JSON.parse(JSON.stringify(payload)));return true;}
+  catch(e){console.error('FB data write error:',e.code,e.message);throw e;}
+};
+
+// Save users (NO photos — photos live in localStorage only)
+window._fbSaveUsers=async function(users){
+  try{
+    var stripped=users.map(function(u){var c=Object.assign({},u);delete c.photo;return c;});
+    await setDoc(refUsers,{users:stripped,_ts:Date.now()});
+    return true;
+  }catch(e){console.error('FB users write error:',e.code,e.message);throw e;}
+};
+
+// Legacy alias (used in seeding bootstrap only)
+window._fbSave=window._fbSaveData;
+
+// Listen: app data
+onSnapshot(refData,function(snap){if(snap.exists()&&window._fbOnUpdate)window._fbOnUpdate(snap.data());},function(err){console.error('FB data snapshot error:',err);});
+// Listen: users
+onSnapshot(refUsers,function(snap){if(window._fbOnUsersUpdate)window._fbOnUsersUpdate(snap.exists()?snap.data():null);},function(err){console.error('FB users snapshot error:',err);});
+
+window._fbReady=true;document.dispatchEvent(new Event('firebase-ready'));
+}catch(e){console.warn('Firebase:',e);}
 
 </script>
 <script>
@@ -2985,21 +3015,31 @@ function lsLoad(){try{var r=localStorage.getItem('cfl_db');return r?JSON.parse(r
 async function saveDB(){
   DB._ts=Date.now();
   lsSave();
-  if(window._fbSave){
-    var json=JSON.stringify(DB);
-    var sizeKB=Math.round(json.length/1024);
-    if(sizeKB>900){
-      console.warn('⚠️ DB size '+sizeKB+'KB — approaching Firebase 1MB limit!');
-      if(CU&&CU.role==='admin'){
-        try{showE('⚠️ Database is '+sizeKB+'KB (limit ~1000KB). Consider removing large images.');}catch(e){}
-      }
+  if(window._fbSaveData&&window._fbSaveUsers){
+    // ── Build data payload: NO users, NO photos ─────────────────────────────
+    var dataPayload={
+      pollas:DB.pollas||[],
+      matches:DB.matches||[],
+      banners:DB.banners||{},
+      stripe:{pub:DB.stripe?DB.stripe.pub:''},  // NEVER save secret key to cloud
+      settings:DB.settings||{},
+      specials:DB.specials||[],
+      bonusQuestions:DB.bonusQuestions||[],
+      nid:DB.nid||{u:10,p:1,m:1},
+      _ts:DB._ts
+    };
+    var dataSz=Math.round(JSON.stringify(dataPayload).length/1024);
+    var usersSz=Math.round(JSON.stringify(DB.users).length/1024);
+    console.log('💾 Saving: data ~'+dataSz+'KB, users ~'+usersSz+'KB (photos local-only)');
+    if(usersSz>900&&CU&&CU.role==='admin'){
+      try{showE('⚠️ User data is '+usersSz+'KB (limit ~1000KB). Ask players to remove profile photos.');}catch(e){}
     }
-    window._fbSave(DB).then(function(){
-      console.log('✅ Firebase saved OK, size ~'+sizeKB+'KB');
-    }).catch(function(e){
-      console.error('❌ Firebase save FAILED:',e.code,e.message,'size was ~'+sizeKB+'KB');
-      var msg='⚠️ Could not save to cloud ('+( e.code||e.message||'unknown')+').\nYour data is saved locally. Try refreshing if the problem persists.';
-      try{alert(msg);}catch(ex){}
+    Promise.all([
+      window._fbSaveData(dataPayload).then(function(){console.log('✅ cfl/data saved ~'+dataSz+'KB');}),
+      window._fbSaveUsers(DB.users).then(function(){console.log('✅ cfl/users saved ~'+usersSz+'KB');})
+    ]).catch(function(e){
+      console.error('❌ Firebase save FAILED:',e.code,e.message);
+      try{alert('⚠️ Could not save to cloud ('+(e.code||e.message||'unknown')+').\nData is saved locally. Try refreshing.');}catch(ex){}
     });
   }
 }
@@ -3584,76 +3624,98 @@ function startApp(){
     seedWC2026();
     seedWC2026Specials();
     lsSave();
-    if(window._fbSave)window._fbSave(DB);
+    saveDB();
   }
   initLang();initTheme();
   setTimeout(fbSync,1000);
 }
 // ════ REAL-TIME FIREBASE SYNC ════
 // Fires automatically whenever ANY user saves data to Firebase
+// ── Shared UI refresh (called after any Firebase update) ─────────────────────
+function _fbRefreshUI(){
+  if(typeof CU==='undefined'||!CU)return;
+  var freshCU=DB.users.find(function(u){return u.id===CU.id;});
+  if(freshCU)CU=freshCU;
+  var auth=document.getElementById('S_auth');
+  if(!auth||!auth.classList.contains('hidden'))return;
+  try{
+    if(CU.role==='admin'){
+      var cur=document.querySelector('#S_admin .stab.on');
+      if(cur){var tab=cur.dataset.tab||'dash';var map={dash:renderAdmDash,pollas:renderAdmPollas,partidos:renderAdmPartidos,resultados:renderAdmRes,premios:renderAdmPremios,stripe:renderAdmStripe,banners:renderAdmBanners,especiales:renderAdmEspeciales,usuarios:renderAdmUsers};if(map[tab])map[tab]();}
+    }else{
+      renderPInicio();
+      var mod=document.getElementById('predModal');
+      if(mod&&mod.style.display!=='none'&&activePolla){try{openModal(activePolla);}catch(e){}}
+    }
+  }catch(e){}
+}
+
+// ── cfl/data snapshot: app content (pollas, matches, banners, settings) ───────
 window._fbOnUpdate=function(d){
-  if(!d||!d.users||!d.users.length)return;
+  if(!d)return;
   var localTs=DB._ts||0;
   var cloudTs=d._ts||0;
 
-  // ── USERS: take cloud version for all admin-controlled fields ────────────────
-  // But protect the current user's local predictions from being overwritten
-  // by a stale snapshot that arrived before their own Firebase write completed.
-  DB.users=d.users;
-  // Re-inject local CU predictions into the cloud user object.
-  // CU.predictions is always the freshest (saveOnePred writes immediately to Firebase,
-  // but the snapshot may not have arrived yet when another update triggers _fbOnUpdate).
+  // MIGRATION: if old cfl/data contained users (legacy single-doc format), migrate them
+  if(d.users&&d.users.length&&window._fbSaveUsers&&!window._migratedUsers){
+    window._migratedUsers=true;
+    console.log('🔄 Migrating users from cfl/data → cfl/users...');
+    if(!DB.users||DB.users.length<=1){DB.users=d.users;}
+    window._fbSaveUsers(DB.users).then(function(){console.log('✅ Users migrated to cfl/users');}).catch(function(e){console.error('Migration failed:',e);});
+  }
+
+  // Only replace app data if cloud is same age or newer
+  if(cloudTs>=localTs){
+    DB.pollas=d.pollas||[];
+    DB.matches=d.matches||[];
+    DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},d.banners||{});
+    DB.stripe=Object.assign({pub:'',secret:''},d.stripe||{});
+    DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
+    DB.nid=d.nid||{u:10,p:1,m:1};
+    DB.bonusQuestions=d.bonusQuestions||[];
+    DB.specials=d.specials||[];
+    // Seed only on very first load (no pollas ever) — prevents write loop with 50 clients
+    var changed=false;
+    if(!DB.pollas.length){seedWC2026();changed=true;}
+    if(changed&&!DB.specials.length){seedWC2026Specials();changed=true;}
+    if(changed&&!window._bnrSeeding){window._bnrSeeding=true;saveDB().catch(function(){}).then(function(){window._bnrSeeding=false;});}
+  }
+
+  lsSave();
+  _fbRefreshUI();
+};
+
+// ── cfl/users snapshot: players array (photos restored from localStorage) ────
+window._fbOnUsersUpdate=function(d){
+  // d=null means cfl/users doc doesn't exist yet — wait for migration from _fbOnUpdate
+  if(!d||!d.users||!d.users.length)return;
+
+  // Restore photos from localStorage (they are never stored in Firebase)
+  var lsData=lsLoad();
+  var lsUsers=(lsData&&lsData.users)||[];
+  var users=d.users.map(function(cloudU){
+    var localU=lsUsers.find(function(lu){return lu.id===cloudU.id;});
+    if(localU&&localU.photo)cloudU.photo=localU.photo;
+    return cloudU;
+  });
+
+  // Protect current user's local predictions from a stale snapshot
   if(typeof CU!=='undefined'&&CU&&CU.id&&CU.predictions&&CU.predictions.length>0){
-    var myInCloud=DB.users.find(function(u){return u.id===CU.id;});
+    var myInCloud=users.find(function(u){return u.id===CU.id;});
     if(myInCloud&&CU.predictions.length>=(myInCloud.predictions||[]).length){
       myInCloud.predictions=CU.predictions;
     }
   }
 
-  // ── EVERYTHING ELSE: only replace if cloud is same age or newer ───────────
-  if(cloudTs>=localTs){
-    DB.pollas=d.pollas||[];
-    DB.matches=d.matches||[];
-    DB.banners=Object.assign({b1:'',b1url:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},d.banners||{});
-    DB.stripe=d.stripe||{pub:'',secret:''};
-    DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
-    DB.nid=d.nid||{u:10,p:1,m:1};DB.bonusQuestions=d.bonusQuestions||[];DB.specials=d.specials||[];
-    // Only seed on first-ever load (no pollas at all) — avoid write-on-read loop with 50 clients
-    var changed=false;
-    if(!DB.pollas.length){seedWC2026();changed=true;}
-    if(changed&&!DB.specials.length){seedWC2026Specials();changed=true;}
-    if(changed&&!window._bnrSeeding){window._bnrSeeding=true;window._fbSave(DB).catch(function(){}).then(function(){window._bnrSeeding=false;});}
-  }
+  DB.users=users;
 
-  // Always guarantee admin credentials exist
+  // Guarantee admin credentials always exist
   var adm=DB.users.find(function(u){return u.role==='admin';});
   if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
   else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';}
 
   lsSave();
-
-  // ── Refresh CU reference so all isPaid / verified checks see new data ──────
-  if(typeof CU!=='undefined'&&CU){
-    var freshCU=DB.users.find(function(u){return u.id===CU.id;});
-    if(freshCU)CU=freshCU;
-    var auth=document.getElementById('S_auth');
-    if(auth&&auth.classList.contains('hidden')){
-      try{
-        if(CU.role==='admin'){
-          var cur=document.querySelector('#S_admin .stab.on');
-          if(cur){var tab=cur.dataset.tab||'dash';var map={dash:renderAdmDash,pollas:renderAdmPollas,partidos:renderAdmPartidos,resultados:renderAdmRes,premios:renderAdmPremios,stripe:renderAdmStripe,banners:renderAdmBanners,especiales:renderAdmEspeciales,usuarios:renderAdmUsers};if(map[tab])map[tab]();}
-        }else{
-          // Re-render player home so pool cards reflect new access state
-          renderPInicio();
-          // If prediction modal is open, refresh it too
-          var mod=document.getElementById('predModal');
-          if(mod&&mod.style.display!=='none'&&activePolla){
-            try{openModal(activePolla);}catch(e){}
-          }
-        }
-      }catch(e){}
-    }
-  }
+  _fbRefreshUI();
 };
 
 document.addEventListener('DOMContentLoaded',startApp);
