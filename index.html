@@ -458,22 +458,46 @@ window._fbSaveData=async function(payload){
   catch(e){console.error('FB data write error:',e.code,e.message);throw e;}
 };
 
-// Save users (NO photos — photos live in localStorage only)
+// Save users — lean (no photos, no redundant prediction fields) + auto-chunked at 100 per doc
+var CHUNK=100;
 window._fbSaveUsers=async function(users){
   try{
-    var stripped=users.map(function(u){var c=Object.assign({},u);delete c.photo;return c;});
-    await setDoc(refUsers,{users:stripped,_ts:Date.now()});
+    // Split into chunks of 100
+    var chunks=[];
+    for(var i=0;i<Math.max(users.length,1);i+=CHUNK)chunks.push(users.slice(i,i+CHUNK));
+    // Strip photos + redundant prediction metadata (pts/correct/type/savedAt are recalculated from results)
+    var lean=function(arr){return arr.map(function(u){
+      var c=Object.assign({},u);delete c.photo;
+      c.predictions=(u.predictions||[]).map(function(pr){return{matchId:pr.matchId,pollaId:pr.pollaId,home:pr.home,away:pr.away};});
+      return c;
+    });};
+    var saves=chunks.map(function(chunk,idx){
+      var r=idx===0?refUsers:doc(db,'cfl','users_'+idx);
+      return setDoc(r,{users:lean(chunk),_ts:Date.now()});
+    });
+    await Promise.all(saves);
+    window._fbUserChunkCount=chunks.length;
     return true;
   }catch(e){console.error('FB users write error:',e.code,e.message);throw e;}
 };
 
-// Legacy alias (used in seeding bootstrap only)
+// Legacy alias
 window._fbSave=window._fbSaveData;
+
+// Dynamically register listener for an extra chunk (users_1, users_2, ...)
+var _regChunks=new Set(['users']);
+window._fbAddChunkListener=function(name){
+  if(_regChunks.has(name))return;
+  _regChunks.add(name);
+  var r=doc(db,'cfl',name);
+  onSnapshot(r,function(snap){if(window._fbOnUsersUpdate)window._fbOnUsersUpdate(snap.exists()?snap.data():null,name);},function(err){console.error('FB chunk error:',name,err);});
+  console.log('📡 Added listener for cfl/'+name);
+};
 
 // Listen: app data
 onSnapshot(refData,function(snap){if(snap.exists()&&window._fbOnUpdate)window._fbOnUpdate(snap.data());},function(err){console.error('FB data snapshot error:',err);});
-// Listen: users
-onSnapshot(refUsers,function(snap){if(window._fbOnUsersUpdate)window._fbOnUsersUpdate(snap.exists()?snap.data():null);},function(err){console.error('FB users snapshot error:',err);});
+// Listen: users (chunk 0)
+onSnapshot(refUsers,function(snap){if(window._fbOnUsersUpdate)window._fbOnUsersUpdate(snap.exists()?snap.data():null,'users');},function(err){console.error('FB users snapshot error:',err);});
 
 window._fbReady=true;document.dispatchEvent(new Event('firebase-ready'));
 }catch(e){console.warn('Firebase:',e);}
@@ -3030,6 +3054,7 @@ async function saveDB(){
       specials:DB.specials||[],
       bonusQuestions:DB.bonusQuestions||[],
       nid:DB.nid||{u:10,p:1,m:1},
+      userChunks:Math.max(1,Math.ceil((DB.users||[]).length/100)),
       _ts:DB._ts
     };
     var dataSz=Math.round(JSON.stringify(dataPayload).length/1024);
@@ -3635,6 +3660,27 @@ function startApp(){
 }
 // ════ REAL-TIME FIREBASE SYNC ════
 // Fires automatically whenever ANY user saves data to Firebase
+// ── Recalculate prediction pts/type/correct from match results (called after Firebase load) ──
+function recalcPredictions(){
+  if(!DB.matches||!DB.matches.length||!DB.users||!DB.users.length)return;
+  DB.users.forEach(function(u){
+    var tot=0,hasAny=false;
+    (u.predictions||[]).forEach(function(pr){
+      var m=DB.matches.find(function(x){return x.id===pr.matchId;});
+      if(m&&m.result){
+        var pol=DB.pollas.find(function(p){return p.id===pr.pollaId;});
+        var sc=pol?(pol.scoring||{win:1,draw:1,exact:5,diff:2}):{win:1,draw:1,exact:5,diff:2};
+        var r=calcPts(pr.home,pr.away,m.result.home,m.result.away,sc);
+        pr.pts=r.pts;pr.type=r.type;pr.correct=(r.type==='exact');
+        tot+=r.pts;hasAny=true;
+      }else{
+        if(!pr.pts)pr.pts=0;if(!pr.type)pr.type='pending';if(!pr.correct)pr.correct=false;
+      }
+    });
+    if(hasAny)u.points=tot;
+  });
+}
+
 // ── Shared UI refresh (called after any Firebase update) ─────────────────────
 function _fbRefreshUI(){
   if(typeof CU==='undefined'||!CU)return;
@@ -3685,38 +3731,61 @@ window._fbOnUpdate=function(d){
     if(changed&&!window._bnrSeeding){window._bnrSeeding=true;saveDB().catch(function(){}).then(function(){window._bnrSeeding=false;});}
   }
 
+  // Register listeners for extra user chunks (if > 100 players)
+  var numChunks=d.userChunks||1;
+  for(var ci=1;ci<numChunks;ci++){if(window._fbAddChunkListener)window._fbAddChunkListener('users_'+ci);}
+
+  // Recalculate scores now that match results are loaded
+  recalcPredictions();
+
   lsSave();
   _fbRefreshUI();
 };
 
-// ── cfl/users snapshot: players array (photos restored from localStorage) ────
-window._fbOnUsersUpdate=function(d){
-  // d=null means cfl/users doc doesn't exist yet — wait for migration from _fbOnUpdate
+// ── cfl/users snapshot: players array (chunked, photos restored from localStorage) ──
+window._fbOnUsersUpdate=function(d,chunkName){
+  chunkName=chunkName||'users';
+  // d=null means chunk doc doesn't exist yet
   if(!d||!d.users||!d.users.length)return;
 
-  // Restore photos from localStorage (they are never stored in Firebase)
-  var lsData=lsLoad();
-  var lsUsers=(lsData&&lsData.users)||[];
-  var users=d.users.map(function(cloudU){
+  // Init chunk storage
+  if(!window._fbLoadedChunks)window._fbLoadedChunks={};
+
+  // Restore photos from localStorage (never stored in Firebase)
+  var lsData=lsLoad();var lsUsers=(lsData&&lsData.users)||[];
+  var chunkUsers=d.users.map(function(cloudU){
     var localU=lsUsers.find(function(lu){return lu.id===cloudU.id;});
     if(localU&&localU.photo)cloudU.photo=localU.photo;
     return cloudU;
   });
 
-  // Protect current user's local predictions from a stale snapshot
+  window._fbLoadedChunks[chunkName]=chunkUsers;
+
+  // Merge all loaded chunks in order: users, users_1, users_2...
+  var allUsers=[];
+  Object.keys(window._fbLoadedChunks).sort(function(a,b){
+    var na=a==='users'?0:parseInt(a.split('_')[1]||0);
+    var nb=b==='users'?0:parseInt(b.split('_')[1]||0);
+    return na-nb;
+  }).forEach(function(k){allUsers=allUsers.concat(window._fbLoadedChunks[k]);});
+
+  // Protect CU predictions from stale snapshots
   if(typeof CU!=='undefined'&&CU&&CU.id&&CU.predictions&&CU.predictions.length>0){
-    var myInCloud=users.find(function(u){return u.id===CU.id;});
+    var myInCloud=allUsers.find(function(u){return u.id===CU.id;});
     if(myInCloud&&CU.predictions.length>=(myInCloud.predictions||[]).length){
       myInCloud.predictions=CU.predictions;
     }
   }
 
-  DB.users=users;
+  DB.users=allUsers;
 
   // Guarantee admin credentials always exist
   var adm=DB.users.find(function(u){return u.role==='admin';});
   if(!adm){DB.users.unshift({id:1,name:'CFL Admin',email:'admin_fcnoise',pass:'FCNOISE26',role:'admin',status:'active',verified:true,points:0,photo:'',phone:'',country:'',predictions:[],payments:[]});}
   else{adm.email='admin_fcnoise';adm.pass='FCNOISE26';}
+
+  // Recalculate pts/type/correct from match results (predictions are stored lean)
+  recalcPredictions();
 
   lsSave();
   _fbRefreshUI();
