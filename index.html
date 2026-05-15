@@ -2476,7 +2476,7 @@ function renderPInicio(){
           html+=`<div class="up-match" style="flex-direction:column;align-items:stretch;padding:6px 0">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:4px">
               <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0">
-                <span style="font-size:18px">${flagOf(m.home)}</span>
+                <span style="font-size:18px">${getTeamFlag(m,'home')}</span>
                 <span style="font-size:11px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.home}</span>
               </div>
               <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
@@ -2486,7 +2486,7 @@ function renderPInicio(){
               </div>
               <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0;justify-content:flex-end">
                 <span style="font-size:11px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">${m.away}</span>
-                <span style="font-size:18px">${flagOf(m.away)}</span>
+                <span style="font-size:18px">${getTeamFlag(m,'away')}</span>
               </div>
             </div>
             <div style="font-size:9px;color:var(--tx2);text-align:center;margin-top:2px">${fmt(m.date,tz)}</div>
@@ -2563,6 +2563,51 @@ function renderPInicio(){
 function fmtDate(d){
   try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch(e){return '';}
 }
+// ════ FLAG PICKER ════
+var ALL_FLAGS=[
+  ['🇲🇽','Mexico'],['🇦🇷','Argentina'],['🇧🇷','Brazil'],['🇺🇾','Uruguay'],['🇨🇱','Chile'],['🇨🇴','Colombia'],
+  ['🇻🇪','Venezuela'],['🇪🇨','Ecuador'],['🇵🇾','Paraguay'],['🇧🇴','Bolivia'],['🇵🇪','Peru'],['🇨🇷','Costa Rica'],
+  ['🇵🇦','Panama'],['🇭🇳','Honduras'],['🇯🇲','Jamaica'],['🇹🇹','Trinidad'],['🇺🇸','USA'],['🇨🇦','Canada'],
+  ['🇿🇦','South Africa'],['🇳🇬','Nigeria'],['🇬🇭','Ghana'],['🇸🇳','Senegal'],['🇨🇲','Cameroon'],['🇩🇿','Algeria'],
+  ['🇹🇳','Tunisia'],['🇨🇮','Ivory Coast'],['🇲🇱','Mali'],['🇦🇴','Angola'],['🇿🇲','Zambia'],['🇪🇬','Egypt'],
+  ['🇲🇦','Morocco'],['🇫🇷','France'],['🇩🇪','Germany'],['🇪🇸','Spain'],['🇵🇹','Portugal'],['🇮🇹','Italy'],
+  ['🇳🇱','Netherlands'],['🇧🇪','Belgium'],['🏴󠁧󠁢󠁥󠁮󠁧󠁿','England'],['🏴󠁧󠁢󠁳󠁣󠁴󠁿','Scotland'],['🏴󠁧󠁢󠁷󠁬󠁳󠁿','Wales'],['🇩🇰','Denmark'],
+  ['🇸🇪','Sweden'],['🇳🇴','Norway'],['🇨🇭','Switzerland'],['🇦🇹','Austria'],['🇵🇱','Poland'],['🇺🇦','Ukraine'],
+  ['🇷🇴','Romania'],['🇭🇺','Hungary'],['🇨🇿','Czech Republic'],['🇸🇰','Slovakia'],['🇸🇮','Slovenia'],['🇭🇷','Croatia'],
+  ['🇷🇸','Serbia'],['🇬🇷','Greece'],['🇹🇷','Turkey'],['🇦🇱','Albania'],['🇯🇵','Japan'],['🇦🇺','Australia'],
+  ['🇰🇷','South Korea'],['🇮🇷','Iran'],['🇸🇦','Saudi Arabia'],['🇶🇦','Qatar'],['🇮🇶','Iraq'],['🇺🇿','Uzbekistan'],
+  ['🇰🇿','Kazakhstan'],['🇮🇩','Indonesia'],['🇳🇿','New Zealand'],['🏳','TBD']
+];
+function buildFlagGrid(side){
+  var grid=document.getElementById('flagGrid'+side);
+  var inp=document.getElementById('em'+side);
+  var prev=document.getElementById('em'+side+'Prev');
+  if(!grid||!inp||!prev)return;
+  grid.innerHTML=ALL_FLAGS.map(function(fl){
+    return'<button onclick="pickFlag(\''+side+'\',\''+fl[0]+'\')" title="'+fl[1]+'" style="font-size:20px;background:none;border:none;cursor:pointer;padding:2px 3px;border-radius:4px;line-height:1" onmouseover="this.style.background=\'var(--org2)\'" onmouseout="this.style.background=\'none\'">'+fl[0]+'</button>';
+  }).join('');
+}
+function toggleFlagPicker(side){
+  var picker=document.getElementById('flagPicker'+side);
+  if(!picker)return;
+  var isHidden=picker.style.display==='none'||picker.style.display==='';
+  // Close both first
+  ['HF','AF'].forEach(function(s){var p=document.getElementById('flagPicker'+s);if(p)p.style.display='none';});
+  if(isHidden){picker.style.display='block';}
+}
+function pickFlag(side,emoji){
+  var inp=document.getElementById('em'+side);
+  var prev=document.getElementById('em'+side+'Prev');
+  if(inp)inp.value=emoji;
+  if(prev)prev.textContent=emoji;
+  var picker=document.getElementById('flagPicker'+side);
+  if(picker)picker.style.display='none';
+}
+function getTeamFlag(m,side){
+  if(side==='home')return m.homeFlag||flagOf(m.home);
+  return m.awayFlag||flagOf(m.away);
+}
+
 function flagOf(name){
   var f={'Mexico':'🇲🇽','South Africa':'🇿🇦','Uruguay':'🇺🇾','Angola':'🇦🇴',
     'Argentina':'🇦🇷','Chile':'🇨🇱','Nigeria':'🇳🇬','Egypt':'🇪🇬',
@@ -3485,6 +3530,11 @@ function editMatch(id){
   var hp=document.getElementById('emHLPrev'),ap=document.getElementById('emALPrev');
   if(m.homeLogo){hp.src=m.homeLogo;hp.style.display='block';}else{hp.src='';hp.style.display='none';}
   if(m.awayLogo){ap.src=m.awayLogo;ap.style.display='block';}else{ap.src='';ap.style.display='none';}
+  // Load stored flags (or auto-detect from name)
+  var hf=m.homeFlag||getTeamFlag(m,'home');var af=m.awayFlag||getTeamFlag(m,'away');
+  document.getElementById('emHF').value=hf;document.getElementById('emAF').value=af;
+  document.getElementById('emHFPrev').textContent=hf;document.getElementById('emAFPrev').textContent=af;
+  buildFlagGrid('HF');buildFlagGrid('AF');
   var sel=document.getElementById('emPo2');
   sel.innerHTML=DB.pollas.map(function(p){return'<option value="'+p.id+'"'+(p.id===m.pollaId?' selected':'')+'>'+p.name+'</option>';}).join('');
   document.getElementById('editMatchModal').style.display='block';
@@ -3506,6 +3556,10 @@ function saveEditMatch(){
   else if(hlUrl)m.homeLogo=hlUrl;
   if(alPrev.src&&alPrev.style.display!=='none'&&alPrev.src.startsWith('data:'))m.awayLogo=alPrev.src;
   else if(alUrl)m.awayLogo=alUrl;
+  var hfVal=document.getElementById('emHF').value;
+  var afVal=document.getElementById('emAF').value;
+  if(hfVal)m.homeFlag=hfVal;
+  if(afVal)m.awayFlag=afVal;
   document.getElementById('editMatchModal').style.display='none';
   saveDB();renderAdmPartidos();
 }
@@ -4208,8 +4262,30 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
     <input type="hidden" id="emId">
     <div class="fg"><label class="fl">Polla</label><select class="fi" id="emPo2"></select></div>
     <div class="fr2">
-      <div class="fg"><label class="fl">Local</label><input class="fi" id="emHo"></div>
-      <div class="fg"><label class="fl">Visitante</label><input class="fi" id="emAw"></div>
+      <div class="fg">
+        <label class="fl">Local</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span id="emHFPrev" style="font-size:22px;cursor:pointer" onclick="toggleFlagPicker('HF')">🏳</span>
+          <input class="fi" id="emHo" style="flex:1">
+        </div>
+        <input type="hidden" id="emHF">
+        <div id="flagPickerHF" style="display:none;max-height:160px;overflow-y:auto;background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:6px;margin-top:4px;display:none">
+          <div style="font-size:9px;color:var(--tx3);margin-bottom:4px">Toca para seleccionar</div>
+          <div id="flagGridHF" style="display:flex;flex-wrap:wrap;gap:2px"></div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Visitante</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span id="emAFPrev" style="font-size:22px;cursor:pointer" onclick="toggleFlagPicker('AF')">🏳</span>
+          <input class="fi" id="emAw" style="flex:1">
+        </div>
+        <input type="hidden" id="emAF">
+        <div id="flagPickerAF" style="display:none;max-height:160px;overflow-y:auto;background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:6px;margin-top:4px;display:none">
+          <div style="font-size:9px;color:var(--tx3);margin-bottom:4px">Toca para seleccionar</div>
+          <div id="flagGridAF" style="display:flex;flex-wrap:wrap;gap:2px"></div>
+        </div>
+      </div>
     </div>
     <div class="fg"><label class="fl">Fecha / Hora</label><input class="fi" type="datetime-local" id="emDt"></div>
     <div class="fr2">
