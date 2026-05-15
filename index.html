@@ -322,7 +322,7 @@ code{background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:10px;}
   .nav-t1{font-size:11px;letter-spacing:2px;}
   .nav-t2{display:none;}
   .tabs{padding:0 8px;}
-  .stab{padding:9px 10px;font-size:9px;letter-spacing:1px;}
+  .stab{padding:8px 8px;font-size:9px;letter-spacing:0.5px;}
   .nav-uname{display:none;}
 }
 @media(max-width:480px){
@@ -331,9 +331,13 @@ code{background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:10px;}
   .mc{padding:9px 10px;}
   .modal-box{max-width:calc(100% - 24px)!important;max-height:90vh;border-radius:14px;}
   .modal{align-items:center;padding:12px;}
-  .stab{padding:8px 8px;font-size:8.5px;}
+  .stab{padding:7px 7px;font-size:8.5px;}
   .nav-logo{width:30px;height:30px;}
   .sc-inp{width:42px!important;font-size:16px!important;}
+  .pool-hero-name{font-size:16px!important;}
+  .pool-hero-meta{font-size:11px!important;}
+  .sp-val{font-size:16px!important;}
+  .up-match{padding:7px 0!important;}
 }
 
 /* ════ MODAL CENTER ════ */
@@ -552,8 +556,8 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           <button class="tabp" onclick="swTab('reg',this)" data-t="register">Sign Up</button>
         </div>
         <div id="fLogin">
-          <div class="fg"><label class="fl">Usuario / Correo</label><input class="fi" id="lEmail" type="text" placeholder="tu@correo.com" autocomplete="username" autocapitalize="off"></div>
-          <div class="fg"><label class="fl">Contraseña</label><input class="fi" id="lPass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+          <div class="fg"><label class="fl">Username / Email</label><input class="fi" id="lEmail" type="text" placeholder="your@email.com" autocomplete="username" autocapitalize="off"></div>
+          <div class="fg"><label class="fl">Password</label><input class="fi" id="lPass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
           <button class="btn btn-p" onclick="doLogin()">INGRESAR</button>
         </div>
         <div id="fReg" class="hidden">
@@ -562,11 +566,11 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
               <img id="rPhPrev" src="" alt=""><span class="ph-lbl">Photo<br>optional</span>
               <input type="file" id="rPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'rPhPrev','rPhRing')">
             </div>
-            <div style="flex:1"><div class="fg"><label class="fl">Nombre completo</label><input class="fi" id="rName" type="text" placeholder="Tu nombre"></div></div>
+            <div style="flex:1"><div class="fg"><label class="fl">Full Name</label><input class="fi" id="rName" type="text" placeholder="Your name"></div></div>
           </div>
-          <div class="fg"><label class="fl">Correo</label><input class="fi" id="rEmail" type="email" placeholder="tu@correo.com"></div>
-          <div class="fg"><label class="fl">Contraseña</label><input class="fi" id="rPass" type="password" placeholder="Mínimo 6 caracteres"></div>
-          <div class="fg"><label class="fl">Celular</label><input class="fi" id="rPhone" type="tel" placeholder="+1 555 000 0000"></div>
+          <div class="fg"><label class="fl">Email</label><input class="fi" id="rEmail" type="email" placeholder="your@email.com"></div>
+          <div class="fg"><label class="fl">Password</label><input class="fi" id="rPass" type="password" placeholder="Min 6 characters"></div>
+          <div class="fg"><label class="fl">Phone</label><input class="fi" id="rPhone" type="tel" placeholder="+1 555 000 0000"></div>
           <button class="btn btn-p" onclick="doRegister()">CREAR CUENTA</button>
         </div>
       </div>
@@ -812,20 +816,20 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           <label class="fl" style="margin-bottom:8px">Distribución del Pool</label>
           <div class="fr4">
             <div>
-              <label class="fl" style="color:var(--org)">1° Lugar (%)</label>
-              <input class="fi" id="pr1" type="number" value="60" min="0" max="100" oninput="updatePrizePreview()">
+              <label class="fl" style="color:var(--org)">🥇 1st Place ($)</label>
+              <input class="fi" id="pr1" type="number" value="0" min="0" step="1" oninput="updatePrizePreview()">
             </div>
             <div>
-              <label class="fl" style="color:var(--g2)">2° Lugar (%)</label>
-              <input class="fi" id="pr2" type="number" value="30" min="0" max="100" oninput="updatePrizePreview()">
+              <label class="fl" style="color:var(--g2)">🥈 2nd Place ($)</label>
+              <input class="fi" id="pr2" type="number" value="0" min="0" step="1" oninput="updatePrizePreview()">
             </div>
             <div>
-              <label class="fl" style="color:var(--grn)">3° Lugar (%)</label>
-              <input class="fi" id="pr3" type="number" value="10" min="0" max="100" oninput="updatePrizePreview()">
+              <label class="fl" style="color:var(--grn)">🥉 3rd Place ($)</label>
+              <input class="fi" id="pr3" type="number" value="0" min="0" step="1" oninput="updatePrizePreview()">
             </div>
             <div>
-              <label class="fl">Org. (%)</label>
-              <input class="fi" id="prCom" type="number" value="0" min="0" max="100" oninput="updatePrizePreview()">
+              <label class="fl">Org. ($)</label>
+              <input class="fi" id="prCom" type="number" value="0" min="0" step="1" oninput="updatePrizePreview()">
             </div>
           </div>
           <div id="prizePreview" style="font-size:10px;color:var(--tx2);padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--bd);margin-top:8px"></div>
@@ -1092,19 +1096,17 @@ const STAGE_CSS = {
 
 // ═══════════ PRIZE PREVIEW ═══════════
 function updatePrizePreview() {
-  const fee  = parseFloat(document.getElementById('pFee').value)||0;
-  const p1   = parseFloat(document.getElementById('pr1').value)||0;
-  const p2   = parseFloat(document.getElementById('pr2').value)||0;
-  const p3   = parseFloat(document.getElementById('pr3').value)||0;
-  const com  = parseFloat(document.getElementById('prCom')||{value:0}).value||0;
-  const tot  = p1+p2+p3+com;
-  const warn = tot>100 ? `<span style="color:var(--red)">⚠ Suma ${tot}% — máximo 100%</span>` : '';
+  const p1  = parseFloat(document.getElementById('pr1').value)||0;
+  const p2  = parseFloat(document.getElementById('pr2').value)||0;
+  const p3  = parseFloat(document.getElementById('pr3').value)||0;
+  const com = parseFloat((document.getElementById('prCom')||{value:0}).value)||0;
+  const tot = p1+p2+p3+com;
   document.getElementById('prizePreview').innerHTML =
-    `Estimado con 10 inscritos (USD ${(fee*10).toFixed(2)} pool):<br>` +
-    `<span style="color:var(--org)">◆ 1° → ${(fee*10*p1/100).toFixed(2)}</span> &nbsp;` +
-    `<span style="color:var(--g2)">◇ 2° → ${(fee*10*p2/100).toFixed(2)}</span> &nbsp;` +
-    `<span style="color:var(--grn)">▸ 3° → ${(fee*10*p3/100).toFixed(2)}</span>` +
-    (com ? ` &nbsp;<span style="color:var(--tx2)">Org → ${(fee*10*com/100).toFixed(2)}</span>` : '') + warn;
+    `Prize pool: <strong>$${tot.toFixed(2)}</strong><br>` +
+    `<span style="color:var(--org)">🥇 1st → $${p1.toFixed(2)}</span> &nbsp;` +
+    `<span style="color:var(--g2)">🥈 2nd → $${p2.toFixed(2)}</span> &nbsp;` +
+    `<span style="color:var(--grn)">🥉 3rd → $${p3.toFixed(2)}</span>` +
+    (com ? ` &nbsp;<span style="color:var(--tx2)">Org → $${com.toFixed(2)}</span>` : '');
 }
 updatePrizePreview();
 
@@ -1379,9 +1381,14 @@ function isPlayerPaid(u,pollaId){
   return !!(u.payments&&u.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';}));
 }
 function calcPrizes(pol){
-  const pool=calcPool(pol),pr=pol.prizes||{p1:60,p2:30,p3:10,com:0};
-  // Count verified players + paid players (deduplicated)
+  const pool=calcPool(pol),pr=pol.prizes||{p1:0,p2:0,p3:0,com:0};
   const inscribed=DB.users.filter(u=>u.role!=='admin'&&isPlayerPaid(u,pol.id)).length;
+  // Support both fixed-$ prizes (new) and legacy %-based prizes (old)
+  const isFixed=(pr.p1||0)+(pr.p2||0)+(pr.p3||0) > 100 || pol.prizeType==='fixed';
+  if(isFixed){
+    return{pool,inscribed,p1:pr.p1||0,p2:pr.p2||0,p3:pr.p3||0,com:pr.com||0};
+  }
+  // Legacy: treat as percentages
   return{pool,inscribed,p1:pool*(pr.p1||0)/100,p2:pool*(pr.p2||0)/100,p3:pool*(pr.p3||0)/100,com:pool*(pr.com||0)/100};
 }
 
@@ -1389,17 +1396,17 @@ function prevPh(ev,imgId,ringId){
   const file=ev.target.files[0];if(!file)return;
   const rd=new FileReader();
   rd.onload=e=>{
-    // Compress image to max 100x100px, JPEG 0.60 — critical: 50 users×photo must fit in 1MB Firebase doc
+    // Compress image to max 200x200px, JPEG 0.82 — critical: 50 users×photo must fit in 1MB Firebase doc
     const rawImg=new Image();
     rawImg.onload=function(){
-      const MAX=100;
+      const MAX=200;
       var w=rawImg.width,h=rawImg.height;
       if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
       else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
       var canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(rawImg,0,0,w,h);
-      var compressed=canvas.toDataURL('image/jpeg',0.60);
+      var compressed=canvas.toDataURL('image/jpeg',0.82);
       var img=document.getElementById(imgId);
       var lbl=document.querySelector('#'+ringId+' .ph-lbl');
       img.src=compressed;img.style.display='block';if(lbl)lbl.style.display='none';
@@ -1449,7 +1456,7 @@ function doRegister(){
   const _phInput=document.getElementById('rPhFile');
   const ph=(_phInput&&_phInput._compressed)||document.getElementById('rPhPrev').src||'';
   if(!name||!email||!pass)return showE('Completa todos los campos');
-  if(pass.length<6)return showE('Contraseña mínimo 6 caracteres');
+  if(pass.length<6)return showE('Password must be at least 6 characters');
   if(DB.users.find(u=>(u.email||'').toLowerCase()===email.toLowerCase()))return showE('Email already registered');
   DB.users.push({id:DB.nid.u++,name,email,pass,phone,role:'user',status:'active',verified:false,points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
   addNotif('register',{name:name,email:email});
@@ -1687,7 +1694,8 @@ function createPolla(){
     prizes:{p1:parseFloat(document.getElementById('pr1').value)||0,
              p2:parseFloat(document.getElementById('pr2').value)||0,
              p3:parseFloat(document.getElementById('pr3').value)||0,
-             com:0},
+             com:parseFloat((document.getElementById('prCom')||{value:0}).value)||0},
+    prizeType:'fixed',
     tz:document.getElementById('pTz').value,
     status:'open'
   });
@@ -2394,6 +2402,11 @@ function renderPInicio(){
             <div style="font-size:8px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">Your rank</div>
           </div>`:''}
         </div>
+        ${prz.p1||prz.p2||prz.p3?`<div style="display:flex;gap:10px;margin-top:10px;margin-bottom:2px;flex-wrap:wrap">
+          <div style="font-size:10px;font-weight:700;color:var(--org)">🥇 ${usd(prz.p1)}</div>
+          <div style="font-size:10px;font-weight:700;color:var(--g2)">🥈 ${usd(prz.p2)}</div>
+          <div style="font-size:10px;font-weight:700;color:var(--grn)">🥉 ${usd(prz.p3)}</div>
+        </div>`:''}
         ${myPolPreds.length>0?`<div class="stats-strip" style="margin-top:12px;margin-bottom:0">
           <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myPoolPts}</div><div class="sp-lbl">Points</div></div>
           <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myExact}</div><div class="sp-lbl">Exact</div></div>
@@ -2460,11 +2473,23 @@ function renderPInicio(){
         upcoming.forEach(m=>{
           const tz=m.tz||pol.tz||'America/New_York';
           const myPr=CU.predictions.find(p=>p.matchId===m.id);
-          html+=`<div class="up-match">
-            <div class="up-teams" style="font-size:11px;color:var(--tx);font-weight:600">${m.home} <span style="color:var(--tx3);font-weight:400">vs</span> ${m.away}</div>
-            <div class="up-time" style="font-size:10px;color:var(--tx2)">${fmt(m.date,tz)}</div>
-            ${myPr?`<div class="up-pred" style="color:var(--org);font-size:10px;font-weight:700">⚽ ${myPr.home}–${myPr.away}</div>`:
-              isOpen?`<button onclick="openModal(${pol.id})" style="font-size:10px;border:none;background:var(--org2);color:var(--org);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:700">Predict</button>`:''}
+          html+=`<div class="up-match" style="flex-direction:column;align-items:stretch;padding:6px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:4px">
+              <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0">
+                <span style="font-size:18px">${flagOf(m.home)}</span>
+                <span style="font-size:11px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.home}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+                ${myPr?`<span style="font-family:'Kallisto',sans-serif;font-size:13px;color:var(--org);font-weight:700">${myPr.home}</span><span style="font-size:10px;color:var(--tx3)">–</span><span style="font-family:'Kallisto',sans-serif;font-size:13px;color:var(--org);font-weight:700">${myPr.away}</span>`
+                :isOpen?`<button onclick="openModal(${pol.id})" style="font-size:9px;border:none;background:var(--org2);color:var(--org);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:700">Predict</button>`
+                :`<span style="font-size:10px;color:var(--tx3)">vs</span>`}
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0;justify-content:flex-end">
+                <span style="font-size:11px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">${m.away}</span>
+                <span style="font-size:18px">${flagOf(m.away)}</span>
+              </div>
+            </div>
+            <div style="font-size:9px;color:var(--tx2);text-align:center;margin-top:2px">${fmt(m.date,tz)}</div>
           </div>`;
         });
         html+='</div>';
@@ -2537,6 +2562,26 @@ function renderPInicio(){
 
 function fmtDate(d){
   try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch(e){return '';}
+}
+function flagOf(name){
+  var f={'Mexico':'🇲🇽','South Africa':'🇿🇦','Uruguay':'🇺🇾','Angola':'🇦🇴',
+    'Argentina':'🇦🇷','Chile':'🇨🇱','Nigeria':'🇳🇬','Egypt':'🇪🇬',
+    'USA':'🇺🇸','United States':'🇺🇸','Australia':'🇦🇺','Morocco':'🇲🇦','Kazakhstan':'🇰🇿',
+    'Canada':'🇨🇦','Ecuador':'🇪🇨','Cameroon':'🇨🇲','Hungary':'🇭🇺',
+    'Brazil':'🇧🇷','Japan':'🇯🇵','Switzerland':'🇨🇭','Albania':'🇦🇱',
+    'France':'🇫🇷','Belgium':'🇧🇪','Venezuela':'🇻🇪','New Zealand':'🇳🇿',
+    'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Colombia':'🇨🇴','Senegal':'🇸🇳','DR Congo':'🇨🇩',
+    'Portugal':'🇵🇹','Iraq':'🇮🇶','Germany':'🇩🇪','Spain':'🇪🇸',
+    'Netherlands':'🇳🇱','Italy':'🇮🇹','Croatia':'🇭🇷','Serbia':'🇷🇸',
+    'South Korea':'🇰🇷','Iran':'🇮🇷','Saudi Arabia':'🇸🇦','Qatar':'🇶🇦',
+    'Ghana':'🇬🇭','Tunisia':'🇹🇳','Ivory Coast':'🇨🇮','Mali':'🇲🇱',
+    'Paraguay':'🇵🇾','Bolivia':'🇧🇴','Peru':'🇵🇪','Costa Rica':'🇨🇷',
+    'Panama':'🇵🇦','Honduras':'🇭🇳','Jamaica':'🇯🇲','Trinidad':'🇹🇹',
+    'Slovenia':'🇸🇮','Slovakia':'🇸🇰','Austria':'🇦🇹','Romania':'🇷🇴',
+    'Ukraine':'🇺🇦','Poland':'🇵🇱','Denmark':'🇩🇰','Sweden':'🇸🇪',
+    'Norway':'🇳🇴','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','Wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Turkey':'🇹🇷',
+    'Greece':'🇬🇷','Czech Republic':'🇨🇿','Algeria':'🇩🇿','Zambia':'🇿🇲'};
+  return f[name]||'🏳';
 }
 function getMyPodiumData(){
   const specials=DB.specials||[];
@@ -3645,7 +3690,7 @@ function renderAdmEspeciales(){
         +'<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">'
         +'<button class="btn-xs" onclick="toggleEspecial('+s.id+')" style="background:'+(isOpen?'rgba(255,60,60,.1)':'var(--grn2)')+';color:'+(isOpen?'var(--red)':'var(--grn)')+';">'+(isOpen?'🔴 Cerrar':'🟢 Abrir')+'</button>'
         +(s.answer?'':'<button class="btn-xs" onclick="setSpecialAnswer('+s.id+')">✅ Fijar resp.</button>')
-        +'<button class="btn-xs" onclick="editSpecial('+s.id+')">✏️</button>'
+        +(answered===0?'<button class="btn-xs" onclick="editSpecial('+s.id+')">✏️</button>':'')
         +'<button class="btn-xs" style="background:var(--red2);color:var(--red)" onclick="deleteSpecial('+s.id+')">✕</button>'
         +'</div>'
         +'</div></div>';
@@ -4232,8 +4277,8 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
         <input type="file" accept="image/*" style="display:none" onchange="prevPh(event,'selfPhPrev','selfPhRing')">
       </label>
     </div>
-    <div class="fg"><label class="fl">Nombre</label><input class="fi" id="selfName" placeholder="Tu nombre"></div>
-    <div class="fg"><label class="fl">Nueva contraseña (opcional)</label><input class="fi" type="password" id="selfPass" placeholder="Mínimo 6 caracteres"></div>
+    <div class="fg"><label class="fl">Name</label><input class="fi" id="selfName" placeholder="Your name"></div>
+    <div class="fg"><label class="fl">New Password (optional)</label><input class="fi" type="password" id="selfPass" placeholder="Min 6 characters"></div>
     <div class="msg-ok" id="selfOK" style="display:none;margin-top:8px">¡Guardado! ✓</div>
     <button class="btn btn-p" style="width:100%;margin-top:12px" onclick="saveSelfEdit()">GUARDAR</button>
   </div>
