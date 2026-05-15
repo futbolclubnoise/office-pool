@@ -2807,6 +2807,11 @@ function saveProfile(){
   const ok=document.getElementById('pfOK');ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);
 }
 
+function showPaymentToast(){
+  var t=document.getElementById('paymentToast');
+  if(!t)return;
+  t.style.display='flex';
+}
 function renderPInscripcion(){
   const open=DB.pollas.filter(p=>p.status==='open');
   document.getElementById('payPolla').innerHTML=open.map(p=>`<option value="${p.id}">${p.name} — ${usd(p.fee)}</option>`).join('')||'<option>No open pools</option>';
@@ -2831,7 +2836,7 @@ function updatePayPreview(){
   if(ya){
     wrap.innerHTML='<div class="res-correct" style="margin-top:12px">✅ Access granted — you can enter predictions for this pool.</div>';
   } else if(link){
-    wrap.innerHTML=`<a href="${link}?client_reference_id=${CU.id}_${id}" target="_blank" style="display:block;text-decoration:none;margin-top:14px">
+    wrap.innerHTML=`<a href="${link}?client_reference_id=${CU.id}_${id}" target="_blank" style="display:block;text-decoration:none;margin-top:14px" onclick="setTimeout(showPaymentToast,1500)">
       <button class="btn btn-p" style="background:var(--org);color:#fff;border:none;font-size:12px;letter-spacing:1px;padding:13px">💳 PAGAR INSCRIPCIÓN — ${usd(pol.fee)}</button>
     </a>
     <div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:8px">You'll be redirected to Stripe. The admin will confirm your payment afterward.</div>`;
@@ -4006,6 +4011,11 @@ function startApp(){
     },6000);
   }
   initLang();initTheme();
+  // Detect return from Stripe payment (?paid=1)
+  if(window.location.search.indexOf('paid=1')>=0){
+    setTimeout(showPaymentToast,1200);
+    history.replaceState(null,'',window.location.pathname);
+  }
   setTimeout(fbSync,1000);
 }
 // ════ REAL-TIME FIREBASE SYNC ════
@@ -4158,6 +4168,21 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
 
 </script>
 
+<!-- ════ PAYMENT TOAST ════ -->
+<div id="paymentToast" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg3);border:1px solid var(--org);border-radius:20px;padding:32px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 0 40px rgba(224,124,42,.3);animation:toastPop .35s cubic-bezier(.34,1.56,.64,1)">
+    <div style="font-size:52px;margin-bottom:16px">🎉</div>
+    <div style="font-family:Kallisto,sans-serif;font-size:18px;font-weight:600;color:var(--tx);margin-bottom:10px;letter-spacing:.5px">Payment Received!</div>
+    <div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:24px">We are verifying your payment.<br>In a few minutes you will be<br><strong style="color:var(--org)">ready to start! 🚀</strong></div>
+    <div style="display:flex;gap:6px;align-items:center;justify-content:center;margin-bottom:20px">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--org);animation:toastDot 1.2s infinite"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--org);animation:toastDot 1.2s .2s infinite"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--org);animation:toastDot 1.2s .4s infinite"></div>
+    </div>
+    <button onclick="document.getElementById('paymentToast').style.display='none'" style="padding:10px 28px;border-radius:12px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px">Got it!</button>
+  </div>
+</div>
+<style>@keyframes toastPop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}@keyframes toastDot{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}</style>
 <!-- ════ MODAL: CONFIGURACIÓN ════ -->
 <div id="settingsModal" class="modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-box card">
