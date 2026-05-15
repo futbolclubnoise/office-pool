@@ -150,9 +150,9 @@ body.light .btn-xs:hover{background:rgba(180,80,0,.08);}
 .lb-pos{font-family:'Kallisto',sans-serif;font-weight:500;font-size:15px;color:var(--tx3);width:22px;text-align:center;flex-shrink:0;}
 .lb-pos.p1{color:var(--org);} .lb-pos.p2{color:var(--g2);} .lb-pos.p3{color:var(--grn);}
 .av{width:30px;height:30px;border-radius:50%;border:1px solid var(--bd2);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg4);font-family:'Kallisto',sans-serif;font-weight:500;font-size:10px;color:var(--tx);flex-shrink:0;}
-.av img{width:100%;height:100%;object-fit:cover;}
+.av img{width:100%;height:100%;object-fit:cover;image-rendering:-webkit-optimize-contrast;}
 .av-lg{width:46px;height:46px;border-radius:50%;border:2px solid var(--bd2);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-family:'Kallisto',sans-serif;font-weight:500;font-size:14px;color:var(--tx);flex-shrink:0;}
-.av-lg img{width:100%;height:100%;object-fit:cover;}
+.av-lg img{width:100%;height:100%;object-fit:cover;image-rendering:-webkit-optimize-contrast;}
 .lb-name{flex:1;font-size:12px;font-weight:500;}
 .lb-pts{font-family:'Kallisto',sans-serif;font-weight:500;font-size:17px;color:var(--g1);}
 .lb-ptsl{font-size:7px;color:var(--tx3);letter-spacing:1px;text-align:right;}
@@ -229,8 +229,8 @@ input[type=number]{-moz-appearance:textfield;}
 .t5-r{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .15s;border-radius:8px;}
 .t5-r:last-child{border-bottom:none;}
 .t5-r:hover{background:var(--bg3);}
-.av-xl{width:90px;height:90px;border-radius:50%;border:3px solid var(--org);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-family:'Kallisto',sans-serif;font-weight:500;font-size:28px;color:var(--tx);flex-shrink:0;margin:0 auto 12px;}
-.av-xl img{width:100%;height:100%;object-fit:cover;}
+.av-xl{width:110px;height:110px;border-radius:50%;border:3px solid var(--org);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-family:'Kallisto',sans-serif;font-weight:500;font-size:32px;color:var(--tx);flex-shrink:0;margin:0 auto 12px;}
+.av-xl img{width:100%;height:100%;object-fit:cover;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;}
 .t5-pos{font-family:'Kallisto',sans-serif;font-weight:500;font-size:13px;color:var(--tx3);width:18px;text-align:center;flex-shrink:0;}
 .t5-pos.a{color:var(--org);} .t5-pos.b{color:var(--g2);} .t5-pos.c{color:var(--grn);}
 
@@ -1402,14 +1402,19 @@ function prevPh(ev,imgId,ringId){
     // Compress image to max 200x200px, JPEG 0.82 — critical: 50 users×photo must fit in 1MB Firebase doc
     const rawImg=new Image();
     rawImg.onload=function(){
-      const MAX=320;
+      const MAX=500;
       var w=rawImg.width,h=rawImg.height;
       if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
       else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
       var canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(rawImg,0,0,w,h);
-      var compressed=canvas.toDataURL('image/jpeg',0.88);
+      // Use device pixel ratio for crisp rendering on retina screens
+      var dpr=Math.min(window.devicePixelRatio||1,2);
+      canvas.width=w*dpr;canvas.height=h*dpr;
+      var ctx=canvas.getContext('2d');
+      ctx.imageSmoothingEnabled=true;
+      ctx.imageSmoothingQuality='high';
+      ctx.drawImage(rawImg,0,0,w*dpr,h*dpr);
+      var compressed=canvas.toDataURL('image/jpeg',0.92);
       var img=document.getElementById(imgId);
       var lbl=document.querySelector('#'+ringId+' .ph-lbl');
       img.src=compressed;img.style.display='block';if(lbl)lbl.style.display='none';
