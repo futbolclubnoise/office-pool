@@ -233,11 +233,13 @@ input[type=number]{-moz-appearance:textfield;}
 .t5-r:hover{background:var(--bg3);}
 .av-xl{width:110px;height:110px;border-radius:50%;border:3px solid var(--org);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-family:'Kallisto',sans-serif;font-weight:500;font-size:32px;color:var(--tx);flex-shrink:0;margin:0 auto 12px;}
 .av-xl img{width:100%;height:100%;object-fit:cover;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;}
-.av-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
-.av-pick-item{aspect-ratio:1;border-radius:50%;border:3px solid transparent;cursor:pointer;overflow:hidden;transition:border-color .2s,transform .2s;display:flex;align-items:center;justify-content:center;}
+.av-pick-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px;}
+.av-pick-item{width:100%;padding-bottom:100%;border-radius:50%;border:3px solid transparent;cursor:pointer;overflow:hidden;transition:border-color .2s,transform .2s;position:relative;box-sizing:border-box;}
 .av-pick-item:hover{transform:scale(1.08);}
-.av-pick-item.selected{border-color:var(--org);transform:scale(1.08);}
-.av-pick-item svg{width:70%;height:70%;}
+.av-pick-item.selected{border-color:var(--org);box-shadow:0 0 0 2px var(--org);transform:scale(1.08);}
+.av-pick-item svg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:65%;height:65%;}
+.av-silhouette{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.av-silhouette svg,.av-silhouette>svg{width:65%;height:65%;flex-shrink:0;}
 .t5-pos{font-family:'Kallisto',sans-serif;font-weight:500;font-size:13px;color:var(--tx3);width:18px;text-align:center;flex-shrink:0;}
 .t5-pos.a{color:var(--org);} .t5-pos.b{color:var(--g2);} .t5-pos.c{color:var(--grn);}
 
@@ -1254,7 +1256,7 @@ function avEl(u,cls='av'){
   var src=u.photoURL||u.photo||'';
   if(src)return`<div class="${cls}"><img src="${src}" alt=""></div>`;
   var av=AVATARS.find(function(a){return a.id===u.avatar;});
-  if(av)return`<div class="${cls}" style="background:${av.bg};display:flex;align-items:center;justify-content:center">${av.svg}</div>`;
+  if(av)return`<div class="${cls} av-silhouette" style="background:${av.bg}">${av.svg}</div>`;
   return`<div class="${cls}">${ini(u.name)}</div>`;
 }
 
@@ -1778,7 +1780,7 @@ function initAdmin(){
 }
 function setNav(avId,nmId){
   const av=document.getElementById(avId),nm=document.getElementById(nmId);
-  if(av){var _avSrc=CU.photoURL||CU.photo||'';if(_avSrc){av.innerHTML=`<img src="${_avSrc}" alt="">`;}else{var _avAv=AVATARS.find(function(a){return a.id===CU.avatar;});if(_avAv){av.style.background=_avAv.bg;av.innerHTML=_avAv.svg;}else{av.style.background='';av.innerHTML='';av.textContent=ini(CU.nickname||CU.name);}}}
+  if(av){var _avSrc=CU.photoURL||CU.photo||'';if(_avSrc){av.className=av.className.replace('av-silhouette','').trim();av.style.background='';av.innerHTML=`<img src="${_avSrc}" alt="">`;}else{var _avAv=AVATARS.find(function(a){return a.id===CU.avatar;});if(_avAv){av.style.background=_avAv.bg;if(!av.classList.contains('av-silhouette'))av.classList.add('av-silhouette');av.innerHTML=_avAv.svg;}else{av.classList.remove('av-silhouette');av.style.background='';av.innerHTML='';av.textContent=ini(CU.nickname||CU.name);}}}
   if(nm)nm.textContent=(CU.nickname||CU.name).split(' ')[0];
 }
 function aTab(tab,btn){
@@ -1922,7 +1924,7 @@ function renderAdmPollas(){
         <div class="dot ${on?'dot-on':'dot-off'}" style="flex-shrink:0"></div>
         <div class="polla-card-info">
           <div class="pr-nm">${p.name}</div>
-          <div class="pr-mt">${p.type==='multi'?'Multi-partido':'Partido único'} · Fee: $${fee} · Pool: ${usd(prz.pool)} · ${prz.inscribed} inscritos</div>
+          <div class="pr-mt">${p.type==='multi'?'Multi-partido':'Partido único'} · Fee: $${fee} · ${prz.inscribed} inscritos</div>
           <div style="font-size:9px;color:var(--tx3);margin-top:2px">Pts: W/L=${sc.win} · Draw=${sc.draw} · Exact=${sc.exact} · Diff=${sc.diff}</div>
         </div>
         <div class="ios-toggle-wrap" style="flex-direction:column;align-items:center;gap:3px;">
@@ -2201,7 +2203,7 @@ function renderAdmPremios(){
         +'</div>'
         +'<div class="pmg">'
           +'<div class="pmg-item"><div class="pmg-v c-g">'+prz.inscribed+'</div><div class="pmg-l">'+T('enrolled')+'</div></div>'
-          +'<div class="pmg-item"><div class="pmg-v c-o">'+usd(prz.pool)+'</div><div class="pmg-l">Pool USD</div></div>'
+          +'<div class="pmg-item"><div class="pmg-v c-r">'+usd(pol.fee||0)+'</div><div class="pmg-l">Fee</div></div>'
           +'<div class="pmg-item"><div class="pmg-v c-r">'+usd(pol.fee||0)+'</div><div class="pmg-l">Fee</div></div>'
         +'</div>'
         +prizeSection
@@ -2551,7 +2553,7 @@ function showPollaDetail(pollaId){
     +'<div class="stat" style="flex:1"><div class="sv c-g">'+matches.length+'</div><div class="sl">Matches</div></div>'
     +'<div class="stat" style="flex:1"><div class="sv c-o">'+specials.length+'</div><div class="sl">Specials</div></div>'
     +'<div class="stat" style="flex:1"><div class="sv">'+prz.inscribed+'</div><div class="sl">Players</div></div>'
-    +'<div class="stat" style="flex:1"><div class="sv c-g">$'+prz.pool+'</div><div class="sl">Pool USD</div></div>'
+    +'<div class="stat" style="flex:1"><div class="sv c-o">$'+pol.fee+'</div><div class="sl">Fee</div></div>'
     +'</div>';
 
   if(matches.length){
@@ -2669,7 +2671,6 @@ function renderPInicio(){
               <span>${ms.length} ${T('matchesLbl')}</span>
               <span>·</span>
               <span>${prz.inscribed} ${T('playersLbl')}</span>
-              ${prz.pool>0?`<span>·</span><span style="color:var(--org);font-weight:700">${usd(prz.pool)} pool</span>`:''}
               ${ct?`<span>·</span><span>${isOpen?T('closesOn'):T('closedOn')}${fmtDate(ct)}</span>`:''}
             </div>
           </div>
@@ -3001,7 +3002,7 @@ function showPlayerProfile(uid){
   document.getElementById('ppAvatar').innerHTML=_ppSrc
     ?'<div class="av-xl"><img src="'+_ppSrc+'" alt=""></div>'
     :_ppAv
-      ?'<div class="av-xl" style="background:'+_ppAv.bg+';display:flex;align-items:center;justify-content:center">'+_ppAv.svg+'</div>'
+      ?'<div class="av-xl av-silhouette" style="background:'+_ppAv.bg+'">'+_ppAv.svg+'</div>'
       :'<div class="av-xl">'+ini(u.name)+'</div>';
   document.getElementById('ppName').textContent=u.name||(u.nickname||'');
   document.getElementById('ppNick').textContent=u.nickname&&u.nickname!==u.name?'@'+u.nickname:'';
@@ -3187,10 +3188,6 @@ function updatePayPreview(){
           <div style="font-family:'Kallisto',sans-serif;font-size:15px;font-weight:700;color:var(--grn)">${usd(prz.p3)}</div>
           <div style="font-size:8px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:1px">3rd Place</div>
         </div>
-      </div>
-      <div style="margin-top:8px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:10px;color:var(--tx2)">💰 Total Pool</span>
-        <span style="font-family:'Kallisto',sans-serif;font-size:14px;font-weight:700;color:var(--org)">${usd(prz.pool)}</span>
       </div>
     </div>`:''}`;
   const wrap=document.getElementById('payLinkWrap');
