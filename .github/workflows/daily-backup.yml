@@ -38,7 +38,7 @@ jobs:
 
           admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            projectId: 'cfl-office-pool'
+            projectId: 'fcnoise-113e0'
           });
 
           const db = admin.firestore();
