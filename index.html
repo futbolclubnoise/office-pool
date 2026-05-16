@@ -468,11 +468,28 @@ body{font-size:14px;}
 
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import{getFirestore,doc,setDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import{getStorage,ref as sRef,uploadString,getDownloadURL}from"https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 try{
 const app=initializeApp({apiKey:"AIzaSyAmsEX2VJRytF9Sw8NOySPD80K9gzv6hRc",authDomain:"cfl-office-pool.firebaseapp.com",projectId:"cfl-office-pool",storageBucket:"cfl-office-pool.firebasestorage.app",messagingSenderId:"670177533526",appId:"1:670177533526:web:7107c4c54701c49a1125f7"});
 const db=getFirestore(app);
+const storage=getStorage(app);
 const refData=doc(db,"cfl","data");
 const refUsers=doc(db,"cfl","users");
+
+// Upload user photo to Firebase Storage → returns public download URL
+window._fbUploadPhoto=async function(userId,dataUrl){
+  try{
+    var r=sRef(storage,'photos/'+userId+'.jpg');
+    await uploadString(r,dataUrl,'data_url');
+    var url=await getDownloadURL(r);
+    return url;
+  }catch(e){console.error('Storage upload error:',e.code,e.message);return null;}
+};
+// Get existing photo URL from Firebase Storage
+window._fbGetPhotoURL=async function(userId){
+  try{return await getDownloadURL(sRef(storage,'photos/'+userId+'.jpg'));}
+  catch(e){return null;}
+};
 
 // Save app data (pollas, matches, banners, settings — NO users, NO photos)
 window._fbSaveData=async function(payload){
@@ -480,8 +497,8 @@ window._fbSaveData=async function(payload){
   catch(e){console.error('FB data write error:',e.code,e.message);throw e;}
 };
 
-// Save users — lean (no photos, no redundant prediction fields) + auto-chunked at 100 per doc
-var CHUNK=100;
+// Save users — lean (no photos, no redundant prediction fields) + auto-chunked at 50 per doc
+var CHUNK=50;
 window._fbSaveUsers=async function(users){
   try{
     // Split into chunks of 100
@@ -1163,7 +1180,8 @@ function tLeft(d){
 }
 const empty=t=>`<p style="font-size:10px;color:var(--tx3);padding:5px 0">${t}</p>`;
 function avEl(u,cls='av'){
-  return u.photo?`<div class="${cls}"><img src="${u.photo}" alt=""></div>`:`<div class="${cls}">${ini(u.name)}</div>`;
+  var src=u.photoURL||u.photo||'';
+  return src?`<div class="${cls}"><img src="${src}" alt=""></div>`:`<div class="${cls}">${ini(u.name)}</div>`;
 }
 
 // ═══════════ SCORING CALCULATOR ═══════════
@@ -1490,9 +1508,16 @@ function doRegister(){
     var newId=DB.nid.u++;
     var newPhoto=ph.startsWith('data:image')?ph:'';
     if(newPhoto)saveUserPhoto(newId,newPhoto);
-    DB.users.push({id:newId,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:newPhoto,predictions:[],payments:[]});
+    var newUser={id:newId,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:newPhoto,photoURL:'',predictions:[],payments:[]};
+    DB.users.push(newUser);
     addNotif('register',{name:name,email:email});
     saveDB();
+    // Upload photo to Firebase Storage after account is saved
+    if(newPhoto&&window._fbUploadPhoto){
+      window._fbUploadPhoto(newId,newPhoto).then(function(url){
+        if(url){newUser.photoURL=url;saveDB();}
+      }).catch(function(e){console.warn('Register photo upload failed:',e);});
+    }
     showOK(T('accountCreated'));
     setTimeout(()=>document.querySelector('.tabp').click(),1500);
   });
@@ -1548,7 +1573,7 @@ function initAdmin(){
 }
 function setNav(avId,nmId){
   const av=document.getElementById(avId),nm=document.getElementById(nmId);
-  if(av){if(CU.photo)av.innerHTML=`<img src="${CU.photo}" alt="">`;else av.textContent=ini(CU.nickname||CU.name);}
+  if(av){var _avSrc=CU.photoURL||CU.photo||'';if(_avSrc)av.innerHTML=`<img src="${_avSrc}" alt="">`;else av.textContent=ini(CU.nickname||CU.name);}
   if(nm)nm.textContent=(CU.nickname||CU.name).split(' ')[0];
 }
 function aTab(tab,btn){
@@ -2759,8 +2784,9 @@ function showPlayerProfile(uid){
   var correct=(u.predictions||[]).filter(function(p){return p.type==='result'||p.type==='diff';}).length;
   var total=(u.predictions||[]).length;
   // Avatar
-  document.getElementById('ppAvatar').innerHTML=u.photo
-    ?'<div class="av-xl"><img src="'+u.photo+'" alt=""></div>'
+  var _ppSrc=u.photoURL||u.photo||'';
+  document.getElementById('ppAvatar').innerHTML=_ppSrc
+    ?'<div class="av-xl"><img src="'+_ppSrc+'" alt=""></div>'
     :'<div class="av-xl">'+ini(u.name)+'</div>';
   document.getElementById('ppName').textContent=u.name||(u.nickname||'');
   document.getElementById('ppNick').textContent=u.nickname&&u.nickname!==u.name?'@'+u.nickname:'';
@@ -2867,7 +2893,8 @@ function renderPPerfil(){
   if(document.getElementById('pfPhone'))document.getElementById('pfPhone').value=CU.phone||'';
   document.getElementById('pfPass').value='';
   const prev=document.getElementById('pfPhPrev'),lbl=document.querySelector('#pfPhRing .ph-lbl');
-  if(CU.photo){prev.src=CU.photo;prev.style.display='block';if(lbl)lbl.style.display='none';}
+  var _pfSrc=CU.photoURL||CU.photo||'';
+  if(_pfSrc){prev.src=_pfSrc;prev.style.display='block';if(lbl)lbl.style.display='none';}
   else{prev.style.display='none';if(lbl)lbl.style.display='block';}
 }
 function saveProfile(){
@@ -2877,7 +2904,7 @@ function saveProfile(){
   const phone=(document.getElementById('pfPhone')||{}).value?.trim()||'';
   const pass=document.getElementById('pfPass').value;
   const _pfInput=document.getElementById('pfPhFile');
-  const src=(_pfInput&&_pfInput._compressed)||document.getElementById('pfPhPrev').src;
+  const src=(_pfInput&&_pfInput._compressed)||'';
   if(!email){alert(T('emailRequired'));return;}
   if(!phone){alert(T('phoneRequired'));return;}
   if(name)CU.name=name;
@@ -2885,10 +2912,20 @@ function saveProfile(){
   CU.email=email;
   CU.phone=phone;
   if(pass&&pass.length>=6)CU.pass=pass;
-  if(src&&src.startsWith('data:image')){CU.photo=src;saveUserPhoto(CU.id,CU.photo);}
-  // Update DB
   const dbU=DB.users.find(u=>u.id===CU.id);
-  if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;if(src&&src.startsWith('data:image'))dbU.photo=CU.photo;}
+  if(src&&src.startsWith('data:image')){
+    // Instant local display
+    CU.photo=src;saveUserPhoto(CU.id,src);
+    if(dbU)dbU.photo=src;
+    // Upload to Firebase Storage asynchronously
+    if(window._fbUploadPhoto){
+      window._fbUploadPhoto(CU.id,src).then(function(url){
+        if(url){CU.photoURL=url;if(dbU)dbU.photoURL=url;saveDB();setNav('porAv','porNm');}
+      }).catch(function(e){console.warn('Photo upload failed:',e);});
+    }
+  }
+  // Update DB fields
+  if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;}
   saveDB();
   setNav('porAv','porNm');
   const ok=document.getElementById('pfOK');ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);
@@ -3317,21 +3354,30 @@ function openSelfEdit(){
   document.getElementById('selfName').value=CU.name;
   document.getElementById('selfPass').value='';
   const prev=document.getElementById('selfPhPrev'),lbl=document.querySelector('#selfPhRing .ph-lbl');
-  if(CU.photo){prev.src=CU.photo;prev.style.display='block';if(lbl)lbl.style.display='none';}
+  var _sSrc=CU.photoURL||CU.photo||'';
+  if(_sSrc){prev.src=_sSrc;prev.style.display='block';if(lbl)lbl.style.display='none';}
   else{prev.style.display='none';if(lbl)lbl.style.display='block';}
   document.getElementById('selfModal').style.display='block';
 }
 function saveSelfEdit(){
   const name=document.getElementById('selfName').value.trim(),pass=document.getElementById('selfPass').value;
   const inp=document.getElementById('selfPhFile');
-  const src=inp&&inp._compressed?inp._compressed:document.getElementById('selfPhPrev').src;
+  const src=inp&&inp._compressed?inp._compressed:'';
   if(!name)return alert(T('nameEmpty'));
   if(pass&&pass.length>0&&pass.length<6)return alert(T('passMin6'));
   CU.name=name;
-  if(src&&src.startsWith('data:image')){CU.photo=src;saveUserPhoto(CU.id,CU.photo);}
   var dbU=DB.users.find(function(x){return x.id===CU.id;});
+  if(src&&src.startsWith('data:image')){
+    CU.photo=src;saveUserPhoto(CU.id,src);
+    if(dbU)dbU.photo=src;
+    if(window._fbUploadPhoto){
+      window._fbUploadPhoto(CU.id,src).then(function(url){
+        if(url){CU.photoURL=url;if(dbU)dbU.photoURL=url;saveDB();setNav(CU.role==='admin'?'admAv':'porAv',CU.role==='admin'?'admNm':'porNm');}
+      }).catch(function(e){console.warn('Photo upload failed:',e);});
+    }
+  }
   var finish=function(){
-    if(dbU){dbU.name=CU.name;dbU.pass=CU.pass;dbU.photo=CU.photo;}
+    if(dbU){dbU.name=CU.name;dbU.pass=CU.pass;}
     setNav(CU.role==='admin'?'admAv':'porAv',CU.role==='admin'?'admNm':'porNm');
     saveDB();
     const ok=document.getElementById('selfOK');ok.style.display='block';
@@ -3604,9 +3650,9 @@ async function saveDB(){
     };
     var dataSz=Math.round(JSON.stringify(dataPayload).length/1024);
     var usersSz=Math.round(JSON.stringify(DB.users).length/1024);
-    console.log('💾 Saving: data ~'+dataSz+'KB, users ~'+usersSz+'KB (photos local-only)');
+    console.log('💾 Saving: data ~'+dataSz+'KB, users ~'+usersSz+'KB (photos in Firebase Storage)');
     if(usersSz>900&&CU&&CU.role==='admin'){
-      try{showE('⚠️ User data is '+usersSz+'KB (limit ~1000KB). Ask players to remove profile photos.');}catch(e){}
+      try{showE('⚠️ User data is '+usersSz+'KB (limit ~1000KB). Contact admin.');}catch(e){}
     }
     Promise.all([
       window._fbSaveData(dataPayload).then(function(){console.log('✅ cfl/data saved ~'+dataSz+'KB');}),
@@ -4476,11 +4522,12 @@ window._fbOnUsersUpdate=function(d,chunkName){
   // Init chunk storage
   if(!window._fbLoadedChunks)window._fbLoadedChunks={};
 
-  // Restore photos from localStorage (never stored in Firebase)
+  // Restore local base64 photo for immediate display; photoURL (Storage URL) comes from Firestore
   var lsData=lsLoad();var lsUsers=(lsData&&lsData.users)||[];
   var chunkUsers=d.users.map(function(cloudU){
     var localU=lsUsers.find(function(lu){return lu.id===cloudU.id;});
     var ph=loadUserPhoto(cloudU.id)||(localU&&localU.photo)||'';if(ph)cloudU.photo=ph;
+    // photoURL already present in cloudU from Firestore — no action needed
     return cloudU;
   });
 
