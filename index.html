@@ -2397,8 +2397,8 @@ function renderPInicio(){
   if(!allPollas.length){
     html+=`<div class="card" style="text-align:center;padding:30px">
       <div style="font-size:32px;margin-bottom:12px">🏈</div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:6px">No pools yet</div>
-      <div style="font-size:12px;color:var(--tx2)">The admin will open pools soon. Stay tuned!</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">${T('noPoolsYet')}</div>
+      <div style="font-size:12px;color:var(--tx2)">${T('noPoolsSoon')}</div>
     </div>`;
   } else {
     allPollas.forEach(pol=>{
@@ -2428,19 +2428,19 @@ function renderPInicio(){
       html+=`<div class="pool-hero-card ${!isPaid&&prz.pool>0?'glow-cta':''}">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
           <div style="flex:1">
-            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--tx3);text-transform:uppercase;margin-bottom:4px">${isOpen?'🟢 Active Pool':'⚫ Closed'}</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--tx3);text-transform:uppercase;margin-bottom:4px">${isOpen?T('activePool'):T('closedPool')}</div>
             <div class="pool-hero-name">${pol.name}</div>
             <div class="pool-hero-meta">
-              <span>${ms.length} matches</span>
+              <span>${ms.length} ${T('matchesLbl')}</span>
               <span>·</span>
-              <span>${prz.inscribed} players</span>
+              <span>${prz.inscribed} ${T('playersLbl')}</span>
               ${prz.pool>0?`<span>·</span><span style="color:var(--org);font-weight:700">${usd(prz.pool)} pool</span>`:''}
-              ${ct?`<span>·</span><span>${isOpen?'Closes ':'Closed '}${fmtDate(ct)}</span>`:''}
+              ${ct?`<span>·</span><span>${isOpen?T('closesOn'):T('closedOn')}${fmtDate(ct)}</span>`:''}
             </div>
           </div>
           ${myRank>=0?`<div style="text-align:center;background:var(--bg3);border-radius:10px;padding:8px 12px;border:1px solid var(--bd)">
             <div style="font-family:'Kallisto',sans-serif;font-size:22px;color:var(--org)">#${myRank+1}</div>
-            <div style="font-size:8px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">Your rank</div>
+            <div style="font-size:8px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">${T('yourRank')}</div>
           </div>`:''}
         </div>
         ${prz.p1||prz.p2||prz.p3?`<div style="display:flex;gap:10px;margin-top:10px;margin-bottom:2px;flex-wrap:wrap">
@@ -2449,15 +2449,15 @@ function renderPInicio(){
           <div style="font-size:10px;font-weight:700;color:var(--grn)">🥉 ${usd(prz.p3)}</div>
         </div>`:''}
         ${myPolPreds.length>0?`<div class="stats-strip" style="margin-top:12px;margin-bottom:0">
-          <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myPoolPts}</div><div class="sp-lbl">Points</div></div>
-          <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myExact}</div><div class="sp-lbl">Exact</div></div>
-          <div class="stat-pill"><div class="sp-val" style="color:var(--grn)">${myResult}</div><div class="sp-lbl">Result</div></div>
-          <div class="stat-pill"><div class="sp-val" style="color:var(--red)">${myWrong}</div><div class="sp-lbl">Missed</div></div>
+          <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myPoolPts}</div><div class="sp-lbl">${T('pts')}</div></div>
+          <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myExact}</div><div class="sp-lbl">${T('exact')}</div></div>
+          <div class="stat-pill"><div class="sp-val" style="color:var(--grn)">${myResult}</div><div class="sp-lbl">${T('result')}</div></div>
+          <div class="stat-pill"><div class="sp-val" style="color:var(--red)">${myWrong}</div><div class="sp-lbl">${T('missed')}</div></div>
         </div>`:''}
         ${isOpen?`<button class="pool-enter-btn" onclick="openModal(${pol.id})">
-          ${myPreds.length?('✏️ Enter / Edit Scores ('+myPreds.length+'/'+ms.length+')'):'🎯 Enter Scores'}
+          ${myPreds.length?(T('enterEditScores')+' ('+myPreds.length+'/'+ms.length+')'):T('enterScores')}
         </button>`:''}
-        ${!isPaid&&prz.pool>0&&isOpen?`<div style="margin-top:8px;font-size:10px;color:var(--org)">⚠️ Join pool to participate → <button onclick="pTab('inscripcion',document.querySelector('#S_player .stab:nth-child(6)'))" style="background:none;border:none;color:var(--org);font-size:10px;font-weight:700;cursor:pointer;padding:0;font-family:Poppins,sans-serif">Pay now</button></div>`:''}
+        ${!isPaid&&prz.pool>0&&isOpen?`<div style="margin-top:8px;font-size:10px;color:var(--org)">${T('joinToPlay')}<button onclick="pTab('inscripcion',document.querySelector('#S_player .stab:nth-child(6)'))" style="background:none;border:none;color:var(--org);font-size:10px;font-weight:700;cursor:pointer;padding:0;font-family:Poppins,sans-serif">${T('payNow')}</button></div>`:''}
       </div>`;
 
       // ── My Position + Ranking (2-col) ──
@@ -2465,23 +2465,23 @@ function renderPInicio(){
       html+=`<div class="two-col-grid">`;
       // Left: My Position
       html+=`<div class="card" style="padding:14px">
-        <div class="ct" style="margin-bottom:10px"><div class="ct-dot ct-dot-g"></div>My Position</div>`;
+        <div class="ct" style="margin-bottom:10px"><div class="ct-dot ct-dot-g"></div>${T('myPosition')}</div>`;
       if(myRank>=0){
         const pc=myRank===0?'a':myRank===1?'b':myRank===2?'c':'';
         html+=`<div style="text-align:center">
           ${avEl(CU,'av-lg')}
           <div style="font-weight:700;font-size:13px;margin:8px 0 2px">${displayName(CU)}</div>
           <div style="font-family:'Kallisto',sans-serif;font-size:28px;color:var(--org)">#${myRank+1}</div>
-          <div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">of ${ranked.length}</div>
+          <div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">${T('ofTotal')} ${ranked.length}</div>
           <div style="font-family:'Kallisto',sans-serif;font-size:22px;margin-top:6px;color:var(--g1)">${myPoolPts} <span style="font-size:9px;color:var(--tx3);font-family:Poppins,sans-serif">PTS</span></div>
         </div>`;
       } else {
-        html+=`<div style="text-align:center;padding:14px 0;color:var(--tx3);font-size:11px">Enter scores to appear in the ranking</div>`;
+        html+=`<div style="text-align:center;padding:14px 0;color:var(--tx3);font-size:11px">${T('enterScoresToRank')}</div>`;
       }
       html+='</div>';
       // Right: Top 15 for this pool
       html+=`<div class="card" style="padding:14px">
-        <div class="ct" style="margin-bottom:10px"><div class="ct-dot ct-dot-o"></div>Ranking</div>`;
+        <div class="ct" style="margin-bottom:10px"><div class="ct-dot ct-dot-o"></div>${T('ranking')}</div>`;
       if(top15.length){
         top15.slice(0,8).forEach((r,i)=>{
           const isMe=r.u.id===CU.id;
@@ -2493,9 +2493,9 @@ function renderPInicio(){
             <div style="font-family:'Kallisto',sans-serif;font-size:13px;color:${isMe?'var(--org)':'var(--tx2)'};">${r.pts}<span style="font-size:7px;color:var(--tx3);font-family:'Poppins',sans-serif"> pts</span></div>
           </div>`;
         });
-        if(top15.length>8)html+=`<div style="text-align:center;font-size:10px;color:var(--tx3);padding:6px 0;cursor:pointer" onclick="pTab('ranking',document.querySelector('#S_player .stab:nth-child(4)'))">See full ranking →</div>`;
+        if(top15.length>8)html+=`<div style="text-align:center;font-size:10px;color:var(--tx3);padding:6px 0;cursor:pointer" onclick="pTab('ranking',document.querySelector('#S_player .stab:nth-child(4)'))">` +T('seeFullRanking')+ `</div>`;
       } else {
-        html+=`<div style="font-size:11px;color:var(--tx3);text-align:center;padding:10px">No scores yet</div>`;
+        html+=`<div style="font-size:11px;color:var(--tx3);text-align:center;padding:10px">${T('noScoresYet')}</div>`;
       }
       html+='</div></div>';
 
@@ -2510,7 +2510,7 @@ function renderPInicio(){
       html+=`<div style="display:flex;flex-direction:column;gap:8px">`;
       if(upcoming.length){
         html+=`<div class="card" style="padding:12px">
-          <div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-o"></div><span style="color:var(--tx);font-weight:700;font-size:12px">Upcoming Matches</span></div>`;
+          <div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-o"></div><span style="color:var(--tx);font-weight:700;font-size:12px">${T('upcomingMatches')}</span></div>`;
         upcoming.forEach(m=>{
           const tz=m.tz||pol.tz||'America/New_York';
           const myPr=CU.predictions.find(p=>p.matchId===m.id);
@@ -2522,7 +2522,7 @@ function renderPInicio(){
               </div>
               <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
                 ${myPr?`<span style="font-family:'Kallisto',sans-serif;font-size:13px;color:var(--org);font-weight:700">${myPr.home}</span><span style="font-size:10px;color:var(--tx3)">–</span><span style="font-family:'Kallisto',sans-serif;font-size:13px;color:var(--org);font-weight:700">${myPr.away}</span>`
-                :isOpen?`<button onclick="openModal(${pol.id})" style="font-size:9px;border:none;background:var(--org2);color:var(--org);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:700">Predict</button>`
+                :isOpen?`<button onclick="openModal(${pol.id})" style="font-size:9px;border:none;background:var(--org2);color:var(--org);border-radius:6px;padding:3px 8px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:700">${T('predict')}</button>`
                 :`<span style="font-size:10px;color:var(--tx3)">vs</span>`}
               </div>
               <div style="display:flex;align-items:center;gap:5px;flex:1;min-width:0;justify-content:flex-end">
@@ -2537,21 +2537,21 @@ function renderPInicio(){
       }
       if(latest.length){
         html+=`<div class="card" style="padding:12px">
-          <div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-r"></div><span style="color:var(--tx);font-weight:700;font-size:12px">Latest Results</span></div>`;
+          <div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-r"></div><span style="color:var(--tx);font-weight:700;font-size:12px">${T('latestResults')}</span></div>`;
         latest.forEach(m=>{
           const myPr=CU.predictions.find(p=>p.matchId===m.id);
           const isCorrect=myPr&&myPr.pts>0;
           const isWrong=myPr&&myPr.pts===0&&myPr.type;
           html+=`<div class="up-match">
             <div class="up-teams" style="font-size:11px;color:var(--tx);font-weight:600">${m.home} <span style="font-weight:700;color:var(--g1)">${m.result.home}–${m.result.away}</span> ${m.away}</div>
-            ${myPr?`<div class="up-pred" style="color:${isCorrect?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700">${isCorrect?'✅':isWrong?'❌':''} ${myPr.pts||0} pts</div>`:'<div style="font-size:9px;color:var(--tx2)">No pred</div>'}
+            ${myPr?`<div class="up-pred" style="color:${isCorrect?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700">${isCorrect?'✅':isWrong?'❌':''} ${myPr.pts||0} pts</div>`:`<div style="font-size:9px;color:var(--tx2)">${T('noPred')}</div>`}
           </div>`;
         });
         html+='</div>';
       }
       if(!upcoming.length&&!latest.length){
         html+=`<div class="card" style="padding:14px;text-align:center">
-          <div style="font-size:11px;color:var(--tx2)">No matches yet</div>
+          <div style="font-size:11px;color:var(--tx2)">${T('noMatchesYet')}</div>
         </div>`;
       }
       html+='</div>';
@@ -2560,8 +2560,8 @@ function renderPInicio(){
       html+=`<div>`;
       if(mySpecials.filled){
         html+=`<div class="podium-card">
-          <div class="ct" style="margin-bottom:4px"><div class="ct-dot ct-dot-o"></div><span style="color:var(--tx);font-weight:700;font-size:12px">My Podium 🏆</span></div>
-          <div style="font-size:10px;color:var(--tx2);margin-bottom:8px">Your special picks — locked in</div>
+          <div class="ct" style="margin-bottom:4px"><div class="ct-dot ct-dot-o"></div><span style="color:var(--tx);font-weight:700;font-size:12px">${T('myPodium')}</span></div>
+          <div style="font-size:10px;color:var(--tx2);margin-bottom:8px">${T('podiumLocked')}</div>
           <div class="podium-row">
             ${mySpecials.picks.map((pk,i)=>{
               const medals=['🥇','🥈','🥉'];
@@ -2577,10 +2577,10 @@ function renderPInicio(){
       } else if(mySpecials.hasSpecials){
         html+=`<div class="podium-card glow-cta">
           <div style="margin-bottom:10px">
-            <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:var(--tx)">⭐ Choose Your Podium</div>
-            <div style="font-size:11px;color:var(--tx2)">Pick your top 3 teams — earn bonus points!</div>
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:var(--tx)">${T('choosePodium')}</div>
+            <div style="font-size:11px;color:var(--tx2)">${T('choosePodiumSub')}</div>
           </div>
-          <button onclick="pTab('especiales',document.querySelector('#S_player .stab:nth-child(3)'))" style="width:100%;padding:10px 14px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px">Pick Now ✨</button>
+          <button onclick="pTab('especiales',document.querySelector('#S_player .stab:nth-child(3)'))" style="width:100%;padding:10px 14px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px">${T('pickNow')}</button>
           <div class="podium-row" style="opacity:.4">
             ${['🥇','🥈','🥉'].map((medal,i)=>`<div class="podium-item ${i===0?'p1':i===1?'p2':'p3'}"><span class="podium-medal">${medal}</span><div class="podium-team">?</div></div>`).join('')}
           </div>
@@ -2588,7 +2588,7 @@ function renderPInicio(){
       } else {
         html+=`<div class="card" style="padding:14px;text-align:center">
           <div style="font-size:24px;margin-bottom:8px">🏆</div>
-          <div style="font-size:11px;color:var(--tx2)">Podium picks coming soon</div>
+          <div style="font-size:11px;color:var(--tx2)">${T('podiumSoon')}</div>
         </div>`;
       }
       html+='</div>';
@@ -2598,7 +2598,7 @@ function renderPInicio(){
       // ── Rules button ──
       html+=`<div style="text-align:center;margin:6px 0 10px">
         <button onclick="showRulesModal(${pol.id})" style="background:none;border:1px solid var(--bd);border-radius:20px;padding:7px 18px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--tx2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s">
-          📋 Rules <span style="color:var(--org)">— see here</span>
+          ${T('rulesBtn')} <span style="color:var(--org)">${T('rulesSeeHere')}</span>
         </button>
       </div>`;
 
@@ -2712,25 +2712,25 @@ function renderPPollas(){
         <div class="dot ${on?'dot-on':'dot-off'}"></div>
         <div class="polla-card-info">
           <div class="pr-nm">${p.name}</div>
-          <div class="pr-mt">${ms.length} matches · ${myPreds.length}/${ms.length} predictions · ${prz.inscribed} players</div>
+          <div class="pr-mt">${ms.length} ${T('matchesLbl')} · ${myPreds.length}/${ms.length} ${T('predictions')} · ${prz.inscribed} ${T('playersLbl')}</div>
           ${prz.pool>0?`<div style="font-size:10px;color:var(--org);margin-top:2px;font-weight:600">${usd(prz.pool)} pool</div>`:''}
         </div>
-        <span class="bdg ${on?'bdg-on':'bdg-off'}">${on?'Open':'Closed'}</span>
+        <span class="bdg ${on?'bdg-on':'bdg-off'}">${on?T('open'):T('closed')}</span>
       </div>
       ${myPreds.length>0?`<div class="stats-strip" style="margin-top:10px;margin-bottom:0">
-        <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myPts}</div><div class="sp-lbl">Points</div></div>
-        <div class="stat-pill"><div class="sp-val">${myRank>=0?'#'+(myRank+1):'—'}</div><div class="sp-lbl">Rank</div></div>
-        <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myExact}</div><div class="sp-lbl">Exact</div></div>
-        <div class="stat-pill"><div class="sp-val" style="color:var(--grn)">${myResult}</div><div class="sp-lbl">Result</div></div>
+        <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myPts}</div><div class="sp-lbl">${T('pts')}</div></div>
+        <div class="stat-pill"><div class="sp-val">${myRank>=0?'#'+(myRank+1):'—'}</div><div class="sp-lbl">${T('rank')}</div></div>
+        <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myExact}</div><div class="sp-lbl">${T('exact')}</div></div>
+        <div class="stat-pill"><div class="sp-val" style="color:var(--grn)">${myResult}</div><div class="sp-lbl">${T('result')}</div></div>
       </div>`:''}
       <div class="polla-card-actions">
-        ${on?`<button class="btn-xs" style="flex:1;padding:8px;letter-spacing:1px;font-size:10px;font-weight:700;border-color:var(--org)" onclick="openModal(${p.id})">ENTER SCORES</button>`:''}
-        <button class="btn-xs" onclick="openModal(${p.id})">${on?'':'📋 '} View Pool</button>
-        ${!isPaid&&prz.pool>0&&on?`<button class="btn-xs" style="color:var(--org);border-color:var(--org3)" onclick="pTab('inscripcion',document.querySelector('#S_player .stab:nth-child(6)'))">💳 Join</button>`:''}
+        ${on?`<button class="btn-xs" style="flex:1;padding:8px;letter-spacing:1px;font-size:10px;font-weight:700;border-color:var(--org)" onclick="openModal(${p.id})">${T('enterScoresBtn')}</button>`:''}
+        <button class="btn-xs" onclick="openModal(${p.id})">${T('viewPool')}</button>
+        ${!isPaid&&prz.pool>0&&on?`<button class="btn-xs" style="color:var(--org);border-color:var(--org3)" onclick="pTab('inscripcion',document.querySelector('#S_player .stab:nth-child(6)'))">${T('join')}</button>`:''}
       </div>
     </div>`;
   });
-  el.innerHTML=html||empty('No pools yet');
+  el.innerHTML=html||empty(T('noPollas'));
 }
 
 function showPlayerProfile(uid){
@@ -2750,8 +2750,8 @@ function showPlayerProfile(uid){
   document.getElementById('ppName').textContent=u.name||(u.nickname||'');
   document.getElementById('ppNick').textContent=u.nickname&&u.nickname!==u.name?'@'+u.nickname:'';
   document.getElementById('ppStats').innerHTML=
-    '<div style="background:var(--bg4);border-radius:10px;padding:10px 6px"><div style="font-family:Kallisto,sans-serif;font-size:22px;color:var(--org)">'+pts+'</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">Points</div></div>'
-    +'<div style="background:var(--bg4);border-radius:10px;padding:10px 6px"><div style="font-family:Kallisto,sans-serif;font-size:22px;color:var(--grn)">'+exact+'</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">Exact</div></div>'
+    '<div style="background:var(--bg4);border-radius:10px;padding:10px 6px"><div style="font-family:Kallisto,sans-serif;font-size:22px;color:var(--org)">'+pts+'</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">'+T('pts')+'</div></div>'
+    +'<div style="background:var(--bg4);border-radius:10px;padding:10px 6px"><div style="font-family:Kallisto,sans-serif;font-size:22px;color:var(--grn)">'+exact+'</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">'+T('exact')+'</div></div>'
     +'<div style="background:var(--bg4);border-radius:10px;padding:10px 6px"><div style="font-family:Kallisto,sans-serif;font-size:22px;color:var(--g2)">'+total+'</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">Played</div></div>';
   document.getElementById('ppExtra').textContent=u.country?('📍 '+u.country):'';
   modal.style.display='flex';
@@ -2767,7 +2767,7 @@ function renderPRanking(){
   }
   var pollaId=parseInt(sel.value);
   var pol=DB.pollas.find(function(p){return p.id===pollaId;});
-  if(!pol){document.getElementById('porRanking').innerHTML=empty('Sin pollas');return;}
+  if(!pol){document.getElementById('porRanking').innerHTML=empty(T('noPollas'));return;}
   var matchIds=DB.matches.filter(function(m){return m.pollaId===pollaId;}).map(function(m){return m.id;});
   var players=DB.users.filter(function(u){return u.role!=='admin'&&u.status!=='disabled';});
   var ranked=players.map(function(u){
@@ -2788,14 +2788,14 @@ function renderPRanking(){
       +'</div>'
       +'<div style="font-family:\'Kallisto\',sans-serif;font-weight:500;font-size:16px;color:'+(isMe?'var(--org)':'var(--tx2)')+'">'+r.pts+'<span style="font-size:8px;color:var(--tx3);font-family:\'Poppins\',sans-serif"> pts</span></div>'
       +'</div>';
-  }).join('')||empty('No players yet');
+  }).join('')||empty(T('noPlayers'));
 }
 
 function renderPHist(){
   const el=document.getElementById('porHist');
   const preds=CU.predictions;
-  if(!preds.length){el.innerHTML=empty('No predictions yet');return;}
-  const TYPE_LABELS={exact:'Exact Score',diff:'Right Diff',result:'Right Result',wrong:'Missed'};
+  if(!preds.length){el.innerHTML=empty(T('noPredictions'));return;}
+  const TYPE_LABELS={exact:T('exactScore'),diff:T('rightDiff'),result:T('rightResult'),wrong:T('missed')};
   const TYPE_COLORS={exact:'var(--org)',diff:'var(--g2)',result:'var(--grn)',wrong:'var(--red)'};
   const TYPE_BG={exact:'var(--org2)',diff:'rgba(200,200,100,.1)',result:'var(--grn2)',wrong:'var(--red2)'};
   // Group by pool
@@ -2824,10 +2824,10 @@ function renderPHist(){
           <div style="font-size:11px;color:var(--tx2);margin-bottom:7px">${fmt(m.date,tz)}${stg?` · <span style="color:var(--tx3)">${stg}</span>`:''}</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <div style="background:var(--bg4);border-radius:8px;padding:5px 11px;font-size:12px">
-              <span style="color:var(--tx2);font-size:10px">My pick: </span><strong>${pr.home}–${pr.away}</strong>
+              <span style="color:var(--tx2);font-size:10px">${T('myPick')}</span><strong>${pr.home}–${pr.away}</strong>
             </div>
             ${hasResult?`<div style="background:var(--bg4);border-radius:8px;padding:5px 11px;font-size:12px">
-              <span style="color:var(--tx2);font-size:10px">Result: </span><strong>${m.result.home}–${m.result.away}</strong>
+              <span style="color:var(--tx2);font-size:10px">${T('resultLbl')}</span><strong>${m.result.home}–${m.result.away}</strong>
             </div>`:''}
           </div>
         </div>
@@ -2836,13 +2836,13 @@ function renderPHist(){
             <div style="font-family:'Kallisto',sans-serif;font-size:22px;font-weight:500;color:${typeColor};line-height:1">${pr.pts>0?'+'+pr.pts:'0'}</div>
             <div style="font-size:8px;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;margin:2px 0">pts</div>
             <div style="font-size:9px;font-weight:700;color:${typeColor};text-align:center;line-height:1.3">${typeLabel}</div>
-          `:`<div style="font-size:10px;color:var(--org);font-weight:700;text-align:center">⏳<br>Pending</div>`}
+          `:`<div style="font-size:10px;color:var(--org);font-weight:700;text-align:center">⏳<br>${T('pending')}</div>`}
         </div>
       </div>`;
     });
     html+='<div style="height:10px"></div>';
   });
-  el.innerHTML=html||empty('No predictions yet');
+  el.innerHTML=html||empty(T('noPredictions'));
 }
 
 function renderPPerfil(){
@@ -2886,7 +2886,7 @@ function showPaymentToast(){
 }
 function renderPInscripcion(){
   const open=DB.pollas.filter(p=>p.status==='open');
-  document.getElementById('payPolla').innerHTML=open.map(p=>`<option value="${p.id}">${p.name} — ${usd(p.fee)}</option>`).join('')||'<option>No open pools</option>';
+  document.getElementById('payPolla').innerHTML=open.map(p=>`<option value="${p.id}">${p.name} — ${usd(p.fee)}</option>`).join('')||`<option>${T('noOpenPools')}</option>`;
   updatePayPreview();
 }
 function updatePayPreview(){
@@ -2897,23 +2897,23 @@ function updatePayPreview(){
   const link=DB.settings&&DB.settings.stripeLink?DB.settings.stripeLink:'';
   document.getElementById('payPreview').innerHTML=`
     <div class="pmg">
-      <div class="pmg-item"><div class="pmg-v c-o">${usd(pol.fee)}</div><div class="pmg-l">Entry Fee</div></div>
-      <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">Inscritos</div></div>
-      <div class="pmg-item"><div class="pmg-v c-r">${usd(prz.pool)}</div><div class="pmg-l">Pool actual</div></div>
+      <div class="pmg-item"><div class="pmg-v c-o">${usd(pol.fee)}</div><div class="pmg-l">${T('entryFee')}</div></div>
+      <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">${T('enrolled')}</div></div>
+      <div class="pmg-item"><div class="pmg-v c-r">${usd(prz.pool)}</div><div class="pmg-l">${T('currentPool')}</div></div>
     </div>
     ${prz.pool>0?`<div style="font-size:10px;color:var(--tx2);padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--bd);margin-top:10px">
-      Premios: <span style="color:var(--org)">1° ${usd(prz.p1)}</span> · <span style="color:var(--g2)">2° ${usd(prz.p2)}</span> · <span style="color:var(--grn)">3° ${usd(prz.p3)}</span>
+      ${T('prizes')}: <span style="color:var(--org)">1° ${usd(prz.p1)}</span> · <span style="color:var(--g2)">2° ${usd(prz.p2)}</span> · <span style="color:var(--grn)">3° ${usd(prz.p3)}</span>
     </div>`:''}`;
   const wrap=document.getElementById('payLinkWrap');
   if(ya){
-    wrap.innerHTML='<div class="res-correct" style="margin-top:12px">✅ Access granted — you can enter predictions for this pool.</div>';
+    wrap.innerHTML=`<div class="res-correct" style="margin-top:12px">${T('accessGranted')}</div>`;
   } else if(link){
     wrap.innerHTML=`<a href="${link}?client_reference_id=${CU.id}_${id}" target="_blank" style="display:block;text-decoration:none;margin-top:14px" onclick="setTimeout(showPaymentToast,1500)">
-      <button class="btn btn-p" style="background:var(--org);color:#fff;border:none;font-size:12px;letter-spacing:1px;padding:13px">💳 PAGAR INSCRIPCIÓN — ${usd(pol.fee)}</button>
+      <button class="btn btn-p" style="background:var(--org);color:#fff;border:none;font-size:12px;letter-spacing:1px;padding:13px">${T('payTitle')} ${usd(pol.fee)}</button>
     </a>
-    <div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:8px">You'll be redirected to Stripe. The admin will confirm your payment afterward.</div>`;
+    <div style="font-size:9px;color:var(--tx3);text-align:center;margin-top:8px">${T('stripeRedirect')}</div>`;
   } else {
-    wrap.innerHTML='<div style="font-size:10px;color:var(--tx3);padding:10px 0">The admin has not set up the payment link yet.</div>';
+    wrap.innerHTML=`<div style="font-size:10px;color:var(--tx3);padding:10px 0">${T('noPayLink')}</div>`;
   }
 }
 function saveStripeLink(){
@@ -2957,15 +2957,15 @@ function openModal(pollaId){
   var rankedPlayers=paidPlayers.map(function(u){var pts=(u.predictions||[]).filter(function(p){return pollaMatchIds.includes(p.matchId);}).reduce(function(s,p){return s+(p.pts||0);},0);return{u:u,pts:pts};}).sort(function(a,b){return b.pts-a.pts;});
   var myRank=CU?rankedPlayers.findIndex(function(r){return r.u.id===CU.id;})+1:0;
   document.getElementById('modMeta').innerHTML=`
-    <div class="pmg-item"><div class="pmg-v c-o">${myPts}</div><div class="pmg-l">My Points</div></div>
-    <div class="pmg-item"><div class="pmg-v c-g">${myRank>0?'#'+myRank:'—'}</div><div class="pmg-l">Position</div></div>
-    <div class="pmg-item"><div class="pmg-v c-r">${prz.inscribed}</div><div class="pmg-l">Inscritos</div></div>`;
+    <div class="pmg-item"><div class="pmg-v c-o">${myPts}</div><div class="pmg-l">${T('myPoints')}</div></div>
+    <div class="pmg-item"><div class="pmg-v c-g">${myRank>0?'#'+myRank:'—'}</div><div class="pmg-l">${T('position')}</div></div>
+    <div class="pmg-item"><div class="pmg-v c-r">${prz.inscribed}</div><div class="pmg-l">${T('enrolled')}</div></div>`;
 
   document.getElementById('modScLegend').innerHTML=
     '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">'
-    +'<span class="scl-item">Res. correcto <span class="scl-pts">'+sc.win+'</span></span>'
-    +'<span class="scl-item">Empate <span class="scl-pts">'+sc.draw+'</span></span>'
-    +'<span class="scl-item">Diff <span class="scl-pts">'+sc.diff+'</span></span>'
+    +'<span class="scl-item">'+T('resCorrect')+' <span class="scl-pts">'+sc.win+'</span></span>'
+    +'<span class="scl-item">'+T('draw')+' <span class="scl-pts">'+sc.draw+'</span></span>'
+    +'<span class="scl-item">'+T('diff')+' <span class="scl-pts">'+sc.diff+'</span></span>'
     +'<span class="scl-item" style="border-color:var(--org3)">Exact 🎯 <span class="scl-pts">'+sc.exact+'</span></span>'
     +'</div>';
 
@@ -3144,45 +3144,45 @@ function showRulesModal(polId){
 
   if(isMulti){
     html+=`<div style="margin-bottom:18px">
-      <div style="font-size:13px;font-weight:700;color:var(--org);margin-bottom:10px;display:flex;align-items:center;gap:6px">⚽ Polla Multi-Partido</div>
-      <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">Predice el marcador de cada partido. Ganas puntos según la precisión de tu predicción:</div>
+      <div style="font-size:13px;font-weight:700;color:var(--org);margin-bottom:10px;display:flex;align-items:center;gap:6px">${T('rulesMulti')}</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">${T('rulesMultiSub')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
           <div style="font-size:18px;margin-bottom:4px">🎯</div>
           <div style="font-size:18px;font-weight:800;color:var(--org);font-family:Kallisto,sans-serif">${sc.exact}</div>
-          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Marcador exacto</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${T('exactScoreLabel')}</div>
         </div>
         <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
           <div style="font-size:18px;margin-bottom:4px">📊</div>
           <div style="font-size:18px;font-weight:800;color:var(--g2);font-family:Kallisto,sans-serif">${sc.diff}</div>
-          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Diferencia correcta</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${T('diffLabel')}</div>
         </div>
         <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
           <div style="font-size:18px;margin-bottom:4px">✅</div>
           <div style="font-size:18px;font-weight:800;color:var(--grn);font-family:Kallisto,sans-serif">${sc.win}</div>
-          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Ganador / Empate</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${T('winnerLabel')}</div>
         </div>
         <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
           <div style="font-size:18px;margin-bottom:4px">❌</div>
           <div style="font-size:18px;font-weight:800;color:var(--tx3);font-family:Kallisto,sans-serif">0</div>
-          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Predicción incorrecta</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${T('zeroLabel')}</div>
         </div>
       </div>
     </div>`;
   } else {
     html+=`<div style="margin-bottom:18px">
-      <div style="font-size:13px;font-weight:700;color:var(--org);margin-bottom:10px;display:flex;align-items:center;gap:6px">⚽ Polla Partido Único</div>
-      <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">Predice el resultado del partido. Puedes ganar puntos por:</div>
+      <div style="font-size:13px;font-weight:700;color:var(--org);margin-bottom:10px;display:flex;align-items:center;gap:6px">${T('rulesSingle')}</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">${T('rulesSingleSub')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
           <div style="font-size:18px;margin-bottom:4px">🎯</div>
           <div style="font-size:18px;font-weight:800;color:var(--org);font-family:Kallisto,sans-serif">${sc.exact}</div>
-          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Marcador exacto</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${T('exactScoreLabel')}</div>
         </div>
         <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
           <div style="font-size:18px;margin-bottom:4px">✅</div>
           <div style="font-size:18px;font-weight:800;color:var(--grn);font-family:Kallisto,sans-serif">${sc.win}</div>
-          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Ganador / Empate</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">${T('winnerLabel')}</div>
         </div>
       </div>
     </div>`;
@@ -3191,22 +3191,22 @@ function showRulesModal(polId){
   // Prizes section
   if(prz.p1||prz.p2||prz.p3){
     html+=`<div style="margin-bottom:18px">
-      <div style="font-size:12px;font-weight:700;color:var(--tx1);margin-bottom:8px">🏆 Premios</div>
+      <div style="font-size:12px;font-weight:700;color:var(--tx1);margin-bottom:8px">${T('rulesPrizesTitle')}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <div style="flex:1;min-width:70px;background:linear-gradient(135deg,rgba(255,215,0,.12),rgba(255,215,0,.04));border:1px solid rgba(255,215,0,.3);border-radius:10px;padding:10px;text-align:center">
           <div style="font-size:16px">🥇</div>
           <div style="font-size:14px;font-weight:800;color:#FFD700;font-family:Kallisto,sans-serif">${usd(prz.p1)}</div>
-          <div style="font-size:9px;color:var(--tx3);margin-top:2px">1er Lugar</div>
+          <div style="font-size:9px;color:var(--tx3);margin-top:2px">${T('place1')}</div>
         </div>
         ${prz.p2?`<div style="flex:1;min-width:70px;background:linear-gradient(135deg,rgba(192,192,192,.12),rgba(192,192,192,.04));border:1px solid rgba(192,192,192,.3);border-radius:10px;padding:10px;text-align:center">
           <div style="font-size:16px">🥈</div>
           <div style="font-size:14px;font-weight:800;color:#C0C0C0;font-family:Kallisto,sans-serif">${usd(prz.p2)}</div>
-          <div style="font-size:9px;color:var(--tx3);margin-top:2px">2do Lugar</div>
+          <div style="font-size:9px;color:var(--tx3);margin-top:2px">${T('place2')}</div>
         </div>`:''}
         ${prz.p3?`<div style="flex:1;min-width:70px;background:linear-gradient(135deg,rgba(205,127,50,.12),rgba(205,127,50,.04));border:1px solid rgba(205,127,50,.3);border-radius:10px;padding:10px;text-align:center">
           <div style="font-size:16px">🥉</div>
           <div style="font-size:14px;font-weight:800;color:#CD7F32;font-family:Kallisto,sans-serif">${usd(prz.p3)}</div>
-          <div style="font-size:9px;color:var(--tx3);margin-top:2px">3er Lugar</div>
+          <div style="font-size:9px;color:var(--tx3);margin-top:2px">${T('place3')}</div>
         </div>`:''}
       </div>
     </div>`;
@@ -3214,12 +3214,12 @@ function showRulesModal(polId){
 
   // Rules
   html+=`<div style="background:var(--bg3);border-radius:10px;padding:12px 14px;border:1px solid var(--bd)">
-    <div style="font-size:11px;font-weight:700;color:var(--tx1);margin-bottom:8px">📌 Reglas Generales</div>
+    <div style="font-size:11px;font-weight:700;color:var(--tx1);margin-bottom:8px">${T('rulesGeneralTitle')}</div>
     <div style="font-size:10.5px;color:var(--tx2);line-height:1.85">
-      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>Los premios se entregan al <strong>1°, 2° y 3° lugar</strong> según puntos acumulados.</span></div>
-      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>En caso de <strong>empate de puntos</strong>, el premio se reparte en partes iguales entre los jugadores empatados.</span></div>
-      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>Los partidos se <strong>bloquean 2 horas</strong> antes del inicio — no se aceptan predicciones después.</span></div>
-      <div style="display:flex;gap:8px"><span style="color:var(--org)">•</span><span><strong>No se realizan devoluciones</strong> de dinero una vez confirmada la inscripción.</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>${T('rule1')}</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>${T('rule2')}</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>${T('rule3')}</span></div>
+      <div style="display:flex;gap:8px"><span style="color:var(--org)">•</span><span>${T('rule4')}</span></div>
     </div>
   </div>`;
 
@@ -3261,12 +3261,12 @@ function timeUntilLock(m){
   if(!m.date)return '';
   var kickoff=new Date(m.date).getTime();
   var diff=kickoff-(2*60*60*1000)-Date.now();
-  if(diff<=0)return '🔒 Locked';
+  if(diff<=0)return T('locked');
   var h=Math.floor(diff/3600000);
   var min=Math.floor((diff%3600000)/60000);
-  if(h>24){var d=Math.floor(h/24);return 'Cierra en '+d+'d '+(h%24)+'h';}
-  if(h>0)return 'Cierra en '+h+'h '+min+'m';
-  return 'Cierra en '+min+'m';
+  if(h>24){var d=Math.floor(h/24);return T('closesIn')+' '+d+'d '+(h%24)+'h';}
+  if(h>0)return T('closesIn')+' '+h+'h '+min+'m';
+  return T('closesIn')+' '+min+'m';
 }
 
 function savePreds(){
@@ -3329,8 +3329,96 @@ function saveSelfEdit(){
 // ════ i18n ════
 var CL='en';
 var LD={
-  en:{login:'Sign In',register:'Sign Up',logout:'Sign Out',home:'Home',myPools:'My Pools',ranking:'Ranking',history:'My Predictions',profile:'Profile',joinPool:'Join Pool',specials:'My Top 3',save:'Save',points:'Points',position:'Position',matches:'Matches',predictions:'Predictions',results:'Results',open:'Open',closed:'Closed',pool:'Pool'},
-  es:{login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Mis Predicciones',profile:'Perfil',joinPool:'Unirse',specials:'Mi Top 3',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool'}
+  en:{
+    login:'Sign In',register:'Sign Up',logout:'Sign Out',home:'Home',myPools:'My Pools',ranking:'Ranking',history:'My Predictions',profile:'Profile',joinPool:'Join Pool',specials:'My Top 3',save:'Save',points:'Points',position:'Position',matches:'Matches',predictions:'Predictions',results:'Results',open:'Open',closed:'Closed',pool:'Pool',
+    noPoolsYet:'No pools yet',noPoolsSoon:'The admin will open pools soon. Stay tuned!',
+    activePool:'🟢 Active Pool',closedPool:'⚫ Closed',
+    matchesLbl:'matches',playersLbl:'players',
+    closesOn:'Closes ',closedOn:'Closed ',
+    yourRank:'Your rank',
+    pts:'Points',exact:'Exact',result:'Result',missed:'Missed',rank:'Rank',
+    enterScores:'🎯 Enter Scores',enterEditScores:'✏️ Enter / Edit Scores',
+    joinToPlay:'⚠️ Join pool to participate → ',payNow:'Pay now',
+    myPosition:'My Position',
+    ofTotal:'of',
+    enterScoresToRank:'Enter scores to appear in the ranking',
+    noScoresYet:'No scores yet',
+    seeFullRanking:'See full ranking →',
+    upcomingMatches:'Upcoming Matches',latestResults:'Latest Results',
+    predict:'Predict',noPred:'No pred',noMatchesYet:'No matches yet',
+    myPodium:'My Podium 🏆',podiumLocked:'Your special picks — locked in',
+    choosePodium:'⭐ Choose Your Podium',choosePodiumSub:'Pick your top 3 teams — earn bonus points!',
+    pickNow:'Pick Now ✨',podiumSoon:'Podium picks coming soon',
+    rulesBtn:'📋 Rules',rulesSeeHere:'— see here',
+    enterScoresBtn:'ENTER SCORES',viewPool:'📋 View Pool',join:'💳 Join',
+    noPollas:'No pools yet',noPlayers:'No players yet',
+    noPredictions:'No predictions yet',exactScore:'Exact Score',rightDiff:'Right Diff',rightResult:'Right Result',missed2:'Missed',
+    myPick:'My pick: ',resultLbl:'Result: ',
+    noOpenPools:'No open pools',entryFee:'Entry Fee',enrolled:'Enrolled',currentPool:'Current Pool',prizes:'Prizes',
+    accessGranted:'✅ Access granted — you can enter predictions for this pool.',
+    stripeRedirect:"You'll be redirected to Stripe. The admin will confirm your payment afterward.",
+    noPayLink:'The admin has not set up the payment link yet.',
+    myPoints:'My Points',
+    locked:'🔒 Locked',closesIn:'Closes in',
+    resCorrect:'Correct result',draw:'Draw',diff:'Diff',
+    rulesMulti:'⚽ Multi-Match Pool',rulesSingle:'⚽ Single-Match Pool',
+    rulesPrizesTitle:'🏆 Prizes',rulesGeneralTitle:'📌 General Rules',
+    rule1:'Prizes are awarded to <strong>1st, 2nd and 3rd place</strong> by total points.',
+    rule2:'In case of a <strong>tie</strong>, the prize is split equally among tied players.',
+    rule3:'Matches are <strong>locked 2 hours</strong> before kickoff — no predictions accepted after.',
+    rule4:'<strong>No refunds</strong> are issued once registration is confirmed.',
+    rulesModalTitle:'📋 Pool Rules',understood:'GOT IT ✓',
+    rulesMultiSub:'Predict the score of each match. Earn points based on accuracy:',
+    rulesSingleSub:'Predict the match result. You can earn points for:',
+    exactScoreLabel:'pts — Exact Score',diffLabel:'pts — Correct Diff',winnerLabel:'pts — Winner / Draw',zeroLabel:'pts — Wrong prediction',
+    place1:'1st Place',place2:'2nd Place',place3:'3rd Place',
+    payTitle:'💳 PAY REGISTRATION —'
+  },
+  es:{
+    login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Mis Predicciones',profile:'Perfil',joinPool:'Unirse',specials:'Mi Top 3',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool',
+    noPoolsYet:'Sin pollas aún',noPoolsSoon:'El admin abrirá pollas pronto. ¡Mantente atento!',
+    activePool:'🟢 Polla Activa',closedPool:'⚫ Cerrada',
+    matchesLbl:'partidos',playersLbl:'jugadores',
+    closesOn:'Cierra ',closedOn:'Cerrada ',
+    yourRank:'Tu posición',
+    pts:'Puntos',exact:'Exacto',result:'Resultado',missed:'Fallado',rank:'Posición',
+    enterScores:'🎯 Ingresar marcadores',enterEditScores:'✏️ Editar marcadores',
+    joinToPlay:'⚠️ Únete para participar → ',payNow:'Pagar ahora',
+    myPosition:'Mi Posición',
+    ofTotal:'de',
+    enterScoresToRank:'Ingresa marcadores para aparecer en el ranking',
+    noScoresYet:'Sin marcadores aún',
+    seeFullRanking:'Ver ranking completo →',
+    upcomingMatches:'Próximos Partidos',latestResults:'Últimos Resultados',
+    predict:'Predecir',noPred:'Sin pred',noMatchesYet:'Sin partidos aún',
+    myPodium:'Mi Podio 🏆',podiumLocked:'Tus picks especiales — confirmados',
+    choosePodium:'⭐ Elige Tu Podio',choosePodiumSub:'¡Elige tus 3 mejores equipos — gana puntos extra!',
+    pickNow:'Elegir ahora ✨',podiumSoon:'Picks de podio próximamente',
+    rulesBtn:'📋 Reglas',rulesSeeHere:'— ver aquí',
+    enterScoresBtn:'INGRESAR',viewPool:'📋 Ver Polla',join:'💳 Unirse',
+    noPollas:'Sin pollas',noPlayers:'Sin jugadores aún',
+    noPredictions:'Sin predicciones aún',exactScore:'Marcador Exacto',rightDiff:'Diferencia Correcta',rightResult:'Resultado Correcto',missed2:'Fallado',
+    myPick:'Mi pick: ',resultLbl:'Resultado: ',
+    noOpenPools:'No hay pollas abiertas',entryFee:'Inscripción',enrolled:'Inscritos',currentPool:'Pool actual',prizes:'Premios',
+    accessGranted:'✅ Acceso confirmado — puedes ingresar predicciones para esta polla.',
+    stripeRedirect:'Serás redirigido a Stripe. El admin confirmará tu pago después.',
+    noPayLink:'El admin aún no ha configurado el enlace de pago.',
+    myPoints:'Mis Puntos',
+    locked:'🔒 Bloqueado',closesIn:'Cierra en',
+    resCorrect:'Res. correcto',draw:'Empate',diff:'Diff',
+    rulesMulti:'⚽ Polla Multi-Partido',rulesSingle:'⚽ Polla Partido Único',
+    rulesPrizesTitle:'🏆 Premios',rulesGeneralTitle:'📌 Reglas Generales',
+    rule1:'Los premios se entregan al <strong>1°, 2° y 3° lugar</strong> según puntos acumulados.',
+    rule2:'En caso de <strong>empate de puntos</strong>, el premio se reparte en partes iguales entre los jugadores empatados.',
+    rule3:'Los partidos se <strong>bloquean 2 horas</strong> antes del inicio — no se aceptan predicciones después.',
+    rule4:'<strong>No se realizan devoluciones</strong> de dinero una vez confirmada la inscripción.',
+    rulesModalTitle:'📋 Reglas de la Polla',understood:'ENTENDIDO ✓',
+    rulesMultiSub:'Predice el marcador de cada partido. Ganas puntos según la precisión de tu predicción:',
+    rulesSingleSub:'Predice el resultado del partido. Puedes ganar puntos por:',
+    exactScoreLabel:'pts — Marcador exacto',diffLabel:'pts — Diferencia correcta',winnerLabel:'pts — Ganador / Empate',zeroLabel:'pts — Predicción incorrecta',
+    place1:'1er Lugar',place2:'2do Lugar',place3:'3er Lugar',
+    payTitle:'💳 PAGAR INSCRIPCIÓN —'
+  }
 };
 function T(k){return(LD[CL]||LD.en)[k]||k;}
 function setLang(l){
@@ -4606,11 +4694,11 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
 <div id="rulesModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
   <div class="card" style="max-width:400px;width:100%;max-height:88vh;overflow-y:auto;padding:20px;border-radius:16px;position:relative">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-size:14px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:7px">📋 Reglas de la Polla</div>
+      <div style="font-size:14px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:7px" data-t="rulesModalTitle">📋 Pool Rules</div>
       <button onclick="document.getElementById('rulesModal').style.display='none'" style="background:none;border:none;font-size:18px;color:var(--tx3);cursor:pointer;padding:0;line-height:1">✕</button>
     </div>
     <div id="rulesModalBody"></div>
-    <button onclick="document.getElementById('rulesModal').style.display='none'" style="width:100%;margin-top:16px;padding:11px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.5px">ENTENDIDO ✓</button>
+    <button onclick="document.getElementById('rulesModal').style.display='none'" data-t="understood" style="width:100%;margin-top:16px;padding:11px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.5px">GOT IT ✓</button>
   </div>
 </div>
 
