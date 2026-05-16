@@ -2678,6 +2678,17 @@ function flagOf(name){
     'Greece':'🇬🇷','Czech Republic':'🇨🇿','Algeria':'🇩🇿','Zambia':'🇿🇲'};
   return f[name]||'🏳';
 }
+// ── Bilingual special names ──────────────────────────────────────────────────
+var SPEC_I18N={
+  '🏆 Equipo Campeón'    :['🏆 Champion Team',  'Which team will win the World Cup 2026?'],
+  '🥈 Equipo Subcampeón' :['🥈 Runner-up Team', 'Which team will reach the Final?'],
+  '🥉 Tercer Lugar'      :['🥉 Third Place',     'Which team will finish in third place?'],
+  'Goleador'             :['Top Scorer',          'Who will be the top scorer?'],
+  'Mejor Jugador'        :['Best Player',         'Who will be the best player?'],
+};
+function sName(s){return CL==='es'?(s.name_es||s.name):(s.name_en||(SPEC_I18N[s.name]||[])[0]||s.name);}
+function sDesc(s){return CL==='es'?(s.desc_es||s.desc):(s.desc_en||(SPEC_I18N[s.name]||[])[1]||s.desc);}
+
 function getMyPodiumData(){
   const specials=DB.specials||[];
   if(!specials.length)return{hasSpecials:false,filled:false,picks:[]};
@@ -2688,7 +2699,7 @@ function getMyPodiumData(){
   if(!myPicks.length)return{hasSpecials:specials.length>0,filled:false,picks:[]};
   const picks=specials.slice(0,3).map(s=>{
     const ans=(s.userAnswers||[]).find(a=>a.userId===CU.id);
-    return{name:s.name,answer:ans?ans.answer:null,pts:s.pts||0};
+    return{name:sName(s),answer:ans?ans.answer:null,pts:s.pts||0};
   });
   return{hasSpecials:true,filled:myPicks.length>0,picks};
 }
@@ -3079,8 +3090,8 @@ function openModal(pollaId){
       var isClosed=s.status==='closed';
       html+='<div style="background:var(--c2);border-radius:10px;padding:11px 12px;margin-bottom:7px;border:1px solid var(--bd)">';
       html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">'
-        +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--tx)">'+s.name+'</div>'
-        +'<div style="font-size:9px;color:var(--tx3);margin-top:2px">'+s.desc+'</div></div>'
+        +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--tx)">'+sName(s)+'</div>'
+        +'<div style="font-size:9px;color:var(--tx3);margin-top:2px">'+sDesc(s)+'</div></div>'
         +'<span style="font-size:11px;font-weight:700;background:var(--org2);color:var(--org);border-radius:20px;padding:3px 9px;white-space:nowrap;flex-shrink:0">+'+s.pts+'pts</span>'
         +'</div>';
       if(isClosed&&s.answer){
@@ -4150,8 +4161,8 @@ function renderPEspeciales(){
       out+='<div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--bd)">';
       // Header
       out+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">'
-        +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--tx)">'+s.name+'</div>'
-        +'<div style="font-size:10px;color:var(--tx3);margin-top:2px">'+s.desc+'</div></div>'
+        +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--tx)">'+sName(s)+'</div>'
+        +'<div style="font-size:10px;color:var(--tx3);margin-top:2px">'+sDesc(s)+'</div></div>'
         +'<span style="font-size:11px;font-weight:700;background:var(--org2);color:var(--org);border-radius:20px;padding:3px 10px;white-space:nowrap">+'+s.pts+' pts</span>'
         +'</div>';
       if(isClosed&&s.answer){
@@ -4233,7 +4244,7 @@ function editSpecialAnswer(spId){
     my.answer='';
     saveDB();renderPEspeciales();
   }else{
-    var newAns=prompt(T('specChangePrompt')+s.desc,my.answer);
+    var newAns=prompt(T('specChangePrompt')+sDesc(s),my.answer);
     if(newAns===null||!newAns.trim())return;
     my.answer=newAns.trim();my.ts=Date.now();
     saveDB();renderPEspeciales();
@@ -4266,8 +4277,8 @@ function seedWC2026Specials(){
   if(hasSpecials)return;
   var now=Date.now();
   DB.specials.push(
-    {id:now+1,pollaId:pid,name:'🏆 Equipo Campeón',desc:'¿Qué equipo ganará el Mundial 2026?',pts:20,status:'open',opciones:getPollaTeams(pid),answer:null,userAnswers:[],orden:1},
-    {id:now+2,pollaId:pid,name:'🥈 Equipo Subcampeón',desc:'¿Qué equipo llegará a la Final?',pts:10,status:'open',opciones:getPollaTeams(pid),answer:null,userAnswers:[],orden:2}
+    {id:now+1,pollaId:pid,name:'🏆 Equipo Campeón',name_en:'🏆 Champion Team',name_es:'🏆 Equipo Campeón',desc:'¿Qué equipo ganará el Mundial 2026?',desc_en:'Which team will win the World Cup 2026?',desc_es:'¿Qué equipo ganará el Mundial 2026?',pts:20,status:'open',opciones:getPollaTeams(pid),answer:null,userAnswers:[],orden:1},
+    {id:now+2,pollaId:pid,name:'🥈 Equipo Subcampeón',name_en:'🥈 Runner-up Team',name_es:'🥈 Equipo Subcampeón',desc:'¿Qué equipo llegará a la Final?',desc_en:'Which team will reach the Final?',desc_es:'¿Qué equipo llegará a la Final?',pts:10,status:'open',opciones:getPollaTeams(pid),answer:null,userAnswers:[],orden:2}
   );
   console.log('✅ WC2026 especiales seeded');
 }
