@@ -79,9 +79,10 @@ body.light .band-mid{background:#fff;}
 
 /* ── BANNER ── */
 .bnr-wrap{padding:14px 22px 0;max-width:1080px;margin:0 auto;}
-.bnr-slot{width:100%;height:72px;border:1px dashed var(--bd2);border-radius:var(--r);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);position:relative;}
+.bnr-slot{width:100%;min-height:40px;border:1px dashed var(--bd2);border-radius:var(--r);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);position:relative;}
+.bnr-slot.empty{height:48px;}
 .bnr-lbl{font-size:8px;letter-spacing:2px;color:var(--tx3);text-transform:uppercase;}
-.bnr-slot img{width:100%;height:100%;object-fit:cover;display:none;position:absolute;inset:0;}
+.bnr-slot img{width:100%;height:auto;object-fit:contain;display:none;position:static;}
 .bnr-pc{display:block;}
 .bnr-mob{display:none;}
 
@@ -321,6 +322,7 @@ code{background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:10px;}
   .bnr-wrap{padding:10px 14px 0;}
   .bnr-pc{display:none;}
   .bnr-mob{display:block;}
+  #bnr2Carousel{height:70px!important;}
   .nav{padding:0 14px;height:52px;}
   .nav-t1{font-size:11px;letter-spacing:2px;}
   .nav-t2{display:none;}
@@ -623,8 +625,8 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     <button class="stab" onclick="pTab('perfil',this)" data-t="profile">Profile</button>
   </div>
   <!-- BANNER TOP -->
-  <div class="bnr-wrap bnr-pc"><div class="bnr-slot" id="bnr1"><span class="bnr-lbl">Banner 1 — Desktop</span><img id="bnr1Img" src="" alt=""></div></div>
-  <div class="bnr-wrap bnr-mob"><div class="bnr-slot" id="bnr1m" style="height:60px"><span class="bnr-lbl">Banner 1 — Mobile</span><img id="bnr1mImg" src="" alt=""></div></div>
+  <div class="bnr-wrap bnr-pc"><div class="bnr-slot empty" id="bnr1"><span class="bnr-lbl">Banner 1 — Desktop</span><img id="bnr1Img" src="" alt=""></div></div>
+  <div class="bnr-wrap bnr-mob"><div class="bnr-slot empty" id="bnr1m"><span class="bnr-lbl">Banner 1 — Mobile</span><img id="bnr1mImg" src="" alt=""></div></div>
   <div class="page">
 
     <div id="P_inicio">
@@ -708,11 +710,11 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
 
 <!-- BANNER 2 — FIXED BOTTOM SLIDESHOW (all tabs) -->
 <div id="bnr2FixedWrap" style="position:fixed;bottom:0;left:0;right:0;z-index:200;display:none;background:var(--bg2);border-top:1px solid var(--bd)">
-  <div id="bnr2Carousel" style="width:100%;height:80px;overflow:hidden;position:relative;background:var(--bg3)">
+  <div id="bnr2Carousel" style="width:100%;height:90px;overflow:hidden;position:relative;background:var(--bg3)">
     <span class="bnr-lbl" id="bnr2EmptyLbl">Bottom Banner</span>
-    <img id="bnr2ImgA" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transform:translateX(0);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
-    <img id="bnr2ImgB" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transform:translateX(100%);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
-    <img id="bnr2ImgC" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transform:translateX(100%);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
+    <img id="bnr2ImgA" src="" alt="" style="display:none;width:100%;height:100%;object-fit:contain;position:absolute;inset:0;transform:translateX(0);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
+    <img id="bnr2ImgB" src="" alt="" style="display:none;width:100%;height:100%;object-fit:contain;position:absolute;inset:0;transform:translateX(100%);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
+    <img id="bnr2ImgC" src="" alt="" style="display:none;width:100%;height:100%;object-fit:contain;position:absolute;inset:0;transform:translateX(100%);transition:transform 0.55s cubic-bezier(.4,0,.2,1)">
     <!-- slide dots -->
     <div id="bnr2Dots" style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);gap:5px;z-index:5;display:flex">
       <span id="bnr2Dot0" style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.9);display:inline-block;transition:background .3s"></span>
@@ -2086,17 +2088,17 @@ function loadBnrFile(e){
   var k=e.target.dataset.k;
   var rd=new FileReader();
   rd.onload=function(ev){
-    // Compress banner: 1400px wide max, 120px tall max, JPEG 0.65 — sharp on retina
+    // Compress banner: 1400px wide max, 200px tall max, JPEG 0.82 — preserves quality at native aspect ratio
     var rawImg=new Image();
     rawImg.onload=function(){
-      var MAX_W=1400,MAX_H=120;
+      var MAX_W=1400,MAX_H=200;
       var w=rawImg.width,h=rawImg.height;
       var ratio=Math.min(MAX_W/w,MAX_H/h,1);
       w=Math.round(w*ratio);h=Math.round(h*ratio);
       var canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(rawImg,0,0,w,h);
-      var compressed=canvas.toDataURL('image/jpeg',0.65);
+      var compressed=canvas.toDataURL('image/jpeg',0.82);
       var sizeKB=Math.round(compressed.length*0.75/1024);
       console.log('Banner compressed: '+sizeKB+'KB (key: '+k+')');
       DB.banners[k]=compressed;
@@ -2116,8 +2118,8 @@ function applyBanners(){
     var slot=img?img.closest('.bnr-slot'):null;
     var lbl=slot?slot.querySelector('.bnr-lbl'):null;
     if(!img)return;
-    if(b1src){img.src=b1src;img.style.display='block';if(lbl)lbl.style.display='none';}
-    else{img.style.display='none';if(lbl)lbl.style.display='block';}
+    if(b1src){img.src=b1src;img.style.display='block';if(lbl)lbl.style.display='none';if(slot)slot.classList.remove('empty');}
+    else{img.style.display='none';if(lbl)lbl.style.display='block';if(slot)slot.classList.add('empty');}
     if(slot&&DB.banners.b1url&&!slot.dataset.linked){
       slot.style.cursor='pointer';slot.onclick=function(){window.open(DB.banners.b1url,'_blank');};slot.dataset.linked='1';
     }
