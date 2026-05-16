@@ -1069,8 +1069,9 @@ const TZ_LABELS = {
   'America/Los_Angeles':'PT','America/Bogota':'COT','UTC':'UTC'
 };
 function formatInTz(isoStr, tz) {
+  var locale=CL==='es'?'es-CO':'en-US';
   try {
-    return new Date(isoStr).toLocaleString('es-CO',{
+    return new Date(isoStr).toLocaleString(locale,{
       timeZone:tz, month:'short', day:'numeric',
       hour:'2-digit', minute:'2-digit', hour12:true
     });
@@ -1147,12 +1148,13 @@ const ini = n=>(n||'?').split(' ').filter(w=>w).map(w=>w[0]).join('').slice(0,2)
 const usd = v=>`$${Number(v).toFixed(2)}`;
 function fmt(iso,tz){
   if(!iso)return'';
+  var locale=CL==='es'?'es-CO':'en-US';
   try{
-    return new Date(iso).toLocaleString('es-CO',{
+    return new Date(iso).toLocaleString(locale,{
       timeZone:tz||'America/New_York',
       month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true
     });
-  }catch(e){return new Date(iso).toLocaleDateString('es-CO',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
+  }catch(e){return new Date(iso).toLocaleDateString(locale,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
 }
 function tLeft(d){
   const diff=new Date(d)-new Date(); if(diff<=0)return'Closed';
@@ -1590,7 +1592,7 @@ function renderAdmDash(){
         ?(n.data.name+' · '+n.data.email)
         :(n.data.name+' inscrito en '+n.data.pollaName);
       var d=new Date(n.ts);
-      var timeStr=d.toLocaleDateString('es',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+      var timeStr=d.toLocaleDateString(CL==='es'?'es':'en-US',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString(CL==='es'?'es':'en-US',{hour:'2-digit',minute:'2-digit'});
       notifHtml+='<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:8px;background:'+(n.read?'var(--bg3)':'var(--bg2)')+';border:1px solid '+(n.read?'var(--bd)':'var(--org3,#ffe5cc)')+'">'
         +'<div style="font-size:18px;flex-shrink:0;line-height:1.2">'+icon+'</div>'
         +'<div style="flex:1;min-width:0">'
@@ -3045,7 +3047,7 @@ function openModal(pollaId){
     var dayId='day_'+pollaId+'_'+dateKey;
     var isOpen=(dateKey===autoDate);
     var dt=new Date(dateKey+'T12:00:00');
-    var dayLabel=dt.toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'});
+    var dayLabel=dt.toLocaleDateString(CL==='es'?'es':'en-US',{weekday:'long',day:'numeric',month:'long'});
     dayLabel=dayLabel.charAt(0).toUpperCase()+dayLabel.slice(1);
     var done=dayMatches.filter(function(m){return m.result;}).length;
     var allDone=done===dayMatches.length;
@@ -3372,7 +3374,20 @@ var LD={
     rulesSingleSub:'Predict the match result. You can earn points for:',
     exactScoreLabel:'pts — Exact Score',diffLabel:'pts — Correct Diff',winnerLabel:'pts — Winner / Draw',zeroLabel:'pts — Wrong prediction',
     place1:'1st Place',place2:'2nd Place',place3:'3rd Place',
-    payTitle:'💳 PAY REGISTRATION —'
+    payTitle:'💳 PAY REGISTRATION —',
+    specNoActivePollas:'No active pools',
+    specSubtitle:'Special predictions — earn bonus points',
+    specResult:'RESULT',
+    specYourAnswer:'Your answer: ',
+    specNotAnswered:"You didn't answer",
+    specYourPred:'Your prediction',
+    specChange:'Change',
+    specSelectTeam:'— Select team —',
+    specYourPredPlaceholder:'Your prediction...',
+    specNoItems:'No special items available',
+    specSelectAlert:'Select a team',
+    specWriteAlert:'Write your prediction',
+    specChangePrompt:'Change prediction:\n'
   },
   es:{
     login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Mis Predicciones',profile:'Perfil',joinPool:'Unirse',specials:'Mi Top 3',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool',
@@ -3417,7 +3432,20 @@ var LD={
     rulesSingleSub:'Predice el resultado del partido. Puedes ganar puntos por:',
     exactScoreLabel:'pts — Marcador exacto',diffLabel:'pts — Diferencia correcta',winnerLabel:'pts — Ganador / Empate',zeroLabel:'pts — Predicción incorrecta',
     place1:'1er Lugar',place2:'2do Lugar',place3:'3er Lugar',
-    payTitle:'💳 PAGAR INSCRIPCIÓN —'
+    payTitle:'💳 PAGAR INSCRIPCIÓN —',
+    specNoActivePollas:'No hay pollas activas',
+    specSubtitle:'Predicciones especiales — gana puntos extra',
+    specResult:'RESULTADO',
+    specYourAnswer:'Tu respuesta: ',
+    specNotAnswered:'No respondiste',
+    specYourPred:'Tu predicción',
+    specChange:'Cambiar',
+    specSelectTeam:'— Selecciona equipo —',
+    specYourPredPlaceholder:'Tu predicción...',
+    specNoItems:'No hay ítems especiales disponibles',
+    specSelectAlert:'Selecciona un equipo',
+    specWriteAlert:'Escribe tu predicción',
+    specChangePrompt:'Cambiar predicción:\n'
   }
 };
 function T(k){return(LD[CL]||LD.en)[k]||k;}
@@ -3431,7 +3459,15 @@ function setLang(l){
   try{
     if(typeof CU!=='undefined'&&CU){
       if(CU.role==='admin'){var cur=document.querySelector('#S_admin .stab.on');if(cur){var tab=cur.dataset.tab||'dash';var map={dash:renderAdmDash,pollas:renderAdmPollas,partidos:renderAdmPartidos,resultados:renderAdmRes,premios:renderAdmPremios,stripe:renderAdmStripe,banners:renderAdmBanners,especiales:renderAdmEspeciales,usuarios:renderAdmUsers};if(map[tab])map[tab]();}}
-      else{renderPInicio();}
+      else{
+        // Re-render whichever player tab is active
+        var activeTab=document.querySelector('#S_player .stab.on');
+        var tabId=activeTab?activeTab.getAttribute('onclick'):'';
+        var pMap={inicio:renderPInicio,pollas:renderPPollas,ranking:renderPRanking,historial:renderPHist,especiales:renderPEspeciales,inscripcion:renderPInscripcion,perfil:renderPPerfil};
+        var matched=false;
+        Object.keys(pMap).forEach(function(k){if(tabId.indexOf("'"+k+"'")>=0){pMap[k]();matched=true;}});
+        if(!matched)renderPInicio();
+      }
     }
   }catch(e){}
   try{localStorage.setItem('cfl_lang_v4',l);}catch(e){}
@@ -4097,7 +4133,7 @@ function renderPEspeciales(){
   var el=document.getElementById('P_spec_content');if(!el)return;
   var openPollas=DB.pollas.filter(function(p){return p.status==='open';});
   if(!openPollas.length){
-    el.innerHTML='<div class="card"><p style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">No hay pollas activas</p></div>';
+    el.innerHTML='<div class="card"><p style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">'+T('specNoActivePollas')+'</p></div>';
     return;
   }
   var out='';
@@ -4105,7 +4141,7 @@ function renderPEspeciales(){
     var items=getSpecials(pol.id).filter(function(s){return s.status!=='closed'||s.answer;});
     if(!items.length)return;
     out+='<div class="card"><div class="ct"><div class="ct-dot ct-dot-o"></div>'+pol.name+'</div>';
-    out+='<div style="font-size:9px;color:var(--tx3);margin-bottom:10px">Special predictions — earn bonus points</div>';
+    out+='<div style="font-size:9px;color:var(--tx3);margin-bottom:10px">'+T('specSubtitle')+'</div>';
     items.forEach(function(s){
       var myAns=(s.userAnswers||[]).find(function(a){return a.userId===CU.id;});
       var isClosed=s.status==='closed';
@@ -4120,19 +4156,19 @@ function renderPEspeciales(){
         // Result revealed
         var correct=myAns&&myAns.answer.trim().toLowerCase()===s.answer.trim().toLowerCase();
         out+='<div style="padding:10px;border-radius:8px;background:'+(correct?'var(--grn2)':'var(--bg4)')+';border:1px solid '+(correct?'var(--grn3)':'var(--bd2)')+'">'
-          +'<div style="font-size:9px;font-weight:700;color:var(--tx3);margin-bottom:4px;letter-spacing:1px">RESULTADO</div>'
+          +'<div style="font-size:9px;font-weight:700;color:var(--tx3);margin-bottom:4px;letter-spacing:1px">'+T('specResult')+'</div>'
           +'<div style="font-size:13px;font-weight:700;color:'+(correct?'var(--grn)':'var(--tx)')+'">'+s.answer+'</div>'
-          +(myAns?'<div style="font-size:9px;color:var(--tx3);margin-top:4px">Tu respuesta: '
+          +(myAns?'<div style="font-size:9px;color:var(--tx3);margin-top:4px">'+T('specYourAnswer')
             +(correct?'<span style="color:var(--grn)">'+myAns.answer+' ✓ +'+s.pts+' pts</span>'
               :'<span style="color:var(--red2)">'+myAns.answer+' ✗</span>')+'</div>'
-            :'<div style="font-size:9px;color:var(--tx3);margin-top:4px">No respondiste</div>')
+            :'<div style="font-size:9px;color:var(--tx3);margin-top:4px">'+T('specNotAnswered')+'</div>')
           +'</div>';
       }else if(myAns){
         // Already answered — show with edit option
         out+='<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg4);border-radius:8px;padding:9px 12px">'
-          +'<div><div style="font-size:9px;color:var(--tx3)">Tu predicción</div>'
+          +'<div><div style="font-size:9px;color:var(--tx3)">'+T('specYourPred')+'</div>'
           +'<div style="font-size:12px;font-weight:600;color:var(--tx)">'+myAns.answer+'</div></div>'
-          +'<button class="btn-xs" onclick="editSpecialAnswer('+s.id+')">Cambiar</button>'
+          +'<button class="btn-xs" onclick="editSpecialAnswer('+s.id+')">'+T('specChange')+'</button>'
           +'</div>';
       }else{
         // Not answered — show dropdown if teams available, else text input
@@ -4140,7 +4176,7 @@ function renderPEspeciales(){
         if(opts.length){
           out+='<div style="display:flex;gap:6px;align-items:center;margin-top:4px">'
             +'<select class="fi" id="spAns_'+s.id+'" style="flex:1;font-size:11px;padding:8px 10px;border-color:var(--org3);background:var(--bg3)">'
-            +'<option value="">— Selecciona equipo —</option>'
+            +'<option value="">'+T('specSelectTeam')+'</option>'
             +opts.map(function(o){
               var f=getFlag(o);
               return'<option value="'+o+'">'+(f?f+' ':'')+o+'</option>';
@@ -4150,7 +4186,7 @@ function renderPEspeciales(){
             +'</div>';
         }else{
           out+='<div style="display:flex;gap:6px;align-items:center;margin-top:4px">'
-            +'<input class="fi" id="spAns_'+s.id+'" placeholder="Tu predicción..." style="flex:1;padding:8px 10px;font-size:11px">'
+            +'<input class="fi" id="spAns_'+s.id+'" placeholder="'+T('specYourPredPlaceholder')+'" style="flex:1;padding:8px 10px;font-size:11px">'
             +'<button onclick="submitSpecialAnswer('+s.id+')" style="width:auto;padding:6px 12px;font-size:9px;border-radius:7px;white-space:nowrap;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-weight:600;cursor:pointer;flex-shrink:0">✓ OK</button>'
             +'</div>';
         }
@@ -4159,7 +4195,7 @@ function renderPEspeciales(){
     });
     out+='</div>';
   });
-  if(!out)out='<div class="card"><p style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">No hay ítems especiales disponibles</p></div>';
+  if(!out)out='<div class="card"><p style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">'+T('specNoItems')+'</p></div>';
   el.innerHTML=out;
 }
 
@@ -4174,7 +4210,7 @@ function selectSpecialOption(spId,opt){
 function submitSpecialAnswer(spId){
   var el=document.getElementById('spAns_'+spId);
   if(!el||!el.value.trim()){
-    alert(el&&el.tagName==='SELECT'?'Selecciona un equipo':'Escribe tu predicción');
+    alert(el&&el.tagName==='SELECT'?T('specSelectAlert'):T('specWriteAlert'));
     return;
   }
   var s=(DB.specials||[]).find(function(x){return x.id===spId;});if(!s)return;
@@ -4195,7 +4231,7 @@ function editSpecialAnswer(spId){
     my.answer='';
     saveDB();renderPEspeciales();
   }else{
-    var newAns=prompt('Cambiar predicción:\n'+s.desc,my.answer);
+    var newAns=prompt(T('specChangePrompt')+s.desc,my.answer);
     if(newAns===null||!newAns.trim())return;
     my.answer=newAns.trim();my.ts=Date.now();
     saveDB();renderPEspeciales();
