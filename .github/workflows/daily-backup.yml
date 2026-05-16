@@ -1,0 +1,127 @@
+name: Daily Firebase Backup
+
+on:
+  schedule:
+    # Every day at 12:00 PM UTC (adjust if you want a different timezone)
+    - cron: '0 12 * * *'
+  workflow_dispatch: # also allows manual trigger from GitHub Actions tab
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase Admin SDK
+        run: npm install firebase-admin
+
+      - name: Download Firebase data and save backup
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node - <<'EOF'
+          const admin = require('firebase-admin');
+          const fs = require('fs');
+          const path = require('path');
+
+          // Parse service account from GitHub secret
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            projectId: 'cfl-office-pool'
+          });
+
+          const db = admin.firestore();
+
+          async function backup() {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+            const timeStr = now.toISOString().replace('T', ' ').split('.')[0] + ' UTC';
+
+            console.log(`Starting backup for ${dateStr}...`);
+
+            // Read cfl/data (pollas, matches, specials, banners, settings)
+            const dataSnap = await db.collection('cfl').doc('data').get();
+            const data = dataSnap.exists ? dataSnap.data() : {};
+
+            // Read cfl/users (chunk 0)
+            const usersSnap = await db.collection('cfl').doc('users').get();
+            let users = usersSnap.exists ? (usersSnap.data().users || []) : [];
+
+            // Read extra user chunks if any
+            const userChunks = data.userChunks || 1;
+            for (let i = 1; i < userChunks; i++) {
+              const chunkSnap = await db.collection('cfl').doc(`users_${i}`).get();
+              if (chunkSnap.exists) {
+                users = users.concat(chunkSnap.data().users || []);
+              }
+            }
+
+            // Strip photos (base64) to keep backup file small
+            const usersClean = users.map(u => {
+              const { photo, ...rest } = u;
+              return rest;
+            });
+
+            const backup = {
+              _backupDate: dateStr,
+              _backupTime: timeStr,
+              _totalUsers: usersClean.length,
+              _totalPollas: (data.pollas || []).length,
+              _totalMatches: (data.matches || []).length,
+              _totalSpecials: (data.specials || []).length,
+              pollas: data.pollas || [],
+              matches: data.matches || [],
+              specials: data.specials || [],
+              bonusQuestions: data.bonusQuestions || [],
+              banners: data.banners || {},
+              settings: data.settings || {},
+              nid: data.nid || {},
+              users: usersClean
+            };
+
+            // Ensure backups folder exists
+            if (!fs.existsSync('backups')) fs.mkdirSync('backups');
+
+            // Save dated backup
+            const filename = `backups/backup-${dateStr}.json`;
+            fs.writeFileSync(filename, JSON.stringify(backup, null, 2));
+
+            // Also overwrite latest.json (always the most recent)
+            fs.writeFileSync('backups/latest.json', JSON.stringify(backup, null, 2));
+
+            console.log(`✅ Backup saved: ${filename}`);
+            console.log(`   Users: ${usersClean.length}`);
+            console.log(`   Pollas: ${(data.pollas||[]).length}`);
+            console.log(`   Matches: ${(data.matches||[]).length}`);
+            console.log(`   Specials: ${(data.specials||[]).length}`);
+          }
+
+          backup().catch(e => { console.error('❌ Backup failed:', e); process.exit(1); });
+          EOF
+
+      - name: Keep only last 30 backups (delete older ones)
+        run: |
+          cd backups
+          # List dated backups sorted oldest first, keep latest 30
+          ls backup-*.json 2>/dev/null | sort | head -n -30 | xargs rm -f || true
+          echo "Backups retained: $(ls backup-*.json 2>/dev/null | wc -l)"
+
+      - name: Commit backup to repo
+        run: |
+          git config user.name "CFL Backup Bot"
+          git config user.email "backup@cfl-office-pool"
+          git add backups/
+          # Only commit if there are changes
+          git diff --staged --quiet || git commit -m "🗄️ Backup $(date -u '+%Y-%m-%d') — $(jq '.users | length' backups/latest.json) users"
+          git push
