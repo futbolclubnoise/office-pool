@@ -2595,59 +2595,11 @@ function renderPInicio(){
 
       html+='</div>'; // end 2-col grid
 
-      // ── Rules Card ──
-      html+=`<div class="card" style="padding:16px;margin-top:4px">
-        <div class="ct" style="margin-bottom:12px"><div class="ct-dot" style="background:var(--org)"></div><span style="font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase">Pool Rules</span></div>
-
-        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">⚽ Points Per Match</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
-          <div style="background:var(--bg3);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:11px;color:var(--tx2)">Correct winner / draw</span>
-            <span style="font-family:'Kallisto',sans-serif;font-size:14px;color:var(--grn);font-weight:700">+${sc.win}</span>
-          </div>
-          <div style="background:var(--bg3);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:11px;color:var(--tx2)">Correct goal difference</span>
-            <span style="font-family:'Kallisto',sans-serif;font-size:14px;color:var(--org);font-weight:700">+${sc.diff}</span>
-          </div>
-          <div style="background:var(--bg3);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;grid-column:1/-1">
-            <span style="font-size:11px;color:var(--tx2)">🎯 Exact score</span>
-            <span style="font-family:'Kallisto',sans-serif;font-size:14px;color:var(--org);font-weight:700">+${sc.exact} pts</span>
-          </div>
-        </div>
-
-        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">🏆 Prizes</div>
-        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
-          <div style="display:flex;align-items:center;gap:8px;font-size:11px">
-            <span style="font-size:16px">🥇</span>
-            <span style="color:var(--tx2);flex:1">1st place</span>
-            <span style="font-family:'Kallisto',sans-serif;font-weight:700;color:var(--org)">${prz.p1>0?usd(prz.p1):'—'}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:11px">
-            <span style="font-size:16px">🥈</span>
-            <span style="color:var(--tx2);flex:1">2nd place</span>
-            <span style="font-family:'Kallisto',sans-serif;font-weight:700;color:var(--g2)">${prz.p2>0?usd(prz.p2):'—'}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:11px">
-            <span style="font-size:16px">🥉</span>
-            <span style="color:var(--tx2);flex:1">3rd place</span>
-            <span style="font-family:'Kallisto',sans-serif;font-weight:700;color:var(--grn)">${prz.p3>0?usd(prz.p3):'—'}</span>
-          </div>
-        </div>
-
-        <div style="border-top:1px solid var(--bd);padding-top:10px;display:flex;flex-direction:column;gap:6px">
-          <div style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--tx2)">
-            <span style="flex-shrink:0">⚖️</span>
-            <span><strong style="color:var(--tx)">Tied points?</strong> The prize for that position is split equally among all tied players.</span>
-          </div>
-          <div style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--tx2)">
-            <span style="flex-shrink:0">🔒</span>
-            <span><strong style="color:var(--tx)">Match locks</strong> 2 hours before kickoff — no changes after that.</span>
-          </div>
-          <div style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--tx2)">
-            <span style="flex-shrink:0">💵</span>
-            <span><strong style="color:var(--tx)">No refunds.</strong> Entry fees are non-refundable once the pool starts.</span>
-          </div>
-        </div>
+      // ── Rules button ──
+      html+=`<div style="text-align:center;margin:6px 0 10px">
+        <button onclick="showRulesModal(${pol.id})" style="background:none;border:1px solid var(--bd);border-radius:20px;padding:7px 18px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--tx2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s">
+          📋 Rules <span style="color:var(--org)">— see here</span>
+        </button>
       </div>`;
 
     });
@@ -3182,6 +3134,98 @@ function editSpecialAnswerModal(spId){
   my.answer='';saveDB();openModal(activePolla);
 }
 function closeModal(){document.getElementById('predModal').style.display='none';activePolla=null;}
+
+function showRulesModal(polId){
+  var pol=DB.pollas.find(function(p){return p.id===polId;});
+  var sc=(pol&&pol.scoring)||{win:1,draw:1,exact:5,diff:2};
+  var prz=pol?calcPrizes(pol):{p1:0,p2:0,p3:0};
+  var isMulti=!pol||pol.type!=='single';
+  var html='';
+
+  if(isMulti){
+    html+=`<div style="margin-bottom:18px">
+      <div style="font-size:13px;font-weight:700;color:var(--org);margin-bottom:10px;display:flex;align-items:center;gap:6px">⚽ Polla Multi-Partido</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">Predice el marcador de cada partido. Ganas puntos según la precisión de tu predicción:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">🎯</div>
+          <div style="font-size:18px;font-weight:800;color:var(--org);font-family:Kallisto,sans-serif">${sc.exact}</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Marcador exacto</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">📊</div>
+          <div style="font-size:18px;font-weight:800;color:var(--g2);font-family:Kallisto,sans-serif">${sc.diff}</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Diferencia correcta</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">✅</div>
+          <div style="font-size:18px;font-weight:800;color:var(--grn);font-family:Kallisto,sans-serif">${sc.win}</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Ganador / Empate</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">❌</div>
+          <div style="font-size:18px;font-weight:800;color:var(--tx3);font-family:Kallisto,sans-serif">0</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Predicción incorrecta</div>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    html+=`<div style="margin-bottom:18px">
+      <div style="font-size:13px;font-weight:700;color:var(--org);margin-bottom:10px;display:flex;align-items:center;gap:6px">⚽ Polla Partido Único</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">Predice el resultado del partido. Puedes ganar puntos por:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">🎯</div>
+          <div style="font-size:18px;font-weight:800;color:var(--org);font-family:Kallisto,sans-serif">${sc.exact}</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Marcador exacto</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--bd);text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">✅</div>
+          <div style="font-size:18px;font-weight:800;color:var(--grn);font-family:Kallisto,sans-serif">${sc.win}</div>
+          <div style="font-size:10px;color:var(--tx3);margin-top:2px">pts — Ganador / Empate</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Prizes section
+  if(prz.p1||prz.p2||prz.p3){
+    html+=`<div style="margin-bottom:18px">
+      <div style="font-size:12px;font-weight:700;color:var(--tx1);margin-bottom:8px">🏆 Premios</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="flex:1;min-width:70px;background:linear-gradient(135deg,rgba(255,215,0,.12),rgba(255,215,0,.04));border:1px solid rgba(255,215,0,.3);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:16px">🥇</div>
+          <div style="font-size:14px;font-weight:800;color:#FFD700;font-family:Kallisto,sans-serif">${usd(prz.p1)}</div>
+          <div style="font-size:9px;color:var(--tx3);margin-top:2px">1er Lugar</div>
+        </div>
+        ${prz.p2?`<div style="flex:1;min-width:70px;background:linear-gradient(135deg,rgba(192,192,192,.12),rgba(192,192,192,.04));border:1px solid rgba(192,192,192,.3);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:16px">🥈</div>
+          <div style="font-size:14px;font-weight:800;color:#C0C0C0;font-family:Kallisto,sans-serif">${usd(prz.p2)}</div>
+          <div style="font-size:9px;color:var(--tx3);margin-top:2px">2do Lugar</div>
+        </div>`:''}
+        ${prz.p3?`<div style="flex:1;min-width:70px;background:linear-gradient(135deg,rgba(205,127,50,.12),rgba(205,127,50,.04));border:1px solid rgba(205,127,50,.3);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:16px">🥉</div>
+          <div style="font-size:14px;font-weight:800;color:#CD7F32;font-family:Kallisto,sans-serif">${usd(prz.p3)}</div>
+          <div style="font-size:9px;color:var(--tx3);margin-top:2px">3er Lugar</div>
+        </div>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Rules
+  html+=`<div style="background:var(--bg3);border-radius:10px;padding:12px 14px;border:1px solid var(--bd)">
+    <div style="font-size:11px;font-weight:700;color:var(--tx1);margin-bottom:8px">📌 Reglas Generales</div>
+    <div style="font-size:10.5px;color:var(--tx2);line-height:1.85">
+      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>Los premios se entregan al <strong>1°, 2° y 3° lugar</strong> según puntos acumulados.</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>En caso de <strong>empate de puntos</strong>, el premio se reparte en partes iguales entre los jugadores empatados.</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--org)">•</span><span>Los partidos se <strong>bloquean 2 horas</strong> antes del inicio — no se aceptan predicciones después.</span></div>
+      <div style="display:flex;gap:8px"><span style="color:var(--org)">•</span><span><strong>No se realizan devoluciones</strong> de dinero una vez confirmada la inscripción.</span></div>
+    </div>
+  </div>`;
+
+  document.getElementById('rulesModalBody').innerHTML=html;
+  document.getElementById('rulesModal').style.display='flex';
+}
 
 function saveOnePred(matchId){
   if(!activePolla)return;
@@ -4555,6 +4599,18 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
       <p>6. La plataforma no se responsabiliza por errores técnicos o pérdida de datos.</p>
     </div>
     <button class="btn btn-p" style="width:100%;margin-top:14px" onclick="document.getElementById('tcModal').style.display='none'">ENTENDIDO ✓</button>
+  </div>
+</div>
+
+<!-- ════ MODAL: REGLAS ════ -->
+<div id="rulesModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
+  <div class="card" style="max-width:400px;width:100%;max-height:88vh;overflow-y:auto;padding:20px;border-radius:16px;position:relative">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;color:var(--tx1);display:flex;align-items:center;gap:7px">📋 Reglas de la Polla</div>
+      <button onclick="document.getElementById('rulesModal').style.display='none'" style="background:none;border:none;font-size:18px;color:var(--tx3);cursor:pointer;padding:0;line-height:1">✕</button>
+    </div>
+    <div id="rulesModalBody"></div>
+    <button onclick="document.getElementById('rulesModal').style.display='none'" style="width:100%;margin-top:16px;padding:11px;border-radius:10px;background:var(--org);color:#fff;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.5px">ENTENDIDO ✓</button>
   </div>
 </div>
 
