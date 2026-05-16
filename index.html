@@ -1571,10 +1571,9 @@ function sendResetEmail(){
   if(!email)return showE(T('emailRequired'));
   var u=DB.users.find(function(x){return (x.email||'').toLowerCase()===email;});
   if(!u)return showE(T('resetEmailNotFound'));
-  var svc=DB.settings&&DB.settings.ejs_svc;
-  var tpl=DB.settings&&DB.settings.ejs_tpl;
-  var key=DB.settings&&DB.settings.ejs_key;
-  if(!svc||!tpl||!key)return showE('EmailJS not configured. Contact admin.');
+  var svc=(DB.settings&&DB.settings.ejs_svc)||'service_ltrmgrq';
+  var tpl=(DB.settings&&DB.settings.ejs_tpl)||'template_vubttda';
+  var key=(DB.settings&&DB.settings.ejs_key)||'Gfd7vOLg0sWvQAWe5';
   var token=generateToken();
   var expires=Date.now()+(60*60*1000); // 1 hour
   u.resetToken=token;
@@ -3127,9 +3126,9 @@ function renderAdmStripe(){
   document.getElementById('regCodeInp').value=DB.settings&&DB.settings.regCode?DB.settings.regCode:'';
   var btn=document.getElementById('toggleEditBtn');
   if(btn)btn.textContent=(DB.settings&&DB.settings.allowPredEdit)?'✅ Allowed (click to lock)':'🔒 Locked (click to allow)';
-  var ejsSvc=document.getElementById('ejsSvc');if(ejsSvc)ejsSvc.value=DB.settings&&DB.settings.ejs_svc?DB.settings.ejs_svc:'';
-  var ejsTpl=document.getElementById('ejsTpl');if(ejsTpl)ejsTpl.value=DB.settings&&DB.settings.ejs_tpl?DB.settings.ejs_tpl:'';
-  var ejsKey=document.getElementById('ejsKey');if(ejsKey)ejsKey.value=DB.settings&&DB.settings.ejs_key?DB.settings.ejs_key:'';
+  var ejsSvc=document.getElementById('ejsSvc');if(ejsSvc)ejsSvc.value=(DB.settings&&DB.settings.ejs_svc)||'service_ltrmgrq';
+  var ejsTpl=document.getElementById('ejsTpl');if(ejsTpl)ejsTpl.value=(DB.settings&&DB.settings.ejs_tpl)||'template_vubttda';
+  var ejsKey=document.getElementById('ejsKey');if(ejsKey)ejsKey.value=(DB.settings&&DB.settings.ejs_key)||'Gfd7vOLg0sWvQAWe5';
 }
 function togglePredEdit(){
   if(!DB.settings)DB.settings={};
