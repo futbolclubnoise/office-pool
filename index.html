@@ -559,22 +559,22 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           <button class="tabp" onclick="swTab('reg',this)" data-t="register">Sign Up</button>
         </div>
         <div id="fLogin">
-          <div class="fg"><label class="fl">Username / Email</label><input class="fi" id="lEmail" type="text" placeholder="your@email.com" autocomplete="username" autocapitalize="off"></div>
-          <div class="fg"><label class="fl">Password</label><input class="fi" id="lPass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
-          <button class="btn btn-p" onclick="doLogin()">INGRESAR</button>
+          <div class="fg"><label class="fl" data-t="usernameEmail">Username / Email</label><input class="fi" id="lEmail" type="text" placeholder="your@email.com" autocomplete="username" autocapitalize="off"></div>
+          <div class="fg"><label class="fl" data-t="passwordLabel">Password</label><input class="fi" id="lPass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+          <button class="btn btn-p" onclick="doLogin()" data-t="loginBtn">SIGN IN</button>
         </div>
         <div id="fReg" class="hidden">
           <div class="fg" style="display:flex;align-items:center;gap:14px">
             <div class="ph-ring" id="rPhRing" onclick="document.getElementById('rPhFile').click()">
-              <img id="rPhPrev" src="" alt=""><span class="ph-lbl">Photo<br>optional</span>
+              <img id="rPhPrev" src="" alt=""><span class="ph-lbl" data-t="photoOptional">Photo (optional)</span>
               <input type="file" id="rPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'rPhPrev','rPhRing')">
             </div>
-            <div style="flex:1"><div class="fg"><label class="fl">Full Name</label><input class="fi" id="rName" type="text" placeholder="Your name"></div></div>
+            <div style="flex:1"><div class="fg"><label class="fl" data-t="fullName">Full Name</label><input class="fi" id="rName" type="text" placeholder="Your name" data-t="yourName"></div></div>
           </div>
-          <div class="fg"><label class="fl">Email</label><input class="fi" id="rEmail" type="email" placeholder="your@email.com"></div>
-          <div class="fg"><label class="fl">Password</label><input class="fi" id="rPass" type="password" placeholder="Min 6 characters"></div>
-          <div class="fg"><label class="fl">Phone</label><input class="fi" id="rPhone" type="tel" placeholder="+1 555 000 0000"></div>
-          <button class="btn btn-p" onclick="doRegister()">CREAR CUENTA</button>
+          <div class="fg"><label class="fl" data-t="emailLabel">Email</label><input class="fi" id="rEmail" type="email" placeholder="your@email.com"></div>
+          <div class="fg"><label class="fl" data-t="passwordLabel">Password</label><input class="fi" id="rPass" type="password" placeholder="Min 6 characters" data-t="minChars"></div>
+          <div class="fg"><label class="fl" data-t="phoneLabel">Phone</label><input class="fi" id="rPhone" type="tel" placeholder="+1 555 000 0000"></div>
+          <button class="btn btn-p" onclick="doRegister()" data-t="registerBtn">CREATE ACCOUNT</button>
         </div>
       </div>
     </div>
@@ -637,41 +637,41 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
     </div>
 
     <div id="P_historial" class="hidden">
-      <div class="card"><div class="ct"><div class="ct-dot ct-dot-r"></div>My History</div><div id="porHist"></div></div>
+      <div class="card"><div class="ct"><div class="ct-dot ct-dot-r"></div><span data-t="myHistory">My History</span></div><div id="porHist"></div></div>
     </div>
 
     <div id="P_perfil" class="hidden">
       <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-g"></div>My Profile</div>
+        <div class="ct"><div class="ct-dot ct-dot-g"></div><span data-t="myProfile">My Profile</span></div>
         <div style="display:flex;align-items:flex-start;gap:18px;margin-bottom:18px">
           <div class="ph-ring" id="pfPhRing" style="width:82px;height:82px" onclick="document.getElementById('pfPhFile').click()">
-            <img id="pfPhPrev" src="" alt=""><span class="ph-lbl">Change<br>photo</span>
+            <img id="pfPhPrev" src="" alt=""><span class="ph-lbl" data-t="changePhoto">Change photo</span>
             <input type="file" id="pfPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'pfPhPrev','pfPhRing')">
           </div>
           <div style="flex:1">
-            <div class="fg"><label class="fl">Full Name</label><input class="fi" id="pfName" type="text" placeholder="Your full name" required></div>
-            <div class="fg"><label class="fl">Nickname <span style="font-size:9px;color:var(--org)">(shown in ranking)</span></label><input class="fi" id="pfNick" type="text" placeholder="Short name shown to others"></div>
-            <div class="fg"><label class="fl">Email <span style="color:var(--red);font-size:10px">*</span></label><input class="fi" id="pfEmail" type="email" placeholder="your@email.com" required></div>
-            <div class="fg"><label class="fl">Phone <span style="color:var(--red);font-size:10px">*</span></label><input class="fi" id="pfPhone" type="tel" placeholder="+1 555 0000"></div>
-            <div class="fg"><label class="fl">New Password (optional)</label><input class="fi" id="pfPass" type="password" placeholder="Leave blank to keep current"></div>
+            <div class="fg"><label class="fl" data-t="fullName">Full Name</label><input class="fi" id="pfName" type="text" placeholder="Your full name" data-t="yourFullName" required></div>
+            <div class="fg"><label class="fl"><span data-t="nickname">Nickname</span> <span style="font-size:9px;color:var(--org)" data-t="nicknameHint">(shown in ranking)</span></label><input class="fi" id="pfNick" type="text" placeholder="Short name shown to others" data-t="shortName"></div>
+            <div class="fg"><label class="fl"><span data-t="emailLabel">Email</span> <span style="color:var(--red);font-size:10px">*</span></label><input class="fi" id="pfEmail" type="email" placeholder="your@email.com" required></div>
+            <div class="fg"><label class="fl"><span data-t="phoneLabel">Phone</span> <span style="color:var(--red);font-size:10px">*</span></label><input class="fi" id="pfPhone" type="tel" placeholder="+1 555 0000"></div>
+            <div class="fg"><label class="fl" data-t="newPassword">New Password (optional)</label><input class="fi" id="pfPass" type="password" placeholder="Leave blank to keep current" data-t="keepPassword"></div>
           </div>
         </div>
-        <button class="btn btn-p" onclick="saveProfile()">GUARDAR</button>
-        <div id="pfOK" class="msg-ok" style="margin-top:9px">Profile updated ✓</div>
+        <button class="btn btn-p" onclick="saveProfile()" data-t="saveBtn">SAVE</button>
+        <div id="pfOK" class="msg-ok" style="margin-top:9px" data-t="profileUpdated">Profile updated ✓</div>
       </div>
     </div>
 
     <div id="P_inscripcion" class="hidden">
       <div class="card">
-        <div class="ct"><div class="ct-dot ct-dot-g"></div>Join Pool</div>
-        <div class="fg"><label class="fl">Polla</label><select class="fi" id="payPolla" onchange="updatePayPreview()"></select></div>
+        <div class="ct"><div class="ct-dot ct-dot-g"></div><span data-t="joinPool">Join Pool</span></div>
+        <div class="fg"><label class="fl" data-t="poolLabel">Pool</label><select class="fi" id="payPolla" onchange="updatePayPreview()"></select></div>
         <div id="payPreview" style="margin-bottom:16px"></div>
         <div id="payLinkWrap"></div>
         <div id="payOK" class="st-ok"></div>
         <div id="payER" class="st-er"></div>
         <div style="display:flex;align-items:center;gap:7px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
           <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" style="height:14px;filter:grayscale(1) brightness(.5)">
-          <span style="font-size:8px;color:var(--tx3)">Payments securely processed by Stripe</span>
+          <span style="font-size:8px;color:var(--tx3)" data-t="paymentsStripe">Payments securely processed by Stripe</span>
         </div>
       </div>
     </div>
@@ -1485,13 +1485,13 @@ function doRegister(){
   const _phInput=document.getElementById('rPhFile');
   const ph=(_phInput&&_phInput._compressed)||document.getElementById('rPhPrev').src||'';
   if(!name||!email||!pass)return showE('Completa todos los campos');
-  if(pass.length<6)return showE('Password must be at least 6 characters');
-  if(DB.users.find(u=>(u.email||'').toLowerCase()===email.toLowerCase()))return showE('Email already registered');
+  if(pass.length<6)return showE(T('passTooShort'));
+  if(DB.users.find(u=>(u.email||'').toLowerCase()===email.toLowerCase()))return showE(T('emailExists'));
   hashPass(pass).then(function(hashed){
     DB.users.push({id:DB.nid.u++,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
     addNotif('register',{name:name,email:email});
     saveDB();
-    showOK('¡Cuenta creada! Ya puedes ingresar.');
+    showOK(T('accountCreated'));
     setTimeout(()=>document.querySelector('.tabp').click(),1500);
   });
 }
@@ -2865,8 +2865,8 @@ function saveProfile(){
   const pass=document.getElementById('pfPass').value;
   const _pfInput=document.getElementById('pfPhFile');
   const src=(_pfInput&&_pfInput._compressed)||document.getElementById('pfPhPrev').src;
-  if(!email){alert('Email is required');return;}
-  if(!phone){alert('Phone is required');return;}
+  if(!email){alert(T('emailRequired'));return;}
+  if(!phone){alert(T('phoneRequired'));return;}
   if(name)CU.name=name;
   CU.nickname=nick||name;
   CU.email=email;
@@ -3312,8 +3312,8 @@ function saveSelfEdit(){
   const name=document.getElementById('selfName').value.trim(),pass=document.getElementById('selfPass').value;
   const inp=document.getElementById('selfPhFile');
   const src=inp&&inp._compressed?inp._compressed:document.getElementById('selfPhPrev').src;
-  if(!name)return alert('Name cannot be empty');
-  if(pass&&pass.length>0&&pass.length<6)return alert('Password must be at least 6 characters');
+  if(!name)return alert(T('nameEmpty'));
+  if(pass&&pass.length>0&&pass.length<6)return alert(T('passMin6'));
   CU.name=name;
   if(src&&src.startsWith('data:image'))CU.photo=src;
   var dbU=DB.users.find(function(x){return x.id===CU.id;});
@@ -3387,7 +3387,8 @@ var LD={
     specNoItems:'No special items available',
     specSelectAlert:'Select a team',
     specWriteAlert:'Write your prediction',
-    specChangePrompt:'Change prediction:\n'
+    specChangePrompt:'Change prediction:\n',
+    usernameEmail:'Username / Email',passwordLabel:'Password',loginBtn:'SIGN IN',photoOptional:'Photo (optional)',yourName:'Your name',fullName:'Full Name',emailLabel:'Email',minChars:'Min 6 characters',phoneLabel:'Phone',registerBtn:'CREATE ACCOUNT',myHistory:'My History',myProfile:'My Profile',changePhoto:'Change photo',nickname:'Nickname',nicknameHint:'(shown in ranking)',yourFullName:'Your full name',shortName:'Short name shown to others',newPassword:'New Password (optional)',keepPassword:'Leave blank to keep current',saveBtn:'SAVE',profileUpdated:'Profile updated ✓',poolLabel:'Pool',paymentsStripe:'Payments securely processed by Stripe',accountCreated:'Account created! You can sign in now.',emailRequired:'Email is required',phoneRequired:'Phone is required',passTooShort:'Password must be at least 6 characters',emailExists:'Email already registered',nameEmpty:'Name cannot be empty',passMin6:'Password must be at least 6 characters'
   },
   es:{
     login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Mis Predicciones',profile:'Perfil',joinPool:'Unirse',specials:'Mi Top 3',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool',
@@ -3445,7 +3446,8 @@ var LD={
     specNoItems:'No hay ítems especiales disponibles',
     specSelectAlert:'Selecciona un equipo',
     specWriteAlert:'Escribe tu predicción',
-    specChangePrompt:'Cambiar predicción:\n'
+    specChangePrompt:'Cambiar predicción:\n',
+    usernameEmail:'Usuario / Email',passwordLabel:'Contraseña',loginBtn:'INGRESAR',photoOptional:'Foto (opcional)',yourName:'Tu nombre',fullName:'Nombre Completo',emailLabel:'Email',minChars:'Mín. 6 caracteres',phoneLabel:'Teléfono',registerBtn:'CREAR CUENTA',myHistory:'Mi Historial',myProfile:'Mi Perfil',changePhoto:'Cambiar foto',nickname:'Apodo',nicknameHint:'(visible en ranking)',yourFullName:'Tu nombre completo',shortName:'Nombre corto visible para otros',newPassword:'Nueva Contraseña (opcional)',keepPassword:'Dejar en blanco para no cambiar',saveBtn:'GUARDAR',profileUpdated:'Perfil actualizado ✓',poolLabel:'Polla',paymentsStripe:'Pagos procesados de forma segura por Stripe',accountCreated:'¡Cuenta creada! Ya puedes ingresar.',emailRequired:'El email es obligatorio',phoneRequired:'El teléfono es obligatorio',passTooShort:'La contraseña debe tener al menos 6 caracteres',emailExists:'Este email ya está registrado',nameEmpty:'El nombre no puede estar vacío',passMin6:'La contraseña debe tener al menos 6 caracteres'
   }
 };
 function T(k){return(LD[CL]||LD.en)[k]||k;}
