@@ -4133,17 +4133,10 @@ window._fbOnUpdate=function(d){
   }
   _updateNotifBadge();
 
-  // Check WC 2026 matches — only seed if real matches are missing AND no user data exists
-  // Never re-seed if users (other than admin) or predictions are present — data safety first
-  var changed=false;
-  var realUsers=DB.users.filter(function(u){return u.role!=='admin';});
-  var anyPreds=DB.users.some(function(u){return(u.predictions||[]).length>0;});
-  if(!realUsers.length&&!anyPreds){
-    // Safe to seed: no real players, no predictions
-    if(seedWC2026()){changed=true;}
-    if(changed&&!DB.specials.length){seedWC2026Specials();changed=true;}
-    if(changed&&!window._bnrSeeding){window._bnrSeeding=true;saveDB().catch(function(){}).then(function(){window._bnrSeeding=false;});}
-  }
+  // ⚠️ NO seeding or saveDB() here — _fbOnUpdate fires before _fbOnUsersUpdate (cfl/users is
+  // a separate Firestore doc). At this point DB.users may still be empty even if real players
+  // exist in the cloud. Calling saveDB() here would overwrite Firebase with seeded/empty data.
+  // Seeding is handled safely in startApp() with the 6-second timer + _fbCloudResponded flag.
 
   // Register listeners for extra user chunks (if > 100 players)
   var numChunks=d.userChunks||1;
