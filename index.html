@@ -3388,7 +3388,7 @@ var LD={
     specSelectAlert:'Select a team',
     specWriteAlert:'Write your prediction',
     specChangePrompt:'Change prediction:\n',
-    usernameEmail:'Username / Email',passwordLabel:'Password',loginBtn:'SIGN IN',photoOptional:'Photo (optional)',yourName:'Your name',fullName:'Full Name',emailLabel:'Email',minChars:'Min 6 characters',phoneLabel:'Phone',registerBtn:'CREATE ACCOUNT',myHistory:'My History',myProfile:'My Profile',changePhoto:'Change photo',nickname:'Nickname',nicknameHint:'(shown in ranking)',yourFullName:'Your full name',shortName:'Short name shown to others',newPassword:'New Password (optional)',keepPassword:'Leave blank to keep current',saveBtn:'SAVE',profileUpdated:'Profile updated ✓',poolLabel:'Pool',paymentsStripe:'Payments securely processed by Stripe',accountCreated:'Account created! You can sign in now.',emailRequired:'Email is required',phoneRequired:'Phone is required',passTooShort:'Password must be at least 6 characters',emailExists:'Email already registered',nameEmpty:'Name cannot be empty',passMin6:'Password must be at least 6 characters'
+    usernameEmail:'Username / Email',passwordLabel:'Password',loginBtn:'SIGN IN',photoOptional:'Photo (optional)',yourName:'Your name',fullName:'Full Name',emailLabel:'Email',minChars:'Min 6 characters',phoneLabel:'Phone',registerBtn:'CREATE ACCOUNT',myHistory:'My History',myProfile:'My Profile',changePhoto:'Change photo',nickname:'Nickname',nicknameHint:'(shown in ranking)',yourFullName:'Your full name',shortName:'Short name shown to others',newPassword:'New Password (optional)',keepPassword:'Leave blank to keep current',saveBtn:'SAVE',profileUpdated:'Profile updated ✓',poolLabel:'Pool',paymentsStripe:'Payments securely processed by Stripe',accountCreated:'Account created! You can sign in now.',emailRequired:'Email is required',phoneRequired:'Phone is required',passTooShort:'Password must be at least 6 characters',emailExists:'Email already registered',nameEmpty:'Name cannot be empty',passMin6:'Password must be at least 6 characters',savePredsBtn:'SAVE PREDICTIONS',editProfileBtn:'SAVE CHANGES'
   },
   es:{
     login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Mis Predicciones',profile:'Perfil',joinPool:'Unirse',specials:'Mi Top 3',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool',
@@ -3447,7 +3447,7 @@ var LD={
     specSelectAlert:'Selecciona un equipo',
     specWriteAlert:'Escribe tu predicción',
     specChangePrompt:'Cambiar predicción:\n',
-    usernameEmail:'Usuario / Email',passwordLabel:'Contraseña',loginBtn:'INGRESAR',photoOptional:'Foto (opcional)',yourName:'Tu nombre',fullName:'Nombre Completo',emailLabel:'Email',minChars:'Mín. 6 caracteres',phoneLabel:'Teléfono',registerBtn:'CREAR CUENTA',myHistory:'Mi Historial',myProfile:'Mi Perfil',changePhoto:'Cambiar foto',nickname:'Apodo',nicknameHint:'(visible en ranking)',yourFullName:'Tu nombre completo',shortName:'Nombre corto visible para otros',newPassword:'Nueva Contraseña (opcional)',keepPassword:'Dejar en blanco para no cambiar',saveBtn:'GUARDAR',profileUpdated:'Perfil actualizado ✓',poolLabel:'Polla',paymentsStripe:'Pagos procesados de forma segura por Stripe',accountCreated:'¡Cuenta creada! Ya puedes ingresar.',emailRequired:'El email es obligatorio',phoneRequired:'El teléfono es obligatorio',passTooShort:'La contraseña debe tener al menos 6 caracteres',emailExists:'Este email ya está registrado',nameEmpty:'El nombre no puede estar vacío',passMin6:'La contraseña debe tener al menos 6 caracteres'
+    usernameEmail:'Usuario / Email',passwordLabel:'Contraseña',loginBtn:'INGRESAR',photoOptional:'Foto (opcional)',yourName:'Tu nombre',fullName:'Nombre Completo',emailLabel:'Email',minChars:'Mín. 6 caracteres',phoneLabel:'Teléfono',registerBtn:'CREAR CUENTA',myHistory:'Mi Historial',myProfile:'Mi Perfil',changePhoto:'Cambiar foto',nickname:'Apodo',nicknameHint:'(visible en ranking)',yourFullName:'Tu nombre completo',shortName:'Nombre corto visible para otros',newPassword:'Nueva Contraseña (opcional)',keepPassword:'Dejar en blanco para no cambiar',saveBtn:'GUARDAR',profileUpdated:'Perfil actualizado ✓',poolLabel:'Polla',paymentsStripe:'Pagos procesados de forma segura por Stripe',accountCreated:'¡Cuenta creada! Ya puedes ingresar.',emailRequired:'El email es obligatorio',phoneRequired:'El teléfono es obligatorio',passTooShort:'La contraseña debe tener al menos 6 caracteres',emailExists:'Este email ya está registrado',nameEmpty:'El nombre no puede estar vacío',passMin6:'La contraseña debe tener al menos 6 caracteres',savePredsBtn:'GUARDAR PREDICCIONES',editProfileBtn:'GUARDAR CAMBIOS'
   }
 };
 function T(k){return(LD[CL]||LD.en)[k]||k;}
@@ -4683,7 +4683,7 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
     <div id="modMeta" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap"></div>
     <div id="modScLegend" style="margin-bottom:0"></div>
     <div id="modBody"></div>
-    <button class="btn btn-p" style="width:100%;margin-top:12px" onclick="savePreds()">GUARDAR PREDICCIONES</button>
+    <button class="btn btn-p" style="width:100%;margin-top:12px" onclick="savePreds()" data-t="savePredsBtn">SAVE PREDICTIONS</button>
   </div>
 </div>
 
@@ -4704,7 +4704,7 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
     <div class="fg"><label class="fl">Name</label><input class="fi" id="selfName" placeholder="Your name"></div>
     <div class="fg"><label class="fl">New Password (optional)</label><input class="fi" type="password" id="selfPass" placeholder="Min 6 characters"></div>
     <div class="msg-ok" id="selfOK" style="display:none;margin-top:8px">¡Guardado! ✓</div>
-    <button class="btn btn-p" style="width:100%;margin-top:12px" onclick="saveSelfEdit()">GUARDAR</button>
+    <button class="btn btn-p" style="width:100%;margin-top:12px" onclick="saveSelfEdit()" data-t="saveBtn">SAVE</button>
   </div>
 </div>
 
