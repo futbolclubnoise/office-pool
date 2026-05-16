@@ -4056,11 +4056,12 @@ function startApp(){
     lsSave();
     setTimeout(function(){
       if(!window._fbCloudResponded&&!window._fbUsersResponded){
-        // Neither cfl/data nor cfl/users responded → truly first-time setup → safe to save
-        console.log('⚡ No Firebase response after 6s — pushing initial seed');
+        // Neither cfl/data nor cfl/users responded after 30s → truly first-time setup → safe to save
+        // 30s gives Firebase ample time even on slow connections before we assume empty DB
+        console.log('⚡ No Firebase response after 30s — pushing initial seed');
         saveDB();
       }
-    },6000);
+    },30000);
   }
   initLang();initTheme();
   // Detect return from Stripe payment (?paid=1)
@@ -4145,11 +4146,13 @@ window._fbOnUpdate=function(d){
     window._fbSaveUsers(DB.users).then(function(){console.log('✅ Users migrated to cfl/users');}).catch(function(e){console.error('Migration failed:',e);});
   }
 
-  // Only replace app data if cloud is same age or newer
-  if(cloudTs>=localTs){
+  // Always accept Firebase data if it has real pollas (real data beats any local seed).
+  // If Firebase has no pollas/matches, only overwrite local if cloud timestamp is newer.
+  var cloudHasRealData=(d.pollas&&d.pollas.length>0)||(d.matches&&d.matches.length>0);
+  if(cloudHasRealData||cloudTs>=localTs){
     // SAFE MERGE: only overwrite if cloud has actual data — never blank-out with empty arrays
     if(Array.isArray(d.pollas)&&d.pollas.length)DB.pollas=d.pollas;
-    else if(Array.isArray(d.pollas))DB.pollas=d.pollas; // allow intentional empty
+    else if(Array.isArray(d.pollas)&&cloudTs>=localTs)DB.pollas=d.pollas; // allow intentional empty only if newer
     if(Array.isArray(d.matches))DB.matches=d.matches;
     DB.banners=Object.assign({b1:'',b1url:'',b1m:'',b1murl:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},d.banners||{});
     DB.stripe=Object.assign({pub:'',secret:''},d.stripe||{});
