@@ -4048,20 +4048,12 @@ function startApp(){
     // Calling saveDB() before Firebase responds would overwrite cloud data
     // with local/seeded data, destroying any changes made from other devices.
   }else{
-    // ── Case B: No local data — seed defaults, but WAIT for Firebase first ──
-    // Firebase may have real data (different browser, incognito, new device).
-    // Only push seeded data to Firebase if cloud is ALSO empty after 6 seconds.
-    seedWC2026();
-    seedWC2026Specials();
-    lsSave();
-    setTimeout(function(){
-      if(!window._fbCloudResponded&&!window._fbUsersResponded){
-        // Neither cfl/data nor cfl/users responded after 30s → truly first-time setup → safe to save
-        // 30s gives Firebase ample time even on slow connections before we assume empty DB
-        console.log('⚡ No Firebase response after 30s — pushing initial seed');
-        saveDB();
-      }
-    },30000);
+    // ── Case B: No localStorage (new device / incognito / cleared cache) ──
+    // Firebase is ALWAYS the source of truth. Do NOT save anything to Firebase.
+    // onSnapshot listeners will fire and populate DB automatically.
+    // The login form is already visible in the HTML — user can log in normally.
+    // After login, all data comes from Firebase in real time.
+    console.log('📡 No local cache — Firebase is source of truth, waiting for onSnapshot...');
   }
   initLang();initTheme();
   // Detect return from Stripe payment (?paid=1)
