@@ -233,6 +233,11 @@ input[type=number]{-moz-appearance:textfield;}
 .t5-r:hover{background:var(--bg3);}
 .av-xl{width:110px;height:110px;border-radius:50%;border:3px solid var(--org);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-family:'Kallisto',sans-serif;font-weight:500;font-size:32px;color:var(--tx);flex-shrink:0;margin:0 auto 12px;}
 .av-xl img{width:100%;height:100%;object-fit:cover;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;}
+.av-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+.av-pick-item{aspect-ratio:1;border-radius:50%;border:3px solid transparent;cursor:pointer;overflow:hidden;transition:border-color .2s,transform .2s;display:flex;align-items:center;justify-content:center;}
+.av-pick-item:hover{transform:scale(1.08);}
+.av-pick-item.selected{border-color:var(--org);transform:scale(1.08);}
+.av-pick-item svg{width:70%;height:70%;}
 .t5-pos{font-family:'Kallisto',sans-serif;font-weight:500;font-size:13px;color:var(--tx3);width:18px;text-align:center;flex-shrink:0;}
 .t5-pos.a{color:var(--org);} .t5-pos.b{color:var(--g2);} .t5-pos.c{color:var(--grn);}
 
@@ -598,9 +603,14 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         </div>
         <div id="fReg" class="hidden">
           <div class="fg" style="display:flex;align-items:center;gap:14px">
-            <div class="ph-ring" id="rPhRing" onclick="document.getElementById('rPhFile').click()">
-              <img id="rPhPrev" src="" alt=""><span class="ph-lbl" data-t="photoOptional">Photo (optional)</span>
-              <input type="file" id="rPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'rPhPrev','rPhRing')">
+            <div>
+              <div class="ph-ring" id="rPhRing" onclick="document.getElementById('rPhFile').click()" style="margin-bottom:6px">
+                <img id="rPhPrev" src="" alt=""><span class="ph-lbl" data-t="photoOptional">Photo (optional)</span>
+                <input type="file" id="rPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'rPhPrev','rPhRing')">
+              </div>
+              <div style="font-size:8px;color:var(--tx3);text-align:center;margin-bottom:4px">— or pick avatar —</div>
+              <div class="av-pick-grid" id="rAvGrid"></div>
+              <input type="hidden" id="rAvatar" value="">
             </div>
             <div style="flex:1"><div class="fg"><label class="fl" data-t="fullName">Full Name</label><input class="fi" id="rName" type="text" placeholder="Your name" data-t="yourName"></div></div>
           </div>
@@ -677,9 +687,14 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
       <div class="card">
         <div class="ct"><div class="ct-dot ct-dot-g"></div><span data-t="myProfile">My Profile</span></div>
         <div style="display:flex;align-items:flex-start;gap:18px;margin-bottom:18px">
-          <div class="ph-ring" id="pfPhRing" style="width:82px;height:82px" onclick="document.getElementById('pfPhFile').click()">
-            <img id="pfPhPrev" src="" alt=""><span class="ph-lbl" data-t="changePhoto">Change photo</span>
-            <input type="file" id="pfPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'pfPhPrev','pfPhRing')">
+          <div>
+            <div class="ph-ring" id="pfPhRing" style="width:82px;height:82px" onclick="document.getElementById('pfPhFile').click()">
+              <img id="pfPhPrev" src="" alt=""><span class="ph-lbl" data-t="changePhoto">Change photo</span>
+              <input type="file" id="pfPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'pfPhPrev','pfPhRing')">
+            </div>
+            <div style="font-size:8px;color:var(--tx3);text-align:center;margin:6px 0 4px">— or pick avatar —</div>
+            <div class="av-pick-grid" id="pfAvGrid"></div>
+            <input type="hidden" id="pfAvatar" value="">
           </div>
           <div style="flex:1">
             <div class="fg"><label class="fl" data-t="fullName">Full Name</label><input class="fi" id="pfName" type="text" placeholder="Your full name" data-t="yourFullName" required></div>
@@ -1131,10 +1146,41 @@ function updateTzPreview() {
 }
 
 // ═══════════ STAGE LABELS ═══════════
-const STAGE_LABELS = {
-  league:'Liga Regular', groups:'Fase de Grupos', r16:'Octavos de Final',
-  r8:'Cuartos de Final', r4:'Semifinal', '3rd':'Tercer Puesto', final:'Gran Final'
-};
+const STAGE_LABELS_ES = {league:'Liga Regular',groups:'Fase de Grupos',r16:'Octavos de Final',r8:'Cuartos de Final',r4:'Semifinal','3rd':'Tercer Puesto',final:'Gran Final'};
+const STAGE_LABELS_EN = {league:'Regular Season',groups:'Group Stage',r16:'Round of 16',r8:'Quarterfinals',r4:'Semifinals','3rd':'Third Place',final:'Grand Final'};
+function stageLabel(s){return(CL==='es'?STAGE_LABELS_ES:STAGE_LABELS_EN)[s]||s;}
+var AVATARS=[
+  {id:'av1',label:'Pelé',bg:'#1a5276',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="25" x2="8" y2="18" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="25" x2="52" y2="18" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="20" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="40" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="42" cy="67" r="5"/></svg>'},
+  {id:'av2',label:'Maradona',bg:'#1f618d',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="22" x2="8" y2="30" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="22" x2="52" y2="14" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="18" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="38" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="14" cy="63" r="5"/></svg>'},
+  {id:'av3',label:'Ronaldo R9',bg:'#922b21',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="24" x2="10" y2="20" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="24" x2="50" y2="20" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="27" y1="40" x2="22" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="33" y1="40" x2="42" y2="55" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="42" y1="55" x2="52" y2="52" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>'},
+  {id:'av4',label:'Zidane',bg:'#1e8449',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="22" x2="10" y2="28" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="22" x2="50" y2="28" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="20" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="40" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
+  {id:'av5',label:'Messi',bg:'#7d3c98',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="26" x2="10" y2="22" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="26" x2="48" y2="18" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="24" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="44" y2="57" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="48" cy="62" r="5"/></svg>'},
+  {id:'av6',label:'Ronaldinho',bg:'#b7770d',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="22" x2="6" y2="16" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="22" x2="54" y2="16" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="18" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="38" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
+  {id:'av7',label:'Beckham',bg:'#2e4053',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="24" x2="10" y2="16" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="22" x2="50" y2="24" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="22" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="42" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="20" cy="64" r="5"/></svg>'},
+  {id:'av8',label:'Cruyff',bg:'#d35400',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="20" x2="8" y2="22" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="20" x2="52" y2="22" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="28" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="46" y2="56" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="46" y1="56" x2="50" y2="48" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>'},
+  {id:'av9',label:'Van Basten',bg:'#117a65',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="26" x2="8" y2="20" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="26" x2="52" y2="32" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="16" y2="56" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="16" y1="56" x2="10" y2="52" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="34" y1="40" x2="38" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
+  {id:'av10',label:'Baggio',bg:'#6c3483',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="24" x2="10" y2="24" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="24" x2="50" y2="24" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="22" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="38" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
+  {id:'av11',label:'Goalkeeper',bg:'#1a252f',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="20" x2="4" y2="14" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="20" x2="56" y2="14" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="20" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="40" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
+  {id:'av12',label:'Champion',bg:'#b7950b',fg:'#fff',
+   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="20" x2="8" y2="12" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="20" x2="52" y2="12" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="20" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="40" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><rect x="18" y="58" width="24" height="4" rx="2"/></svg>'},
+];
+function avSrc(u){
+  if(u.photoURL||u.photo)return null;
+  if(!u.avatar)return null;
+  var av=AVATARS.find(function(a){return a.id===u.avatar;});
+  return av||null;
+}
 const STAGE_CSS = {
   league:'stage-league', groups:'stage-groups', r16:'stage-r16',
   r8:'stage-r8', r4:'stage-r4', '3rd':'stage-3rd', final:'stage-final'
@@ -1206,7 +1252,10 @@ function tLeft(d){
 const empty=t=>`<p style="font-size:10px;color:var(--tx3);padding:5px 0">${t}</p>`;
 function avEl(u,cls='av'){
   var src=u.photoURL||u.photo||'';
-  return src?`<div class="${cls}"><img src="${src}" alt=""></div>`:`<div class="${cls}">${ini(u.name)}</div>`;
+  if(src)return`<div class="${cls}"><img src="${src}" alt=""></div>`;
+  var av=AVATARS.find(function(a){return a.id===u.avatar;});
+  if(av)return`<div class="${cls}" style="background:${av.bg};display:flex;align-items:center;justify-content:center">${av.svg}</div>`;
+  return`<div class="${cls}">${ini(u.name)}</div>`;
 }
 
 // ═══════════ SCORING CALCULATOR ═══════════
@@ -1534,7 +1583,8 @@ function doRegister(){
     var newId=DB.nid.u++;
     var newPhoto=ph.startsWith('data:image')?ph:'';
     if(newPhoto)saveUserPhoto(newId,newPhoto);
-    var newUser={id:newId,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:newPhoto,photoURL:'',predictions:[],payments:[]};
+    var newAvatar=document.getElementById('rAvatar')?document.getElementById('rAvatar').value:'';
+    var newUser={id:newId,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:newPhoto,photoURL:'',avatar:newAvatar,predictions:[],payments:[]};
     DB.users.push(newUser);
     addNotif('register',{name:name,email:email});
     saveDB();
@@ -1548,6 +1598,18 @@ function doRegister(){
     setTimeout(()=>document.querySelector('.tabp').click(),1500);
   });
 }
+function pickAvatar(id,prefix){
+  document.getElementById(prefix+'Avatar').value=id;
+  document.querySelectorAll('#'+prefix+'AvGrid .av-pick-item').forEach(function(el){el.classList.remove('selected');});
+  var el=document.getElementById(prefix+'Av_'+id);if(el)el.classList.add('selected');
+}
+function renderAvGrid(gridId,prefix,selected){
+  var g=document.getElementById(gridId);if(!g)return;
+  g.innerHTML=AVATARS.map(function(av){
+    return'<div class="av-pick-item'+(selected===av.id?' selected':'')+'" id="'+prefix+'Av_'+av.id+'" style="background:'+av.bg+'" onclick="pickAvatar(\''+av.id+'\',\''+prefix+'\')" title="'+av.label+'">'+av.svg+'</div>';
+  }).join('');
+}
+
 // ═══════════ PASSWORD RESET ═══════════
 function showForgot(){
   document.getElementById('fLogin').classList.add('hidden');
@@ -1716,7 +1778,7 @@ function initAdmin(){
 }
 function setNav(avId,nmId){
   const av=document.getElementById(avId),nm=document.getElementById(nmId);
-  if(av){var _avSrc=CU.photoURL||CU.photo||'';if(_avSrc)av.innerHTML=`<img src="${_avSrc}" alt="">`;else av.textContent=ini(CU.nickname||CU.name);}
+  if(av){var _avSrc=CU.photoURL||CU.photo||'';if(_avSrc){av.innerHTML=`<img src="${_avSrc}" alt="">`;}else{var _avAv=AVATARS.find(function(a){return a.id===CU.avatar;});if(_avAv){av.style.background=_avAv.bg;av.innerHTML=_avAv.svg;}else{av.style.background='';av.innerHTML='';av.textContent=ini(CU.nickname||CU.name);}}}
   if(nm)nm.textContent=(CU.nickname||CU.name).split(' ')[0];
 }
 function aTab(tab,btn){
@@ -1938,7 +2000,7 @@ function renderAdmPartidos(){
       </div>
       <div id="${gid}">`;
       matches.forEach(m=>{
-        const stg=STAGE_LABELS[m.stage]||m.stage||'';
+        const stg=stageLabel(m.stage)||m.stage||'';
         const stgCss=STAGE_CSS[m.stage]||'stage-league';
         const tz=m.tz||pol?.tz||'America/New_York';
         html+=`<div class="mc" style="margin-bottom:8px">
@@ -2011,7 +2073,7 @@ function renderAdmRes(){
       </div>
       <div id="${gid}">`;
       matches.forEach(m=>{
-        const stg=STAGE_LABELS[m.stage]||'';
+        const stg=stageLabel(m.stage)||'';
         const tz=m.tz||pol?.tz||'America/New_York';
         const hFlag=getFlag(m.home),aFlag=getFlag(m.away);
         const hI=m.homeLogo?`<img src="${m.homeLogo}" onerror="this.style.display='none'" style="width:22px;height:22px;object-fit:contain;border-radius:4px;flex-shrink:0">`:(hFlag?`<span style="font-size:22px;line-height:1;flex-shrink:0">${hFlag}</span>`:'');
@@ -2498,7 +2560,7 @@ function showPollaDetail(pollaId){
     html+='<div class="ct" style="margin-bottom:8px"><div class="ct-dot ct-dot-g"></div>Matches ('+matches.length+')</div>';
     var stageOrd=['group','r32','r16','qf','sf','final'];
     stageOrd.filter(function(s){return byStage[s];}).forEach(function(stage){
-      var label=STAGE_LABELS[stage]||stage;
+      var label=stageLabel(stage)||stage;
       html+='<div style="font-size:9px;color:var(--tx2);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px">'+label+'</div>';
       byStage[stage].slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);}).forEach(function(m){
         var res=m.result?m.result.home+' - '+m.result.away:'No result';
@@ -2537,6 +2599,7 @@ function initPlayer(){
   setNav('porAv','porNm');
   applyBanners();
   renderPInicio();
+  renderAvGrid('rAvGrid','r','');
 }
 function pTab(tab,btn){
   document.querySelectorAll('#S_player .stab').forEach(t=>t.classList.remove('on'));
@@ -2615,10 +2678,16 @@ function renderPInicio(){
             <div style="font-size:8px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px">${T('yourRank')}</div>
           </div>`:''}
         </div>
-        ${prz.p1||prz.p2||prz.p3?`<div style="display:flex;gap:10px;margin-top:10px;margin-bottom:2px;flex-wrap:wrap">
-          <div style="font-size:10px;font-weight:700;color:var(--org)">🥇 ${usd(prz.p1)}</div>
-          <div style="font-size:10px;font-weight:700;color:var(--g2)">🥈 ${usd(prz.p2)}</div>
-          <div style="font-size:10px;font-weight:700;color:var(--grn)">🥉 ${usd(prz.p3)}</div>
+        ${prz.p1||prz.p2||prz.p3?`<div style="display:flex;gap:6px;margin-top:10px;margin-bottom:2px">
+          <div style="flex:1;background:rgba(255,165,0,.12);border:1px solid rgba(255,165,0,.35);border-radius:10px;padding:8px 6px;text-align:center">
+            <div style="font-size:14px">🥇</div><div style="font-family:'Kallisto',sans-serif;font-size:12px;font-weight:700;color:var(--org)">${usd(prz.p1)}</div>
+          </div>
+          <div style="flex:1;background:rgba(180,180,180,.1);border:1px solid rgba(180,180,180,.25);border-radius:10px;padding:8px 6px;text-align:center">
+            <div style="font-size:14px">🥈</div><div style="font-family:'Kallisto',sans-serif;font-size:12px;font-weight:700;color:var(--g2)">${usd(prz.p2)}</div>
+          </div>
+          <div style="flex:1;background:rgba(180,130,80,.1);border:1px solid rgba(180,130,80,.25);border-radius:10px;padding:8px 6px;text-align:center">
+            <div style="font-size:14px">🥉</div><div style="font-family:'Kallisto',sans-serif;font-size:12px;font-weight:700;color:var(--grn)">${usd(prz.p3)}</div>
+          </div>
         </div>`:''}
         ${myPolPreds.length>0?`<div class="stats-strip" style="margin-top:12px;margin-bottom:0">
           <div class="stat-pill"><div class="sp-val" style="color:var(--org)">${myPoolPts}</div><div class="sp-lbl">${T('pts')}</div></div>
@@ -2928,9 +2997,12 @@ function showPlayerProfile(uid){
   var total=(u.predictions||[]).length;
   // Avatar
   var _ppSrc=u.photoURL||u.photo||'';
+  var _ppAv=AVATARS.find(function(a){return a.id===u.avatar;});
   document.getElementById('ppAvatar').innerHTML=_ppSrc
     ?'<div class="av-xl"><img src="'+_ppSrc+'" alt=""></div>'
-    :'<div class="av-xl">'+ini(u.name)+'</div>';
+    :_ppAv
+      ?'<div class="av-xl" style="background:'+_ppAv.bg+';display:flex;align-items:center;justify-content:center">'+_ppAv.svg+'</div>'
+      :'<div class="av-xl">'+ini(u.name)+'</div>';
   document.getElementById('ppName').textContent=u.name||(u.nickname||'');
   document.getElementById('ppNick').textContent=u.nickname&&u.nickname!==u.name?'@'+u.nickname:'';
   document.getElementById('ppStats').innerHTML=
@@ -3001,7 +3073,7 @@ function renderPHist(){
       const typeLabel=pr.type?TYPE_LABELS[pr.type]:'Pending';
       const typeColor=pr.type?TYPE_COLORS[pr.type]:'var(--tx3)';
       const typeBg=pr.type?TYPE_BG[pr.type]:'var(--bg3)';
-      const stg=STAGE_LABELS[m.stage]||'';
+      const stg=stageLabel(m.stage)||'';
       html+=`<div style="display:flex;align-items:stretch;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd)">
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:var(--tx)">${m.home} <span style="color:var(--tx2);font-weight:400">vs</span> ${m.away}</div>
@@ -3035,6 +3107,7 @@ function renderPPerfil(){
   document.getElementById('pfEmail').value=CU.email||'';
   if(document.getElementById('pfPhone'))document.getElementById('pfPhone').value=CU.phone||'';
   document.getElementById('pfPass').value='';
+  renderAvGrid('pfAvGrid','pf',CU.avatar||'');
   const prev=document.getElementById('pfPhPrev'),lbl=document.querySelector('#pfPhRing .ph-lbl');
   var _pfSrc=CU.photoURL||CU.photo||'';
   if(_pfSrc){prev.src=_pfSrc;prev.style.display='block';if(lbl)lbl.style.display='none';}
@@ -3068,7 +3141,8 @@ function saveProfile(){
     }
   }
   // Update DB fields
-  if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;}
+  var pfAv=document.getElementById('pfAvatar');if(pfAv&&pfAv.value){CU.avatar=pfAv.value;}
+  if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;if(CU.avatar)dbU.avatar=CU.avatar;}
   saveDB();
   setNav('porAv','porNm');
   const ok=document.getElementById('pfOK');ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);
@@ -3094,10 +3168,30 @@ function updatePayPreview(){
     <div class="pmg">
       <div class="pmg-item"><div class="pmg-v c-o">${usd(pol.fee)}</div><div class="pmg-l">${T('entryFee')}</div></div>
       <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">${T('enrolled')}</div></div>
-      <div class="pmg-item"><div class="pmg-v c-r">${usd(prz.pool)}</div><div class="pmg-l">${T('currentPool')}</div></div>
     </div>
-    ${prz.pool>0?`<div style="font-size:10px;color:var(--tx2);padding:8px 10px;background:var(--bg3);border-radius:8px;border:1px solid var(--bd);margin-top:10px">
-      ${T('prizes')}: <span style="color:var(--org)">1° ${usd(prz.p1)}</span> · <span style="color:var(--g2)">2° ${usd(prz.p2)}</span> · <span style="color:var(--grn)">3° ${usd(prz.p3)}</span>
+    ${prz.pool>0?`<div style="margin-top:12px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;margin-bottom:8px">🏆 ${T('prizes')}</div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:linear-gradient(135deg,rgba(255,165,0,.15),rgba(255,165,0,.05));border:1px solid rgba(255,165,0,.4);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-size:18px;margin-bottom:2px">🥇</div>
+          <div style="font-family:'Kallisto',sans-serif;font-size:15px;font-weight:700;color:var(--org)">${usd(prz.p1)}</div>
+          <div style="font-size:8px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:1px">1st Place</div>
+        </div>
+        <div style="flex:1;background:linear-gradient(135deg,rgba(180,180,180,.15),rgba(180,180,180,.05));border:1px solid rgba(180,180,180,.3);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-size:18px;margin-bottom:2px">🥈</div>
+          <div style="font-family:'Kallisto',sans-serif;font-size:15px;font-weight:700;color:var(--g2)">${usd(prz.p2)}</div>
+          <div style="font-size:8px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:1px">2nd Place</div>
+        </div>
+        <div style="flex:1;background:linear-gradient(135deg,rgba(180,130,80,.15),rgba(180,130,80,.05));border:1px solid rgba(180,130,80,.3);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-size:18px;margin-bottom:2px">🥉</div>
+          <div style="font-family:'Kallisto',sans-serif;font-size:15px;font-weight:700;color:var(--grn)">${usd(prz.p3)}</div>
+          <div style="font-size:8px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:1px">3rd Place</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:10px;color:var(--tx2)">💰 Total Pool</span>
+        <span style="font-family:'Kallisto',sans-serif;font-size:14px;font-weight:700;color:var(--org)">${usd(prz.pool)}</span>
+      </div>
     </div>`:''}`;
   const wrap=document.getElementById('payLinkWrap');
   if(ya){
