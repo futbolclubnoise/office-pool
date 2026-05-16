@@ -233,11 +233,11 @@ input[type=number]{-moz-appearance:textfield;}
 .t5-r:hover{background:var(--bg3);}
 .av-xl{width:110px;height:110px;border-radius:50%;border:3px solid var(--org);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-family:'Kallisto',sans-serif;font-weight:500;font-size:32px;color:var(--tx);flex-shrink:0;margin:0 auto 12px;}
 .av-xl img{width:100%;height:100%;object-fit:cover;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;}
-.av-pick-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px;}
-.av-pick-item{width:100%;padding-bottom:100%;border-radius:50%;border:3px solid transparent;cursor:pointer;overflow:hidden;transition:border-color .2s,transform .2s;position:relative;box-sizing:border-box;}
-.av-pick-item:hover{transform:scale(1.08);}
-.av-pick-item.selected{border-color:var(--org);box-shadow:0 0 0 2px var(--org);transform:scale(1.08);}
-.av-pick-item svg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:65%;height:65%;}
+.av-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
+.av-pick-item{width:100%;aspect-ratio:1/1;border-radius:50%;border:3px solid transparent;cursor:pointer;overflow:hidden;transition:border-color .2s,transform .2s;position:relative;display:flex;align-items:center;justify-content:center;}
+.av-pick-item:hover{transform:scale(1.06);}
+.av-pick-item.selected{border-color:var(--org);box-shadow:0 0 0 2px var(--org);transform:scale(1.06);}
+.av-pick-item svg{width:60%;height:60%;flex-shrink:0;}
 .av-silhouette{display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .av-silhouette svg,.av-silhouette>svg{width:65%;height:65%;flex-shrink:0;}
 .t5-pos{font-family:'Kallisto',sans-serif;font-weight:500;font-size:13px;color:var(--tx3);width:18px;text-align:center;flex-shrink:0;}
@@ -492,13 +492,33 @@ window._fbUploadPhoto=async function(userId,dataUrl){
     var r=sRef(storage,'photos/'+userId+'.jpg');
     await uploadString(r,dataUrl,'data_url');
     var url=await getDownloadURL(r);
+    console.log('✅ Photo uploaded to Storage:',url);
     return url;
-  }catch(e){console.error('Storage upload error:',e.code,e.message);return null;}
+  }catch(e){
+    console.error('❌ Storage upload error:',e.code,e.message);
+    // Show visible error so admin knows rules need to be set
+    if(e.code==='storage/unauthorized'||e.code==='storage/unknown'){
+      setTimeout(function(){
+        if(typeof showE==='function')showE('⚠️ Photo sync failed: Firebase Storage rules not configured. Go to Firebase Console → Storage → Rules and allow read/write.');
+      },500);
+    }
+    return null;
+  }
 };
 // Get existing photo URL from Firebase Storage
 window._fbGetPhotoURL=async function(userId){
   try{return await getDownloadURL(sRef(storage,'photos/'+userId+'.jpg'));}
   catch(e){return null;}
+};
+// On login: try to restore photoURL from Storage if not in DB
+window._fbRestorePhoto=async function(user){
+  if(user.photoURL)return; // already has URL
+  var url=await window._fbGetPhotoURL(user.id);
+  if(url){
+    user.photoURL=url;
+    var dbU=typeof DB!=='undefined'&&DB.users?DB.users.find(function(u){return u.id===user.id;}):null;
+    if(dbU&&!dbU.photoURL){dbU.photoURL=url;if(typeof saveDB==='function')saveDB();}
+  }
 };
 
 // Save app data (pollas, matches, banners, settings — NO users, NO photos)
@@ -1562,6 +1582,8 @@ function doLogin(){
       if(u.pass!==hashed){u.pass=hashed;var dbU=DB.users.find(function(x){return x.id===u.id;});if(dbU)dbU.pass=hashed;saveDB();}
       CU=u;
       document.getElementById('S_auth').classList.add('hidden');
+      // Try to restore photo from Firebase Storage (cross-device sync)
+      if(window._fbRestorePhoto)window._fbRestorePhoto(CU).then(function(){if(typeof setNav==='function')setNav(CU.role==='admin'?'admAv':'porAv',CU.role==='admin'?'admNm':'porNm');});
       if(u.role==='admin')initAdmin();else initPlayer();
     });
   }catch(err){
