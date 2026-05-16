@@ -1961,12 +1961,12 @@ function renderAdmPremios(){
           +'<div class="dot '+(on?'dot-on':'dot-off')+'"></div>'
           +'<div style="flex:1">'
             +'<div style="font-family:Kallisto,sans-serif;font-weight:500;font-size:12px;letter-spacing:1.5px">'+pol.name+'</div>'
-            +'<div style="font-size:9px;color:var(--tx3);margin-top:2px">'+pol.type+' · '+ms.length+' partidos</div>'
+            +'<div style="font-size:9px;color:var(--tx3);margin-top:2px">'+pol.type+' · '+ms.length+' '+T('matchesLbl')+'</div>'
           +'</div>'
-          +'<span class="bdg '+(on?'bdg-on':'bdg-off')+'">'+(on?'Activa':'Cerrada')+'</span>'
+          +'<span class="bdg '+(on?'bdg-on':'bdg-off')+'">'+(on?T('open'):T('closed'))+'</span>'
         +'</div>'
         +'<div class="pmg">'
-          +'<div class="pmg-item"><div class="pmg-v c-g">'+prz.inscribed+'</div><div class="pmg-l">Inscritos</div></div>'
+          +'<div class="pmg-item"><div class="pmg-v c-g">'+prz.inscribed+'</div><div class="pmg-l">'+T('enrolled')+'</div></div>'
           +'<div class="pmg-item"><div class="pmg-v c-o">'+usd(prz.pool)+'</div><div class="pmg-l">Pool USD</div></div>'
           +'<div class="pmg-item"><div class="pmg-v c-r">'+usd(pol.fee||0)+'</div><div class="pmg-l">Fee</div></div>'
         +'</div>'
@@ -2966,7 +2966,7 @@ function openModal(pollaId){
     +'<span class="scl-item">'+T('resCorrect')+' <span class="scl-pts">'+sc.win+'</span></span>'
     +'<span class="scl-item">'+T('draw')+' <span class="scl-pts">'+sc.draw+'</span></span>'
     +'<span class="scl-item">'+T('diff')+' <span class="scl-pts">'+sc.diff+'</span></span>'
-    +'<span class="scl-item" style="border-color:var(--org3)">Exact 🎯 <span class="scl-pts">'+sc.exact+'</span></span>'
+    +'<span class="scl-item" style="border-color:var(--org3)">'+T('exact')+' 🎯 <span class="scl-pts">'+sc.exact+'</span></span>'
     +'</div>';
 
   var html='';
@@ -3015,8 +3015,8 @@ function openModal(pollaId){
         +'</div>'
         +'<div style="text-align:center;margin-top:5px">'
         +(canEdit
-          ?'<button id="'+btnId+'" onclick="saveOnePred('+m.id+')" style="padding:4px 18px;font-size:9px;border-radius:6px;background:'+(pr!=null?'var(--grn)':'var(--tx)')+';color:'+(pr!=null?'#fff':'var(--bg)')+';border:none;font-family:Poppins,sans-serif;font-weight:700;cursor:pointer;letter-spacing:.8px">'+(pr!=null?'✅ SAVED':'💾 SAVE')+'</button>'
-          :'<span style="font-size:9px;color:var(--grn)">✅ Saved · 🔒 Locked</span>'
+          ?'<button id="'+btnId+'" onclick="saveOnePred('+m.id+')" style="padding:4px 18px;font-size:9px;border-radius:6px;background:'+(pr!=null?'var(--grn)':'var(--tx)')+';color:'+(pr!=null?'#fff':'var(--bg)')+';border:none;font-family:Poppins,sans-serif;font-weight:700;cursor:pointer;letter-spacing:.8px">'+(pr!=null?'✅ '+T('save').toUpperCase():'💾 '+T('save').toUpperCase())+'</button>'
+          :'<span style="font-size:9px;color:var(--grn)">✅ '+T('save')+' · '+T('locked')+'</span>'
         )+'</div>';
     }
     c+='</div>';
