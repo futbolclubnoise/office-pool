@@ -1438,17 +1438,36 @@ function swTab(tab,btn){
 const showE=m=>{const e=document.getElementById('ae');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',4500);};
 const showOK=m=>{const e=document.getElementById('aok');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',3000);};
 
+// ── Password hashing (SHA-256 via WebCrypto) ─────────────────────────────────
+async function hashPass(pass){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('cfl2026:'+pass));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function passMatch(stored,plain){
+  // Support plain-text passwords during migration (no $ prefix = not yet hashed)
+  if(!stored)return false;
+  if(stored.length===64&&!/\s/.test(stored))return false; // hash won't match plain — handled async
+  return stored===plain; // legacy plain-text fallback (removed once all users log in once)
+}
+
 function doLogin(){
   try{
     var email=document.getElementById('lEmail').value.trim().toLowerCase();
     var pass=document.getElementById('lPass').value;
     if(!email||!pass)return showE('Enter username and password');
-    var u=DB.users.find(function(x){return (x.email||'').toLowerCase()===email&&x.pass===pass;});
+    var u=DB.users.find(function(x){return (x.email||'').toLowerCase()===email;});
     if(!u)return showE('Incorrect username or password');
     if(u.status==='disabled')return showE('This account has been suspended. Contact the admin.');
-    CU=u;
-    document.getElementById('S_auth').classList.add('hidden');
-    if(u.role==='admin')initAdmin();else initPlayer();
+    // Check hashed password first, fall back to plain-text for migration
+    hashPass(pass).then(function(hashed){
+      var ok=(u.pass===hashed)||(u.pass&&u.pass.length<64&&u.pass===pass);
+      if(!ok)return showE('Incorrect username or password');
+      // Migrate plain-text password to hash on successful login
+      if(u.pass!==hashed){u.pass=hashed;var dbU=DB.users.find(function(x){return x.id===u.id;});if(dbU)dbU.pass=hashed;saveDB();}
+      CU=u;
+      document.getElementById('S_auth').classList.add('hidden');
+      if(u.role==='admin')initAdmin();else initPlayer();
+    });
   }catch(err){
     showE('Error: '+err.message);
     console.error('doLogin error:',err);
@@ -1466,11 +1485,13 @@ function doRegister(){
   if(!name||!email||!pass)return showE('Completa todos los campos');
   if(pass.length<6)return showE('Password must be at least 6 characters');
   if(DB.users.find(u=>(u.email||'').toLowerCase()===email.toLowerCase()))return showE('Email already registered');
-  DB.users.push({id:DB.nid.u++,name,email,pass,phone,role:'user',status:'active',verified:false,points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
-  addNotif('register',{name:name,email:email});
-  saveDB();
-  showOK('¡Cuenta creada! Ya puedes ingresar.');
-  setTimeout(()=>document.querySelector('.tabp').click(),1500);
+  hashPass(pass).then(function(hashed){
+    DB.users.push({id:DB.nid.u++,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
+    addNotif('register',{name:name,email:email});
+    saveDB();
+    showOK('¡Cuenta creada! Ya puedes ingresar.');
+    setTimeout(()=>document.querySelector('.tabp').click(),1500);
+  });
 }
 function doLogout(){
   CU=null;
@@ -3192,17 +3213,18 @@ function saveSelfEdit(){
   const src=inp&&inp._compressed?inp._compressed:document.getElementById('selfPhPrev').src;
   if(!name)return alert('Name cannot be empty');
   if(pass&&pass.length>0&&pass.length<6)return alert('Password must be at least 6 characters');
-  // Update CU in memory
   CU.name=name;
-  if(pass&&pass.length>=6)CU.pass=pass;
   if(src&&src.startsWith('data:image'))CU.photo=src;
-  // Write back to DB.users so saveDB() persists to Firebase
   var dbU=DB.users.find(function(x){return x.id===CU.id;});
-  if(dbU){dbU.name=CU.name;dbU.pass=CU.pass;dbU.photo=CU.photo;}
-  setNav(CU.role==='admin'?'admAv':'porAv',CU.role==='admin'?'admNm':'porNm');
-  saveDB();
-  const ok=document.getElementById('selfOK');ok.style.display='block';
-  setTimeout(()=>{ok.style.display='none';document.getElementById('selfModal').style.display='none';},1600);
+  var finish=function(){
+    if(dbU){dbU.name=CU.name;dbU.pass=CU.pass;dbU.photo=CU.photo;}
+    setNav(CU.role==='admin'?'admAv':'porAv',CU.role==='admin'?'admNm':'porNm');
+    saveDB();
+    const ok=document.getElementById('selfOK');ok.style.display='block';
+    setTimeout(()=>{ok.style.display='none';document.getElementById('selfModal').style.display='none';},1600);
+  };
+  if(pass&&pass.length>=6){hashPass(pass).then(function(h){CU.pass=h;finish();});}
+  else{finish();}
 }
 
 // ════ i18n ════

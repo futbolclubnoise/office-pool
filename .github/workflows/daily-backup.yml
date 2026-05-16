@@ -129,6 +129,52 @@ jobs:
           ls backup-*.json 2>/dev/null | sort | head -n -30 | xargs rm -f || true
           echo "Backups retained: $(ls backup-*.json 2>/dev/null | wc -l | tr -d ' ')"
 
+      - name: Detect anomalies and alert
+        run: |
+          node - <<'EOF'
+          const fs = require('fs');
+          const today = require('./backups/latest.json');
+
+          // Find yesterday's backup
+          const files = fs.readdirSync('backups')
+            .filter(f => f.startsWith('backup-') && f.endsWith('.json'))
+            .sort();
+
+          if (files.length < 2) { console.log('No previous backup to compare'); process.exit(0); }
+
+          const yesterday = JSON.parse(fs.readFileSync('backups/' + files[files.length - 2]));
+
+          const alerts = [];
+
+          // Users deleted?
+          const lost = yesterday._totalUsers - today._totalUsers;
+          if (lost > 0) alerts.push(`🚨 ${lost} user(s) DELETED (${yesterday._totalUsers} → ${today._totalUsers})`);
+
+          // Pollas deleted?
+          const lostP = yesterday._totalPollas - today._totalPollas;
+          if (lostP > 0) alerts.push(`🚨 ${lostP} polla(s) DELETED (${yesterday._totalPollas} → ${today._totalPollas})`);
+
+          // Matches deleted in bulk?
+          const lostM = yesterday._totalMatches - today._totalMatches;
+          if (lostM > 10) alerts.push(`🚨 ${lostM} matches DELETED (${yesterday._totalMatches} → ${today._totalMatches})`);
+
+          // Specials deleted?
+          const lostS = yesterday._totalSpecials - today._totalSpecials;
+          if (lostS > 0) alerts.push(`🚨 ${lostS} special(s) DELETED (${yesterday._totalSpecials} → ${today._totalSpecials})`);
+
+          // All data wiped?
+          if (today._totalUsers === 0 && yesterday._totalUsers > 0)
+            alerts.push('🔴 CRITICAL: ALL USERS WIPED!');
+
+          if (alerts.length > 0) {
+            console.log('⚠️  ANOMALIES DETECTED:\n' + alerts.join('\n'));
+            fs.writeFileSync('backups/.alert', alerts.join('\n'));
+            process.exit(1); // fail the job → GitHub sends email notification
+          } else {
+            console.log('✅ No anomalies. Users:', today._totalUsers, '| Pollas:', today._totalPollas, '| Matches:', today._totalMatches);
+          }
+          EOF
+
       - name: Commit backup
         run: |
           git config user.name  "CFL Backup Bot"
