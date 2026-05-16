@@ -1404,19 +1404,18 @@ function prevPh(ev,imgId,ringId){
     // Compress image to max 200x200px, JPEG 0.82 — critical: 50 users×photo must fit in 1MB Firebase doc
     const rawImg=new Image();
     rawImg.onload=function(){
-      const MAX=500;
+      const MAX=320;
       var w=rawImg.width,h=rawImg.height;
       if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
       else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
       var canvas=document.createElement('canvas');
-      // Use device pixel ratio for crisp rendering on retina screens
-      var dpr=Math.min(window.devicePixelRatio||1,2);
-      canvas.width=w*dpr;canvas.height=h*dpr;
+      canvas.width=w;canvas.height=h;
       var ctx=canvas.getContext('2d');
       ctx.imageSmoothingEnabled=true;
       ctx.imageSmoothingQuality='high';
-      ctx.drawImage(rawImg,0,0,w*dpr,h*dpr);
-      var compressed=canvas.toDataURL('image/jpeg',0.92);
+      ctx.drawImage(rawImg,0,0,w,h);
+      var compressed=canvas.toDataURL('image/jpeg',0.80);
+      if(!compressed||compressed.length<100){console.warn('Canvas toDataURL failed — using raw src');compressed=e.target.result;}
       var img=document.getElementById(imgId);
       var lbl=document.querySelector('#'+ringId+' .ph-lbl');
       img.src=compressed;img.style.display='block';if(lbl)lbl.style.display='none';
@@ -1488,7 +1487,10 @@ function doRegister(){
   if(pass.length<6)return showE(T('passTooShort'));
   if(DB.users.find(u=>(u.email||'').toLowerCase()===email.toLowerCase()))return showE(T('emailExists'));
   hashPass(pass).then(function(hashed){
-    DB.users.push({id:DB.nid.u++,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:ph.startsWith('data:image')?ph:'',predictions:[],payments:[]});
+    var newId=DB.nid.u++;
+    var newPhoto=ph.startsWith('data:image')?ph:'';
+    if(newPhoto)saveUserPhoto(newId,newPhoto);
+    DB.users.push({id:newId,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:newPhoto,predictions:[],payments:[]});
     addNotif('register',{name:name,email:email});
     saveDB();
     showOK(T('accountCreated'));
@@ -2883,7 +2885,7 @@ function saveProfile(){
   CU.email=email;
   CU.phone=phone;
   if(pass&&pass.length>=6)CU.pass=pass;
-  if(src&&src.startsWith('data:image'))CU.photo=src;
+  if(src&&src.startsWith('data:image')){CU.photo=src;saveUserPhoto(CU.id,CU.photo);}
   // Update DB
   const dbU=DB.users.find(u=>u.id===CU.id);
   if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;if(src&&src.startsWith('data:image'))dbU.photo=CU.photo;}
@@ -3326,7 +3328,7 @@ function saveSelfEdit(){
   if(!name)return alert(T('nameEmpty'));
   if(pass&&pass.length>0&&pass.length<6)return alert(T('passMin6'));
   CU.name=name;
-  if(src&&src.startsWith('data:image'))CU.photo=src;
+  if(src&&src.startsWith('data:image')){CU.photo=src;saveUserPhoto(CU.id,CU.photo);}
   var dbU=DB.users.find(function(x){return x.id===CU.id;});
   var finish=function(){
     if(dbU){dbU.name=CU.name;dbU.pass=CU.pass;dbU.photo=CU.photo;}
@@ -3549,8 +3551,39 @@ function updateThemeBtns(){
 }
 
 // ════ PERSISTENCE ════
-function lsSave(){try{localStorage.setItem('cfl_db',JSON.stringify(DB));}catch(e){}}
-function lsLoad(){try{var r=localStorage.getItem('cfl_db');return r?JSON.parse(r):null;}catch(e){return null;}}
+// ── Per-user photo storage (separate from main DB to avoid quota issues) ──
+function saveUserPhoto(userId,photo){
+  if(!userId||!photo||!photo.startsWith('data:image'))return;
+  try{localStorage.setItem('cfl_ph_'+userId,photo);}
+  catch(e){console.warn('Photo save failed (quota?)',e);}
+}
+function loadUserPhoto(userId){
+  try{return localStorage.getItem('cfl_ph_'+userId)||'';}catch(e){return '';}
+}
+function lsSave(){
+  try{
+    // Strip photos from main DB — stored separately per-user
+    var toSave=Object.assign({},DB);
+    toSave.users=(DB.users||[]).map(function(u){var c=Object.assign({},u);delete c.photo;return c;});
+    localStorage.setItem('cfl_db',JSON.stringify(toSave));
+    // Save each user's photo in its own key
+    (DB.users||[]).forEach(function(u){if(u.photo)saveUserPhoto(u.id,u.photo);});
+  }catch(e){console.error('lsSave error:',e);}
+}
+function lsLoad(){
+  try{
+    var r=localStorage.getItem('cfl_db');if(!r)return null;
+    var data=JSON.parse(r);
+    // Restore photos from per-user keys
+    if(data&&data.users){
+      data.users=data.users.map(function(u){
+        var ph=loadUserPhoto(u.id)||u.photo||'';
+        return ph?Object.assign({},u,{photo:ph}):u;
+      });
+    }
+    return data;
+  }catch(e){return null;}
+}
 async function saveDB(){
   DB._ts=Date.now();
   lsSave();
@@ -4447,7 +4480,7 @@ window._fbOnUsersUpdate=function(d,chunkName){
   var lsData=lsLoad();var lsUsers=(lsData&&lsData.users)||[];
   var chunkUsers=d.users.map(function(cloudU){
     var localU=lsUsers.find(function(lu){return lu.id===cloudU.id;});
-    if(localU&&localU.photo)cloudU.photo=localU.photo;
+    var ph=loadUserPhoto(cloudU.id)||(localU&&localU.photo)||'';if(ph)cloudU.photo=ph;
     return cloudU;
   });
 
