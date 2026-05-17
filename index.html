@@ -1465,14 +1465,17 @@ function isPlayerPaid(u,pollaId){
   return !!(u.payments&&u.payments.find(function(p){return p.pollaId===pollaId&&p.status==='succeeded';}));
 }
 function calcPrizes(pol){
-  const pool=calcPool(pol),pr=pol.prizes||{p1:0,p2:0,p3:0,com:0};
   const inscribed=DB.users.filter(u=>u.role!=='admin'&&isPlayerPaid(u,pol.id)).length;
-  // Support both fixed-$ prizes (new) and legacy %-based prizes (old)
-  const isFixed=(pr.p1||0)+(pr.p2||0)+(pr.p3||0) > 100 || pol.prizeType==='fixed';
-  if(isFixed){
-    return{pool,inscribed,p1:pr.p1||0,p2:pr.p2||0,p3:pr.p3||0,com:pr.com||0};
+  const pool=inscribed*(pol.fee||0);
+  // Always use POOL_CONFIG distribution so prizes scale automatically with player count
+  if(typeof POOL_CONFIG!=='undefined'&&pol.fee>0){
+    var d=POOL_CONFIG.distribution;
+    return{pool,inscribed,p1:pool*d.first,p2:pool*d.second,p3:pool*d.third,com:pool*d.house};
   }
-  // Legacy: treat as percentages
+  // Fallback: use prizes stored on polla
+  var pr=pol.prizes||{p1:0,p2:0,p3:0,com:0};
+  var isFixed=(pr.p1||0)+(pr.p2||0)+(pr.p3||0)>100||pol.prizeType==='fixed';
+  if(isFixed)return{pool,inscribed,p1:pr.p1||0,p2:pr.p2||0,p3:pr.p3||0,com:pr.com||0};
   return{pool,inscribed,p1:pool*(pr.p1||0)/100,p2:pool*(pr.p2||0)/100,p3:pool*(pr.p3||0)/100,com:pool*(pr.com||0)/100};
 }
 
@@ -3187,7 +3190,7 @@ function updatePayPreview(){
       <div class="pmg-item"><div class="pmg-v c-o">${usd(pol.fee)}</div><div class="pmg-l">${T('entryFee')}</div></div>
       <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">${T('enrolled')}</div></div>
     </div>
-    ${prz.pool>0?`<div style="margin-top:12px">
+    ${prz.p1>0?`<div style="margin-top:12px">
       <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;margin-bottom:8px">🏆 ${T('prizes')}</div>
       <div style="display:flex;gap:8px">
         <div style="flex:1;background:linear-gradient(135deg,rgba(255,165,0,.15),rgba(255,165,0,.05));border:1px solid rgba(255,165,0,.4);border-radius:12px;padding:12px 8px;text-align:center">
@@ -3206,25 +3209,7 @@ function updatePayPreview(){
           <div style="font-size:8px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:1px">3rd Place</div>
         </div>
       </div>
-    </div>`:''}
-    ${(typeof calculatePool==='function'&&pol.fee>0)?(()=>{try{
-      const calc=calculatePool(prz.inscribed);
-      const be=calc.breakEven;
-      const beOk=be.isAboveBreakEven;
-      return `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)">
-        <div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">💰 ${T('prizes')} Breakdown</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
-          <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:8px;text-align:center">
-            <div style="font-family:Kallisto,sans-serif;font-size:13px;font-weight:700;color:var(--g2)">${usd(calc.prizes.total)}</div>
-            <div style="font-size:8px;color:var(--tx3);margin-top:1px;text-transform:uppercase;letter-spacing:.8px">En Premios</div>
-          </div>
-          <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:8px;text-align:center">
-            <div style="font-family:Kallisto,sans-serif;font-size:13px;font-weight:700;color:${beOk?'var(--grn)':'var(--err)'}">${prz.inscribed}/${be.playersNeeded}</div>
-            <div style="font-size:8px;color:var(--tx3);margin-top:1px;text-transform:uppercase;letter-spacing:.8px">${beOk?'✅ Goal Reached':'⚡ Need '+be.playersNeeded}</div>
-          </div>
-        </div>
-      </div>`;
-    }catch(e){return '';}})()||'':''}`;
+    </div>`:''}`;
   const wrap=document.getElementById('payLinkWrap');
   if(ya){
     wrap.innerHTML=`<div class="res-correct" style="margin-top:12px">${T('accessGranted')}</div>`;
@@ -3979,7 +3964,7 @@ function seedWC2026(){
   });
   // Create polla if it doesn't exist
   if(wcIdx<0){
-    DB.pollas.push({id:pid,name:'FIFA World Cup 2026',status:'open',start:'2026-06-11',end:'2026-07-19',fee:20,type:'multi',scoring:{win:1,draw:1,exact:5,diff:2},prizes:{p1:50,p2:30,p3:15,org:5}});
+    DB.pollas.push({id:pid,name:'FIFA World Cup 2026',status:'open',start:'2026-06-11',end:'2026-07-19',fee:40,type:'multi',scoring:{win:1,draw:1,exact:5,diff:2},prizes:{p1:30,p2:15,p3:10,org:45}});
   }
   // Only reset bonus questions if no player has answered them yet — NEVER wipe existing answers
   var hasBonus=DB.bonusQuestions&&DB.bonusQuestions.some(function(bq){return bq.pollaId===pid&&(bq.userAnswers||[]).length>0;});
@@ -4130,7 +4115,7 @@ function editPolla(id){
   var sc=p.scoring||{win:1,draw:1,exact:5,diff:2};
   document.getElementById('epWin').value=sc.win;document.getElementById('epDraw').value=sc.draw;
   document.getElementById('epExact').value=sc.exact;document.getElementById('epDiff').value=sc.diff;
-  var pr=p.prizes||{p1:50,p2:30,p3:15,org:5};
+  var pr=p.prizes||{p1:30,p2:15,p3:10,org:45};
   document.getElementById('epP1').value=pr.p1;document.getElementById('epP2').value=pr.p2;
   document.getElementById('epP3').value=pr.p3;document.getElementById('epOrg').value=pr.org;
   document.getElementById('epAllowJoin').checked=p.allowJoin!==false;
@@ -4145,7 +4130,7 @@ function saveEditPolla(){
   p.fee=parseFloat(document.getElementById('epFee').value)||0;
   p.type=document.getElementById('epType').value;
   p.scoring={win:parseInt(document.getElementById('epWin').value)||1,draw:parseInt(document.getElementById('epDraw').value)||1,exact:parseInt(document.getElementById('epExact').value)||5,diff:parseInt(document.getElementById('epDiff').value)||2};
-  p.prizes={p1:parseFloat(document.getElementById('epP1').value)||50,p2:parseFloat(document.getElementById('epP2').value)||30,p3:parseFloat(document.getElementById('epP3').value)||15,org:parseFloat(document.getElementById('epOrg').value)||5};
+  p.prizes={p1:parseFloat(document.getElementById('epP1').value)||30,p2:parseFloat(document.getElementById('epP2').value)||15,p3:parseFloat(document.getElementById('epP3').value)||10,org:parseFloat(document.getElementById('epOrg').value)||45};
   p.allowJoin=document.getElementById('epAllowJoin').checked;
   document.getElementById('editPollaModal').style.display='none';
   saveDB();renderAdmPollas();
