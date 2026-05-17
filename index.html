@@ -3086,22 +3086,33 @@ function saveProfile(){
   CU.phone=phone;
   if(pass&&pass.length>=6)CU.pass=pass;
   const dbU=DB.users.find(u=>u.id===CU.id);
+  if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;}
   if(src&&src.startsWith('data:image')){
-    // Instant local display
     CU.photo=src;saveUserPhoto(CU.id,src);
     if(dbU)dbU.photo=src;
-    // Upload to Firebase Storage asynchronously
+    saveDB();setNav('porAv','porNm');
+    const ok=document.getElementById('pfOK');ok.textContent=T('profileUpdated');ok.style.display='block';
     if(window._fbUploadPhoto){
+      ok.textContent='📤 Syncing photo...';
       window._fbUploadPhoto(CU.id,src).then(function(url){
-        if(url){CU.photoURL=url;if(dbU)dbU.photoURL=url;saveDB();setNav('porAv','porNm');}
-      }).catch(function(e){console.warn('Photo upload failed:',e);});
+        if(url){
+          CU.photoURL=url;if(dbU)dbU.photoURL=url;saveDB();setNav('porAv','porNm');
+          ok.textContent='✅ '+T('profileUpdated')+' — photo synced';
+        }else{
+          ok.textContent='⚠️ Saved locally — photo sync failed (check Storage rules)';
+        }
+        setTimeout(function(){ok.style.display='none';ok.textContent=T('profileUpdated');},4000);
+      }).catch(function(e){
+        ok.textContent='❌ Photo sync error: '+e.code;
+        setTimeout(function(){ok.style.display='none';ok.textContent=T('profileUpdated');},5000);
+      });
+    }else{
+      setTimeout(()=>ok.style.display='none',2500);
     }
+  }else{
+    saveDB();setNav('porAv','porNm');
+    const ok=document.getElementById('pfOK');ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);
   }
-  // Update DB fields
-  if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;}
-  saveDB();
-  setNav('porAv','porNm');
-  const ok=document.getElementById('pfOK');ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);
 }
 
 function showPaymentToast(){
@@ -3559,21 +3570,28 @@ function saveSelfEdit(){
   if(pass&&pass.length>0&&pass.length<6)return alert(T('passMin6'));
   CU.name=name;
   var dbU=DB.users.find(function(x){return x.id===CU.id;});
-  if(src&&src.startsWith('data:image')){
-    CU.photo=src;saveUserPhoto(CU.id,src);
-    if(dbU)dbU.photo=src;
-    if(window._fbUploadPhoto){
-      window._fbUploadPhoto(CU.id,src).then(function(url){
-        if(url){CU.photoURL=url;if(dbU)dbU.photoURL=url;saveDB();setNav(CU.role==='admin'?'admAv':'porAv',CU.role==='admin'?'admNm':'porNm');}
-      }).catch(function(e){console.warn('Photo upload failed:',e);});
-    }
-  }
+  var navId=CU.role==='admin'?'admAv':'porAv',navNm=CU.role==='admin'?'admNm':'porNm';
   var finish=function(){
     if(dbU){dbU.name=CU.name;dbU.pass=CU.pass;}
-    setNav(CU.role==='admin'?'admAv':'porAv',CU.role==='admin'?'admNm':'porNm');
+    setNav(navId,navNm);
     saveDB();
-    const ok=document.getElementById('selfOK');ok.style.display='block';
-    setTimeout(()=>{ok.style.display='none';document.getElementById('selfModal').style.display='none';},1600);
+    const ok=document.getElementById('selfOK');
+    if(src&&src.startsWith('data:image')&&window._fbUploadPhoto){
+      CU.photo=src;saveUserPhoto(CU.id,src);if(dbU)dbU.photo=src;
+      ok.textContent='📤 Syncing photo...';ok.style.display='block';
+      window._fbUploadPhoto(CU.id,src).then(function(url){
+        if(url){CU.photoURL=url;if(dbU)dbU.photoURL=url;saveDB();setNav(navId,navNm);ok.textContent='✅ Photo synced!';}
+        else{ok.textContent='⚠️ Saved locally — sync failed';}
+        setTimeout(function(){ok.style.display='none';ok.textContent='✓';document.getElementById('selfModal').style.display='none';},3000);
+      }).catch(function(e){
+        ok.textContent='❌ '+e.code;
+        setTimeout(function(){ok.style.display='none';ok.textContent='✓';document.getElementById('selfModal').style.display='none';},4000);
+      });
+    }else{
+      if(src&&src.startsWith('data:image')){CU.photo=src;saveUserPhoto(CU.id,src);if(dbU)dbU.photo=src;}
+      ok.style.display='block';
+      setTimeout(()=>{ok.style.display='none';document.getElementById('selfModal').style.display='none';},1600);
+    }
   };
   if(pass&&pass.length>=6){hashPass(pass).then(function(h){CU.pass=h;finish();});}
   else{finish();}
