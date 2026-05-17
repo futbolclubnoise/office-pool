@@ -233,13 +233,6 @@ input[type=number]{-moz-appearance:textfield;}
 .t5-r:hover{background:var(--bg3);}
 .av-xl{width:110px;height:110px;border-radius:50%;border:3px solid var(--org);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-family:'Kallisto',sans-serif;font-weight:500;font-size:32px;color:var(--tx);flex-shrink:0;margin:0 auto 12px;}
 .av-xl img{width:100%;height:100%;object-fit:cover;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;}
-.av-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
-.av-pick-item{width:100%;aspect-ratio:1/1;border-radius:50%;border:3px solid transparent;cursor:pointer;overflow:hidden;transition:border-color .2s,transform .2s;position:relative;display:flex;align-items:center;justify-content:center;}
-.av-pick-item:hover{transform:scale(1.06);}
-.av-pick-item.selected{border-color:var(--org);box-shadow:0 0 0 2px var(--org);transform:scale(1.06);}
-.av-pick-item svg{width:60%;height:60%;flex-shrink:0;}
-.av-silhouette{display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.av-silhouette svg,.av-silhouette>svg{width:65%;height:65%;flex-shrink:0;}
 .t5-pos{font-family:'Kallisto',sans-serif;font-weight:500;font-size:13px;color:var(--tx3);width:18px;text-align:center;flex-shrink:0;}
 .t5-pos.a{color:var(--org);} .t5-pos.b{color:var(--g2);} .t5-pos.c{color:var(--grn);}
 
@@ -630,9 +623,6 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
                 <img id="rPhPrev" src="" alt=""><span class="ph-lbl" data-t="photoOptional">Photo (optional)</span>
                 <input type="file" id="rPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'rPhPrev','rPhRing')">
               </div>
-              <div style="font-size:8px;color:var(--tx3);text-align:center;margin-bottom:4px">— or pick avatar —</div>
-              <div class="av-pick-grid" id="rAvGrid"></div>
-              <input type="hidden" id="rAvatar" value="">
             </div>
             <div style="flex:1"><div class="fg"><label class="fl" data-t="fullName">Full Name</label><input class="fi" id="rName" type="text" placeholder="Your name" data-t="yourName"></div></div>
           </div>
@@ -714,9 +704,6 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
               <img id="pfPhPrev" src="" alt=""><span class="ph-lbl" data-t="changePhoto">Change photo</span>
               <input type="file" id="pfPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'pfPhPrev','pfPhRing')">
             </div>
-            <div style="font-size:8px;color:var(--tx3);text-align:center;margin:6px 0 4px">— or pick avatar —</div>
-            <div class="av-pick-grid" id="pfAvGrid"></div>
-            <input type="hidden" id="pfAvatar" value="">
           </div>
           <div style="flex:1">
             <div class="fg"><label class="fl" data-t="fullName">Full Name</label><input class="fi" id="pfName" type="text" placeholder="Your full name" data-t="yourFullName" required></div>
@@ -1171,38 +1158,6 @@ function updateTzPreview() {
 const STAGE_LABELS_ES = {league:'Liga Regular',groups:'Fase de Grupos',r16:'Octavos de Final',r8:'Cuartos de Final',r4:'Semifinal','3rd':'Tercer Puesto',final:'Gran Final'};
 const STAGE_LABELS_EN = {league:'Regular Season',groups:'Group Stage',r16:'Round of 16',r8:'Quarterfinals',r4:'Semifinals','3rd':'Third Place',final:'Grand Final'};
 function stageLabel(s){return(CL==='es'?STAGE_LABELS_ES:STAGE_LABELS_EN)[s]||s;}
-var AVATARS=[
-  {id:'av1',label:'Pelé',bg:'#1a5276',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="25" x2="8" y2="18" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="25" x2="52" y2="18" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="20" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="40" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="42" cy="67" r="5"/></svg>'},
-  {id:'av2',label:'Maradona',bg:'#1f618d',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="22" x2="8" y2="30" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="22" x2="52" y2="14" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="18" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="38" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="14" cy="63" r="5"/></svg>'},
-  {id:'av3',label:'Ronaldo R9',bg:'#922b21',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="24" x2="10" y2="20" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="24" x2="50" y2="20" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="27" y1="40" x2="22" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="33" y1="40" x2="42" y2="55" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="42" y1="55" x2="52" y2="52" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>'},
-  {id:'av4',label:'Zidane',bg:'#1e8449',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="22" x2="10" y2="28" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="22" x2="50" y2="28" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="20" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="40" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
-  {id:'av5',label:'Messi',bg:'#7d3c98',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="26" x2="10" y2="22" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="26" x2="48" y2="18" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="24" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="44" y2="57" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="48" cy="62" r="5"/></svg>'},
-  {id:'av6',label:'Ronaldinho',bg:'#b7770d',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="22" x2="6" y2="16" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="22" x2="54" y2="16" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="18" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="38" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
-  {id:'av7',label:'Beckham',bg:'#2e4053',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="24" x2="10" y2="16" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="22" x2="50" y2="24" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="22" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="42" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="20" cy="64" r="5"/></svg>'},
-  {id:'av8',label:'Cruyff',bg:'#d35400',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="20" x2="8" y2="22" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="20" x2="52" y2="22" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="28" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="46" y2="56" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="46" y1="56" x2="50" y2="48" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>'},
-  {id:'av9',label:'Van Basten',bg:'#117a65',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="26" x2="8" y2="20" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="26" x2="52" y2="32" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="16" y2="56" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="16" y1="56" x2="10" y2="52" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="34" y1="40" x2="38" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
-  {id:'av10',label:'Baggio',bg:'#6c3483',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="24" x2="10" y2="24" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="24" x2="50" y2="24" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="22" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="38" y2="62" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
-  {id:'av11',label:'Goalkeeper',bg:'#1a252f',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="20" x2="4" y2="14" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="20" x2="56" y2="14" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="20" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="40" y2="60" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>'},
-  {id:'av12',label:'Champion',bg:'#b7950b',fg:'#fff',
-   svg:'<svg viewBox="0 0 60 80" fill="white" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="9" r="8"/><rect x="22" y="18" width="16" height="22" rx="4"/><line x1="22" y1="20" x2="8" y2="12" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="38" y1="20" x2="52" y2="12" stroke="white" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="40" x2="20" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><line x1="34" y1="40" x2="40" y2="58" stroke="white" stroke-width="5" stroke-linecap="round"/><rect x="18" y="58" width="24" height="4" rx="2"/></svg>'},
-];
-function avSrc(u){
-  if(u.photoURL||u.photo)return null;
-  if(!u.avatar)return null;
-  var av=AVATARS.find(function(a){return a.id===u.avatar;});
-  return av||null;
-}
 const STAGE_CSS = {
   league:'stage-league', groups:'stage-groups', r16:'stage-r16',
   r8:'stage-r8', r4:'stage-r4', '3rd':'stage-3rd', final:'stage-final'
@@ -1274,10 +1229,7 @@ function tLeft(d){
 const empty=t=>`<p style="font-size:10px;color:var(--tx3);padding:5px 0">${t}</p>`;
 function avEl(u,cls='av'){
   var src=u.photoURL||u.photo||'';
-  if(src)return`<div class="${cls}"><img src="${src}" alt=""></div>`;
-  var av=AVATARS.find(function(a){return a.id===u.avatar;});
-  if(av)return`<div class="${cls} av-silhouette" style="background:${av.bg}">${av.svg}</div>`;
-  return`<div class="${cls}">${ini(u.name)}</div>`;
+  return src?`<div class="${cls}"><img src="${src}" alt=""></div>`:`<div class="${cls}">${ini(u.name)}</div>`;
 }
 
 // ═══════════ SCORING CALCULATOR ═══════════
@@ -1607,8 +1559,7 @@ function doRegister(){
     var newId=DB.nid.u++;
     var newPhoto=ph.startsWith('data:image')?ph:'';
     if(newPhoto)saveUserPhoto(newId,newPhoto);
-    var newAvatar=document.getElementById('rAvatar')?document.getElementById('rAvatar').value:'';
-    var newUser={id:newId,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:newPhoto,photoURL:'',avatar:newAvatar,predictions:[],payments:[]};
+    var newUser={id:newId,name,email,pass:hashed,phone,role:'user',status:'active',verified:false,points:0,photo:newPhoto,photoURL:'',predictions:[],payments:[]};
     DB.users.push(newUser);
     addNotif('register',{name:name,email:email});
     saveDB();
@@ -1622,18 +1573,6 @@ function doRegister(){
     setTimeout(()=>document.querySelector('.tabp').click(),1500);
   });
 }
-function pickAvatar(id,prefix){
-  document.getElementById(prefix+'Avatar').value=id;
-  document.querySelectorAll('#'+prefix+'AvGrid .av-pick-item').forEach(function(el){el.classList.remove('selected');});
-  var el=document.getElementById(prefix+'Av_'+id);if(el)el.classList.add('selected');
-}
-function renderAvGrid(gridId,prefix,selected){
-  var g=document.getElementById(gridId);if(!g)return;
-  g.innerHTML=AVATARS.map(function(av){
-    return'<div class="av-pick-item'+(selected===av.id?' selected':'')+'" id="'+prefix+'Av_'+av.id+'" style="background:'+av.bg+'" onclick="pickAvatar(\''+av.id+'\',\''+prefix+'\')" title="'+av.label+'">'+av.svg+'</div>';
-  }).join('');
-}
-
 // ═══════════ PASSWORD RESET ═══════════
 function showForgot(){
   document.getElementById('fLogin').classList.add('hidden');
@@ -1802,7 +1741,7 @@ function initAdmin(){
 }
 function setNav(avId,nmId){
   const av=document.getElementById(avId),nm=document.getElementById(nmId);
-  if(av){var _avSrc=CU.photoURL||CU.photo||'';if(_avSrc){av.className=av.className.replace('av-silhouette','').trim();av.style.background='';av.innerHTML=`<img src="${_avSrc}" alt="">`;}else{var _avAv=AVATARS.find(function(a){return a.id===CU.avatar;});if(_avAv){av.style.background=_avAv.bg;if(!av.classList.contains('av-silhouette'))av.classList.add('av-silhouette');av.innerHTML=_avAv.svg;}else{av.classList.remove('av-silhouette');av.style.background='';av.innerHTML='';av.textContent=ini(CU.nickname||CU.name);}}}
+  if(av){var _avSrc=CU.photoURL||CU.photo||'';if(_avSrc){av.innerHTML=`<img src="${_avSrc}" alt="">`;}else{av.textContent=ini(CU.nickname||CU.name);}}
   if(nm)nm.textContent=(CU.nickname||CU.name).split(' ')[0];
 }
 function aTab(tab,btn){
@@ -2623,7 +2562,6 @@ function initPlayer(){
   setNav('porAv','porNm');
   applyBanners();
   renderPInicio();
-  renderAvGrid('rAvGrid','r','');
 }
 function pTab(tab,btn){
   document.querySelectorAll('#S_player .stab').forEach(t=>t.classList.remove('on'));
@@ -3020,12 +2958,9 @@ function showPlayerProfile(uid){
   var total=(u.predictions||[]).length;
   // Avatar
   var _ppSrc=u.photoURL||u.photo||'';
-  var _ppAv=AVATARS.find(function(a){return a.id===u.avatar;});
   document.getElementById('ppAvatar').innerHTML=_ppSrc
     ?'<div class="av-xl"><img src="'+_ppSrc+'" alt=""></div>'
-    :_ppAv
-      ?'<div class="av-xl av-silhouette" style="background:'+_ppAv.bg+'">'+_ppAv.svg+'</div>'
-      :'<div class="av-xl">'+ini(u.name)+'</div>';
+    :'<div class="av-xl">'+ini(u.name)+'</div>';
   document.getElementById('ppName').textContent=u.name||(u.nickname||'');
   document.getElementById('ppNick').textContent=u.nickname&&u.nickname!==u.name?'@'+u.nickname:'';
   document.getElementById('ppStats').innerHTML=
@@ -3130,7 +3065,6 @@ function renderPPerfil(){
   document.getElementById('pfEmail').value=CU.email||'';
   if(document.getElementById('pfPhone'))document.getElementById('pfPhone').value=CU.phone||'';
   document.getElementById('pfPass').value='';
-  renderAvGrid('pfAvGrid','pf',CU.avatar||'');
   const prev=document.getElementById('pfPhPrev'),lbl=document.querySelector('#pfPhRing .ph-lbl');
   var _pfSrc=CU.photoURL||CU.photo||'';
   if(_pfSrc){prev.src=_pfSrc;prev.style.display='block';if(lbl)lbl.style.display='none';}
@@ -3164,8 +3098,7 @@ function saveProfile(){
     }
   }
   // Update DB fields
-  var pfAv=document.getElementById('pfAvatar');if(pfAv&&pfAv.value){CU.avatar=pfAv.value;}
-  if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;if(CU.avatar)dbU.avatar=CU.avatar;}
+  if(dbU){dbU.name=CU.name;dbU.nickname=CU.nickname;dbU.email=CU.email;dbU.phone=CU.phone;if(pass&&pass.length>=6)dbU.pass=CU.pass;}
   saveDB();
   setNav('porAv','porNm');
   const ok=document.getElementById('pfOK');ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);
