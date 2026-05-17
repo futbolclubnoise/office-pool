@@ -4137,11 +4137,12 @@ function saveEditPolla(){
 }
 // ════ CONFIRM MODAL ════
 var _confirmCb=null;
-function showConfirm(title,msg,cb,okLabel,icon){
+function showConfirm(title,msg,cb,okLabel,icon,okColor){
   document.getElementById('confTitle').textContent=title||'¿Eliminar?';
   document.getElementById('confMsg').textContent=msg||'Esta acción no se puede deshacer.';
   document.getElementById('confIcon').textContent=icon||'🗑️';
   document.getElementById('confOkBtn').textContent=okLabel||'Eliminar';
+  document.getElementById('confOkBtn').style.background=okColor||'var(--red)';
   _confirmCb=cb;
   document.getElementById('confirmModal').style.display='block';
 }
@@ -4400,7 +4401,7 @@ function renderAdmEspeciales(){
         +'<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">'
         +'<button class="btn-xs" onclick="toggleEspecial('+s.id+')" style="background:'+(isOpen?'rgba(255,60,60,.1)':'var(--grn2)')+';color:'+(isOpen?'var(--red)':'var(--grn)')+';">'+(isOpen?'🔴 Cerrar':'🟢 Abrir')+'</button>'
         +(s.answer?'':'<button class="btn-xs" onclick="setSpecialAnswer('+s.id+')">✅ Fijar resp.</button>')
-        +(answered===0?'<button class="btn-xs" onclick="editSpecial('+s.id+')">✏️</button>':'')
+        +'<button class="btn-xs" onclick="editSpecial('+s.id+')">✏️ Edit</button>'
         +'<button class="btn-xs" style="background:var(--red2);color:var(--red)" onclick="deleteSpecial('+s.id+')">✕</button>'
         +'</div>'
         +'</div></div>';
@@ -4479,10 +4480,26 @@ function setSpecialAnswer(id){
 
 function editSpecial(id){
   var s=(DB.specials||[]).find(function(x){return x.id===id;});if(!s)return;
-  var n=prompt('Nombre:',s.name);if(n===null)return;
-  var d=prompt('Pregunta:',s.desc);if(d===null)return;
-  var p=parseInt(prompt('Points:',s.pts));if(isNaN(p))return;
-  s.name=n.trim()||s.name;s.desc=d.trim()||s.desc;s.pts=p||s.pts;
+  document.getElementById('esId').value=id;
+  document.getElementById('esName').value=s.name||'';
+  document.getElementById('esDesc').value=s.desc||'';
+  document.getElementById('esPts').value=s.pts||20;
+  document.getElementById('esOpciones').value=(s.opciones||[]).join(', ');
+  document.getElementById('esStatus').value=s.status||'open';
+  document.getElementById('editSpecialModal').style.display='block';
+}
+function saveEditSpecial(){
+  var id=parseInt(document.getElementById('esId').value);
+  var s=(DB.specials||[]).find(function(x){return x.id===id;});if(!s)return;
+  var nm=document.getElementById('esName').value.trim();
+  var desc=document.getElementById('esDesc').value.trim();
+  var pts=parseInt(document.getElementById('esPts').value)||20;
+  var opcsRaw=document.getElementById('esOpciones').value;
+  var opciones=opcsRaw?opcsRaw.split(',').map(function(x){return x.trim();}).filter(Boolean):[];
+  if(!nm||!desc){alert('Name and question are required.');return;}
+  s.name=nm;s.desc=desc;s.pts=pts;s.opciones=opciones;
+  s.status=document.getElementById('esStatus').value;
+  document.getElementById('editSpecialModal').style.display='none';
   renderAdmEspeciales();saveDB();
 }
 
@@ -4522,11 +4539,11 @@ function renderPEspeciales(){
             :'<div style="font-size:9px;color:var(--tx3);margin-top:4px">'+T('specNotAnswered')+'</div>')
           +'</div>';
       }else if(myAns){
-        // Already answered — show with edit option
+        // Already answered — LOCKED, no editing allowed
         out+='<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg4);border-radius:8px;padding:9px 12px">'
           +'<div><div style="font-size:9px;color:var(--tx3)">'+T('specYourPred')+'</div>'
           +'<div style="font-size:12px;font-weight:600;color:var(--tx)">'+myAns.answer+'</div></div>'
-          +'<button class="btn-xs" onclick="editSpecialAnswer('+s.id+')">'+T('specChange')+'</button>'
+          +'<span style="font-size:9px;color:var(--tx3);background:var(--bg3);border:1px solid var(--bd);border-radius:6px;padding:3px 8px">🔒 Locked</span>'
           +'</div>';
       }else{
         // Not answered — show dropdown if teams available, else text input
@@ -4571,14 +4588,25 @@ function submitSpecialAnswer(spId){
     alert(el&&el.tagName==='SELECT'?T('specSelectAlert'):T('specWriteAlert'));
     return;
   }
-  var s=(DB.specials||[]).find(function(x){return x.id===spId;});if(!s)return;
-  if(!s.userAnswers)s.userAnswers=[];
-  var existing=s.userAnswers.find(function(a){return a.userId===CU.id;});
-  if(existing){existing.answer=el.value.trim();existing.ts=Date.now();}
-  else s.userAnswers.push({userId:CU.id,answer:el.value.trim(),ts:Date.now()});
-  var u=DB.users.find(function(x){return x.id===CU.id;});
-  if(u)u.predictions=CU.predictions;
-  saveDB();renderPEspeciales();
+  var answer=el.value.trim();
+  // Show lock warning modal before saving
+  showConfirm(
+    '⚠️ Heads up!',
+    'Remember — once submitted, this pick is FINAL and cannot be changed. Make sure "'+answer+'" is your pick.',
+    function(){
+      var s=(DB.specials||[]).find(function(x){return x.id===spId;});if(!s)return;
+      if(!s.userAnswers)s.userAnswers=[];
+      var existing=s.userAnswers.find(function(a){return a.userId===CU.id;});
+      if(existing){existing.answer=answer;existing.ts=Date.now();}
+      else s.userAnswers.push({userId:CU.id,answer:answer,ts:Date.now()});
+      var u=DB.users.find(function(x){return x.id===CU.id;});
+      if(u)u.predictions=CU.predictions;
+      saveDB();renderPEspeciales();
+    },
+    'Confirm Pick 🔒',
+    '🏆',
+    'var(--org)'
+  );
 }
 
 function editSpecialAnswer(spId){
@@ -5122,6 +5150,29 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
   </div>
 </div>
 
+<!-- ── Edit Special Modal ── -->
+<div id="editSpecialModal" class="modal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box card">
+    <div class="modal-hdr">
+      <div class="modal-title">✏️ Edit Special Item</div>
+      <button class="modal-x" onclick="document.getElementById('editSpecialModal').style.display='none'">✕</button>
+    </div>
+    <input type="hidden" id="esId">
+    <div class="fg"><label class="fl">Name / Title</label><input class="fi" id="esName" placeholder="e.g. 🏆 Champion Team"></div>
+    <div class="fg"><label class="fl">Question / Description</label><input class="fi" id="esDesc" placeholder="e.g. Which team will win the World Cup 2026?"></div>
+    <div class="fg"><label class="fl">Options (comma-separated, leave blank to use pool teams)</label><input class="fi" id="esOpciones" placeholder="e.g. Brazil, Argentina, France"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Points</label><input class="fi" type="number" id="esPts" value="20" min="1"></div>
+      <div class="fg"><label class="fl">Status</label>
+        <select class="fi" id="esStatus">
+          <option value="open">🟢 Open</option>
+          <option value="closed">🔴 Closed</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-p" style="margin-top:6px" onclick="saveEditSpecial()">💾 Save Changes</button>
+  </div>
+</div>
 
 </body>
 </html>
