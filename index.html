@@ -3284,6 +3284,15 @@ function showPaymentToast(){
 function showPredEditToast(){
   var t=document.getElementById('predEditToast');
   if(!t)return;
+  var el=t.querySelector('[data-pet]');
+  if(el){
+    el.innerHTML='<div style="font-family:Kallisto,sans-serif;font-size:18px;font-weight:600;color:var(--tx);margin-bottom:10px;letter-spacing:.5px">'+T('predEditTitle')+'</div>'
+      +'<div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:24px">'+T('predEditBody')+'</div>'
+      +'<div style="display:flex;gap:8px;justify-content:center">'
+        +'<button onclick="closePredEditToast(false)" style="padding:10px 20px;border-radius:12px;background:var(--bg4);color:var(--tx2);border:1px solid var(--bd);font-family:Poppins,sans-serif;font-size:11px;font-weight:600;cursor:pointer">'+T('predEditLater')+'</button>'
+        +'<button onclick="closePredEditToast(true)" style="padding:10px 24px;border-radius:12px;background:#27ae60;color:#fff;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px">'+T('predEditGo')+'</button>'
+      +'</div>';
+  }
   t.style.display='flex';
 }
 function closePredEditToast(goToPools){
@@ -3835,7 +3844,8 @@ var LD={
     specWriteAlert:'Write your prediction',
     specChangePrompt:'Change prediction:\n',
     usernameEmail:'Username / Email',passwordLabel:'Password',loginBtn:'SIGN IN',photoOptional:'Photo (optional)',yourName:'Your name',fullName:'Full Name',emailLabel:'Email',minChars:'Min 6 characters',phoneLabel:'Phone',registerBtn:'CREATE ACCOUNT',myHistory:'My History',myProfile:'My Profile',changePhoto:'Change photo',nickname:'Nickname',nicknameHint:'(shown in ranking)',yourFullName:'Your full name',shortName:'Short name shown to others',newPassword:'New Password (optional)',keepPassword:'Leave blank to keep current',saveBtn:'SAVE',profileUpdated:'Profile updated ✓',poolLabel:'Pool',paymentsStripe:'Payments securely processed by Stripe',accountCreated:'Account created! You can sign in now.',emailRequired:'Email is required',phoneRequired:'Phone is required',passTooShort:'Password must be at least 6 characters',emailExists:'Email already registered',nameEmpty:'Name cannot be empty',passMin6:'Password must be at least 6 characters',savePredsBtn:'SAVE PREDICTIONS',editProfileBtn:'SAVE CHANGES',
-    forgotPass:'Forgot your password?',backToLogin:'← Back to Sign In',resetSend:'SEND RESET LINK',resetEmailLabel:'Enter your registered email',resetSent:'✅ Check your email — reset link sent!',resetEmailNotFound:'No account found with that email.',resetTitle:'Reset Password',resetNewPass:'New Password',resetConfirmPass:'Confirm Password',resetPassMismatch:'Passwords do not match.',resetPassShort:'Password must be at least 6 characters.',resetSuccess:'✅ Password updated! You can now sign in.',resetLinkExpired:'This reset link has expired. Request a new one.',resetLinkInvalid:'Invalid reset link.'
+    forgotPass:'Forgot your password?',backToLogin:'← Back to Sign In',resetSend:'SEND RESET LINK',resetEmailLabel:'Enter your registered email',resetSent:'✅ Check your email — reset link sent!',resetEmailNotFound:'No account found with that email.',resetTitle:'Reset Password',resetNewPass:'New Password',resetConfirmPass:'Confirm Password',resetPassMismatch:'Passwords do not match.',resetPassShort:'Password must be at least 6 characters.',resetSuccess:'✅ Password updated! You can now sign in.',resetLinkExpired:'This reset link has expired. Request a new one.',resetLinkInvalid:'Invalid reset link.',
+    predEditTitle:'Ready to play?',predEditBody:"Let's go! 🏆 Enter your predictions before the matches lock.",predEditLater:'Later',predEditGo:'Go now! →'
   },
   es:{
     login:'Ingresar',register:'Registrarse',logout:'Salir',home:'Inicio',myPools:'Mis Pools',ranking:'Ranking',history:'Mis Predicciones',profile:'Perfil',joinPool:'Unirse',specials:'Mi Top 3',save:'Guardar',points:'Puntos',position:'Posición',matches:'Partidos',predictions:'Predicciones',results:'Resultados',open:'Abierto',closed:'Cerrado',pool:'Pool',
@@ -3895,7 +3905,8 @@ var LD={
     specWriteAlert:'Escribe tu predicción',
     specChangePrompt:'Cambiar predicción:\n',
     usernameEmail:'Usuario / Email',passwordLabel:'Contraseña',loginBtn:'INGRESAR',photoOptional:'Foto (opcional)',yourName:'Tu nombre',fullName:'Nombre Completo',emailLabel:'Email',minChars:'Mín. 6 caracteres',phoneLabel:'Teléfono',registerBtn:'CREAR CUENTA',myHistory:'Mi Historial',myProfile:'Mi Perfil',changePhoto:'Cambiar foto',nickname:'Apodo',nicknameHint:'(visible en ranking)',yourFullName:'Tu nombre completo',shortName:'Nombre corto visible para otros',newPassword:'Nueva Contraseña (opcional)',keepPassword:'Dejar en blanco para no cambiar',saveBtn:'GUARDAR',profileUpdated:'Perfil actualizado ✓',poolLabel:'Polla',paymentsStripe:'Pagos procesados de forma segura por Stripe',accountCreated:'¡Cuenta creada! Ya puedes ingresar.',emailRequired:'El email es obligatorio',phoneRequired:'El teléfono es obligatorio',passTooShort:'La contraseña debe tener al menos 6 caracteres',emailExists:'Este email ya está registrado',nameEmpty:'El nombre no puede estar vacío',passMin6:'La contraseña debe tener al menos 6 caracteres',savePredsBtn:'GUARDAR PREDICCIONES',editProfileBtn:'GUARDAR CAMBIOS',
-    forgotPass:'¿Olvidaste tu contraseña?',backToLogin:'← Volver al inicio de sesión',resetSend:'ENVIAR LINK DE RESTABLECIMIENTO',resetEmailLabel:'Ingresa tu email registrado',resetSent:'✅ Revisa tu email — link de restablecimiento enviado!',resetEmailNotFound:'No se encontró ninguna cuenta con ese email.',resetTitle:'Restablecer Contraseña',resetNewPass:'Nueva Contraseña',resetConfirmPass:'Confirmar Contraseña',resetPassMismatch:'Las contraseñas no coinciden.',resetPassShort:'La contraseña debe tener al menos 6 caracteres.',resetSuccess:'✅ Contraseña actualizada. Ya puedes ingresar.',resetLinkExpired:'Este link expiró. Solicita uno nuevo.',resetLinkInvalid:'Link de restablecimiento inválido.'
+    forgotPass:'¿Olvidaste tu contraseña?',backToLogin:'← Volver al inicio de sesión',resetSend:'ENVIAR LINK DE RESTABLECIMIENTO',resetEmailLabel:'Ingresa tu email registrado',resetSent:'✅ Revisa tu email — link de restablecimiento enviado!',resetEmailNotFound:'No se encontró ninguna cuenta con ese email.',resetTitle:'Restablecer Contraseña',resetNewPass:'Nueva Contraseña',resetConfirmPass:'Confirmar Contraseña',resetPassMismatch:'Las contraseñas no coinciden.',resetPassShort:'La contraseña debe tener al menos 6 caracteres.',resetSuccess:'✅ Contraseña actualizada. Ya puedes ingresar.',resetLinkExpired:'Este link expiró. Solicita uno nuevo.',resetLinkInvalid:'Link de restablecimiento inválido.',
+    predEditTitle:'¿Cómo es ahora de jugar?',predEditBody:'¡Ya puedes empezar! 🏆 Entra tus predicciones antes de que cierren los partidos.',predEditLater:'Luego',predEditGo:'¡Ir ahora! →'
   }
 };
 function T(k){return(LD[CL]||LD.en)[k]||k;}
@@ -5020,12 +5031,7 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
 <div id="predEditToast" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--bg3);border:1px solid rgba(39,174,96,.5);border-radius:20px;padding:32px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 0 40px rgba(39,174,96,.25);animation:toastPop .35s cubic-bezier(.34,1.56,.64,1)">
     <div style="font-size:52px;margin-bottom:14px">🎯</div>
-    <div style="font-family:Kallisto,sans-serif;font-size:18px;font-weight:600;color:var(--tx);margin-bottom:10px;letter-spacing:.5px">¿Cómo es ahora de jugar?</div>
-    <div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:24px"><strong style="color:#27ae60">¡Ya puedes empezar! 🏆</strong><br>Entra tus predicciones<br>antes de que cierren los partidos.</div>
-    <div style="display:flex;gap:8px;justify-content:center">
-      <button onclick="closePredEditToast(false)" style="padding:10px 20px;border-radius:12px;background:var(--bg4);color:var(--tx2);border:1px solid var(--bd);font-family:Poppins,sans-serif;font-size:11px;font-weight:600;cursor:pointer">Luego</button>
-      <button onclick="closePredEditToast(true)" style="padding:10px 24px;border-radius:12px;background:#27ae60;color:#fff;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px">¡Ir ahora! →</button>
-    </div>
+    <div data-pet></div>
   </div>
 </div>
 <!-- ════ MODAL: CONFIGURACIÓN ════ -->
