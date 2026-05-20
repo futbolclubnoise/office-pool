@@ -3281,6 +3281,19 @@ function showPaymentToast(){
   if(!t)return;
   t.style.display='flex';
 }
+function showPredEditToast(){
+  var t=document.getElementById('predEditToast');
+  if(!t)return;
+  t.style.display='flex';
+}
+function closePredEditToast(goToPools){
+  var t=document.getElementById('predEditToast');
+  if(t)t.style.display='none';
+  if(goToPools){
+    var btn=document.querySelector('#S_player .stab:nth-child(5)');
+    if(btn)pTab('pollas',btn);
+  }
+}
 function renderPInscripcion(){
   const open=DB.pollas.filter(p=>p.status==='open');
   document.getElementById('payPolla').innerHTML=open.map(p=>`<option value="${p.id}">${p.name} — ${usd(p.fee)}</option>`).join('')||`<option>${T('noOpenPools')}</option>`;
@@ -4887,7 +4900,9 @@ window._fbOnUpdate=function(d){
     if(Array.isArray(d.matches))DB.matches=d.matches;
     DB.banners=Object.assign({b1:'',b1url:'',b1m:'',b1murl:'',b2a:'',b2aurl:'',b2b:'',b2burl:'',b2c:'',b2curl:''},d.banners||{});
     DB.stripe=Object.assign({pub:'',secret:''},d.stripe||{});
+    var _prevAllowEdit=DB.settings&&DB.settings.allowPredEdit;
     DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
+    if(!_prevAllowEdit&&DB.settings.allowPredEdit&&CU&&CU.role!=='admin'){setTimeout(showPredEditToast,600);}
     DB.nid=d.nid||{u:10,p:1,m:1};
     // Never blank-out bonus questions or specials if cloud doc is missing those fields
     if(Array.isArray(d.bonusQuestions)&&d.bonusQuestions.length)DB.bonusQuestions=d.bonusQuestions;
@@ -5001,6 +5016,18 @@ setInterval(function(){if(typeof CU!=='undefined'&&CU&&CU.role!=='admin'){try{re
   </div>
 </div>
 <style>@keyframes toastPop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}@keyframes toastDot{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}</style>
+
+<div id="predEditToast" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg3);border:1px solid rgba(39,174,96,.5);border-radius:20px;padding:32px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 0 40px rgba(39,174,96,.25);animation:toastPop .35s cubic-bezier(.34,1.56,.64,1)">
+    <div style="font-size:52px;margin-bottom:14px">🎯</div>
+    <div style="font-family:Kallisto,sans-serif;font-size:18px;font-weight:600;color:var(--tx);margin-bottom:10px;letter-spacing:.5px">¡Marcadores abiertos!</div>
+    <div style="font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:24px">El admin habilitó el ingreso<br>de marcadores. ¡Es tu momento de<br><strong style="color:#27ae60">entrar tus predicciones! 🏆</strong></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button onclick="closePredEditToast(false)" style="padding:10px 20px;border-radius:12px;background:var(--bg4);color:var(--tx2);border:1px solid var(--bd);font-family:Poppins,sans-serif;font-size:11px;font-weight:600;cursor:pointer">Luego</button>
+      <button onclick="closePredEditToast(true)" style="padding:10px 24px;border-radius:12px;background:#27ae60;color:#fff;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px">¡Ir ahora! →</button>
+    </div>
+  </div>
+</div>
 <!-- ════ MODAL: CONFIGURACIÓN ════ -->
 <div id="settingsModal" class="modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-box card">
