@@ -1023,8 +1023,9 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         <div class="fg"><label class="fl">Public Key</label><input class="fi" id="ejsKey" placeholder="xxxxxxxxxxxxxxxxxxxxxx"></div>
         <div style="border-top:1px solid var(--bd);margin:12px 0"></div>
         <div style="font-size:10px;font-weight:700;color:var(--org);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🔔 New User Alert</div>
-        <div class="fg"><label class="fl">New User Template ID <span style="color:var(--tx3);font-weight:400">(nuevo template en EmailJS)</span></label><input class="fi" id="ejsTplAdmin" placeholder="template_newuser"></div>
-        <div class="fg"><label class="fl">Admin Email <span style="color:var(--tx3);font-weight:400">(donde recibes el aviso)</span></label><input class="fi" id="ejsAdminEmail" type="email" placeholder="tu@email.com"></div>
+        <div class="fg"><label class="fl">New User Template ID</label><input class="fi" id="ejsTplAdmin" placeholder="template_newuser"></div>
+        <div class="fg"><label class="fl">💳 Payment Template ID</label><input class="fi" id="ejsTplPay" placeholder="template_payment"></div>
+        <div class="fg"><label class="fl">Admin Email <span style="color:var(--tx3);font-weight:400">(donde recibes los avisos)</span></label><input class="fi" id="ejsAdminEmail" type="email" placeholder="tu@email.com"></div>
         <button class="btn btn-p" onclick="saveEmailJS()" style="margin-top:6px">SAVE EMAILJS CONFIG</button>
         <div id="ejsOK" class="msg-ok" style="display:none;margin-top:6px">EmailJS config saved ✓</div>
       </div>
@@ -1693,10 +1694,60 @@ function saveEmailJS(){
   DB.settings.ejs_tpl=document.getElementById('ejsTpl').value.trim();
   DB.settings.ejs_key=document.getElementById('ejsKey').value.trim();
   DB.settings.ejs_tpl_admin=document.getElementById('ejsTplAdmin').value.trim();
+  DB.settings.ejs_tpl_pay=document.getElementById('ejsTplPay').value.trim();
   DB.settings.adminEmail=document.getElementById('ejsAdminEmail').value.trim();
   saveDB();
   var ok=document.getElementById('ejsOK');if(ok){ok.style.display='block';setTimeout(function(){ok.style.display='none';},2500);}
 }
+function checkPaymentReturn(){
+  var params=new URLSearchParams(window.location.search);
+  var ref=params.get('client_reference_id')||params.get('ref');
+  if(!ref||!ref.includes('_'))return;
+  // Espera a que el DB cargue
+  var attempts=0;
+  var check=setInterval(function(){
+    attempts++;
+    if(!CU&&attempts<30){return;}
+    clearInterval(check);
+    var parts=ref.split('_');
+    var userId=parseInt(parts[0]);
+    var pollaId=parseInt(parts[1]);
+    // Solo procesa si el usuario logueado coincide
+    if(!CU||CU.id!==userId)return;
+    var pol=DB.pollas.find(function(p){return p.id===pollaId;});
+    var fee=pol?pol.fee:0;
+    // Envía email al admin
+    notifyAdminPayment(CU.name,CU.email,CU.phone||'—',pol?pol.name:'Pool #'+pollaId,fee,ref);
+    // Limpia URL para que no se dispare de nuevo al refrescar
+    window.history.replaceState({},'',window.location.pathname);
+  },300);
+}
+
+function notifyAdminPayment(playerName,playerEmail,playerPhone,pollaName,amount,ref){
+  var svc=(DB.settings&&DB.settings.ejs_svc)||'service_ltrmgrq';
+  var tpl=(DB.settings&&DB.settings.ejs_tpl_pay)||'template_payment';
+  var key=(DB.settings&&DB.settings.ejs_key)||'Gfd7vOLg0sWvQAWe5';
+  var adminEmail=(DB.settings&&DB.settings.adminEmail)||'futbolclubnoise@gmail.com';
+  try{
+    emailjs.init(key);
+    emailjs.send(svc,tpl,{
+      to_email    : adminEmail,
+      player_name : playerName,
+      player_email: playerEmail,
+      player_phone: playerPhone,
+      polla_name  : pollaName,
+      amount      : '$'+amount+' USD',
+      reference   : ref,
+      app_name    : 'CFL Office Pool',
+      pool_url    : 'https://pool.fcnoise.com'
+    }).then(function(){
+      console.log('✅ Payment notification sent to admin');
+    }).catch(function(e){
+      console.warn('Payment notify failed:',e);
+    });
+  }catch(e){console.warn('Payment notify error:',e);}
+}
+
 function checkResetToken(){
   var params=new URLSearchParams(window.location.search);
   var token=params.get('reset');
@@ -3295,6 +3346,7 @@ function renderAdmStripe(){
   var ejsTpl=document.getElementById('ejsTpl');if(ejsTpl)ejsTpl.value=(DB.settings&&DB.settings.ejs_tpl)||'template_vubttda';
   var ejsKey=document.getElementById('ejsKey');if(ejsKey)ejsKey.value=(DB.settings&&DB.settings.ejs_key)||'Gfd7vOLg0sWvQAWe5';
   var ejsTplAdmin=document.getElementById('ejsTplAdmin');if(ejsTplAdmin)ejsTplAdmin.value=(DB.settings&&DB.settings.ejs_tpl_admin)||'';
+  var ejsTplPay=document.getElementById('ejsTplPay');if(ejsTplPay)ejsTplPay.value=(DB.settings&&DB.settings.ejs_tpl_pay)||'';
   var ejsAdminEmail=document.getElementById('ejsAdminEmail');if(ejsAdminEmail)ejsAdminEmail.value=(DB.settings&&DB.settings.adminEmail)||'';
 }
 function togglePredEdit(){
@@ -4739,6 +4791,8 @@ function startApp(){
     console.log('📡 No local cache — Firebase is source of truth, waiting for onSnapshot...');
   }
   initLang();initTheme();
+  checkResetToken();
+  checkPaymentReturn();
   // Detect return from Stripe payment (?paid=1)
   if(window.location.search.indexOf('paid=1')>=0){
     setTimeout(showPaymentToast,1200);
