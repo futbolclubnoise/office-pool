@@ -2724,6 +2724,11 @@ function initPlayer(){
   setNav('porAv','porNm');
   applyBanners();
   renderPInicio();
+  // Show notification if score entry is already open when player logs in
+  if(DB.settings&&DB.settings.allowPredEdit&&!window._predEditToastShown){
+    window._predEditToastShown=true;
+    setTimeout(showPredEditToast,800);
+  }
 }
 function pTab(tab,btn){
   document.querySelectorAll('#S_player .stab').forEach(t=>t.classList.remove('on'));
@@ -4913,7 +4918,8 @@ window._fbOnUpdate=function(d){
     DB.stripe=Object.assign({pub:'',secret:''},d.stripe||{});
     var _prevAllowEdit=DB.settings&&DB.settings.allowPredEdit;
     DB.settings=Object.assign({regCode:'POLLA2026',stripeLink:'https://buy.stripe.com/28EaEX9W7gnj2vVdP8e3e05'},d.settings||{});
-    if(!_prevAllowEdit&&DB.settings.allowPredEdit&&CU&&CU.role!=='admin'){setTimeout(showPredEditToast,600);}
+    if(!_prevAllowEdit&&DB.settings.allowPredEdit&&CU&&CU.role!=='admin'&&!window._predEditToastShown){window._predEditToastShown=true;setTimeout(showPredEditToast,600);}
+    if(!DB.settings.allowPredEdit){window._predEditToastShown=false;} // reset so next enable shows it again
     DB.nid=d.nid||{u:10,p:1,m:1};
     // Never blank-out bonus questions or specials if cloud doc is missing those fields
     if(Array.isArray(d.bonusQuestions)&&d.bonusQuestions.length)DB.bonusQuestions=d.bonusQuestions;
