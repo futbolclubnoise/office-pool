@@ -1016,11 +1016,15 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
         </div>
       </div>
       <div class="card" style="margin-top:12px">
-        <div class="ct"><div class="ct-dot ct-dot-b"></div>EmailJS — Password Reset</div>
+        <div class="ct"><div class="ct-dot ct-dot-b"></div>EmailJS — Password Reset &amp; Admin Alerts</div>
         <p style="font-size:11px;color:var(--tx3);margin-bottom:10px">Get your free keys at <a href="https://emailjs.com" target="_blank" style="color:var(--org)">emailjs.com</a> → Account → API Keys + Email Services + Email Templates</p>
         <div class="fg"><label class="fl">Service ID</label><input class="fi" id="ejsSvc" placeholder="service_xxxxxxx"></div>
-        <div class="fg"><label class="fl">Template ID</label><input class="fi" id="ejsTpl" placeholder="template_xxxxxxx"></div>
+        <div class="fg"><label class="fl">Password Reset — Template ID</label><input class="fi" id="ejsTpl" placeholder="template_xxxxxxx"></div>
         <div class="fg"><label class="fl">Public Key</label><input class="fi" id="ejsKey" placeholder="xxxxxxxxxxxxxxxxxxxxxx"></div>
+        <div style="border-top:1px solid var(--bd);margin:12px 0"></div>
+        <div style="font-size:10px;font-weight:700;color:var(--org);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🔔 New User Alert</div>
+        <div class="fg"><label class="fl">New User Template ID <span style="color:var(--tx3);font-weight:400">(nuevo template en EmailJS)</span></label><input class="fi" id="ejsTplAdmin" placeholder="template_newuser"></div>
+        <div class="fg"><label class="fl">Admin Email <span style="color:var(--tx3);font-weight:400">(donde recibes el aviso)</span></label><input class="fi" id="ejsAdminEmail" type="email" placeholder="tu@email.com"></div>
         <button class="btn btn-p" onclick="saveEmailJS()" style="margin-top:6px">SAVE EMAILJS CONFIG</button>
         <div id="ejsOK" class="msg-ok" style="display:none;margin-top:6px">EmailJS config saved ✓</div>
       </div>
@@ -1605,6 +1609,8 @@ function doRegister(){
     DB.users.push(newUser);
     addNotif('register',{name:name,email:email});
     saveDB();
+    // Notificar al admin por email
+    notifyAdminNewUser(name,email,phone);
     // Upload photo to Firebase Storage after account is saved
     if(newPhoto&&window._fbUploadPhoto){
       window._fbUploadPhoto(newId,newPhoto).then(function(url){
@@ -1661,11 +1667,33 @@ function sendResetEmail(){
     showE('Error sending email. Check EmailJS config.');
   });
 }
+function notifyAdminNewUser(name,email,phone){
+  var svc=(DB.settings&&DB.settings.ejs_svc)||'service_ltrmgrq';
+  var tpl=(DB.settings&&DB.settings.ejs_tpl_admin)||'template_newuser';
+  var key=(DB.settings&&DB.settings.ejs_key)||'Gfd7vOLg0sWvQAWe5';
+  var adminEmail=(DB.settings&&DB.settings.adminEmail)||'futbolclubnoise@gmail.com';
+  var totalUsers=DB.users.filter(function(u){return u.role!=='admin';}).length;
+  try{
+    emailjs.init(key);
+    emailjs.send(svc,tpl,{
+      to_email    : adminEmail,
+      user_name   : name,
+      user_email  : email,
+      user_phone  : phone||'—',
+      total_users : totalUsers,
+      app_name    : 'CFL Office Pool',
+      pool_url    : 'https://pool.fcnoise.com'
+    }).catch(function(e){console.warn('Admin notify failed:',e);});
+  }catch(e){console.warn('Admin notify error:',e);}
+}
+
 function saveEmailJS(){
   if(!DB.settings)DB.settings={};
   DB.settings.ejs_svc=document.getElementById('ejsSvc').value.trim();
   DB.settings.ejs_tpl=document.getElementById('ejsTpl').value.trim();
   DB.settings.ejs_key=document.getElementById('ejsKey').value.trim();
+  DB.settings.ejs_tpl_admin=document.getElementById('ejsTplAdmin').value.trim();
+  DB.settings.adminEmail=document.getElementById('ejsAdminEmail').value.trim();
   saveDB();
   var ok=document.getElementById('ejsOK');if(ok){ok.style.display='block';setTimeout(function(){ok.style.display='none';},2500);}
 }
@@ -3266,6 +3294,8 @@ function renderAdmStripe(){
   var ejsSvc=document.getElementById('ejsSvc');if(ejsSvc)ejsSvc.value=(DB.settings&&DB.settings.ejs_svc)||'service_ltrmgrq';
   var ejsTpl=document.getElementById('ejsTpl');if(ejsTpl)ejsTpl.value=(DB.settings&&DB.settings.ejs_tpl)||'template_vubttda';
   var ejsKey=document.getElementById('ejsKey');if(ejsKey)ejsKey.value=(DB.settings&&DB.settings.ejs_key)||'Gfd7vOLg0sWvQAWe5';
+  var ejsTplAdmin=document.getElementById('ejsTplAdmin');if(ejsTplAdmin)ejsTplAdmin.value=(DB.settings&&DB.settings.ejs_tpl_admin)||'';
+  var ejsAdminEmail=document.getElementById('ejsAdminEmail');if(ejsAdminEmail)ejsAdminEmail.value=(DB.settings&&DB.settings.adminEmail)||'';
 }
 function togglePredEdit(){
   if(!DB.settings)DB.settings={};
