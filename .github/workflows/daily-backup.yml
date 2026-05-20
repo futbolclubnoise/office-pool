@@ -2,8 +2,8 @@ name: Daily Firebase Backup
 
 on:
   schedule:
-    # Every day at 12:00 PM UTC
-    - cron: '0 12 * * *'
+    # Every day at 12:00 PM Colombia time (UTC-5 = 17:00 UTC)
+    - cron: '0 17 * * *'
   workflow_dispatch: # also allows manual trigger from GitHub Actions tab
 
 jobs:
