@@ -3297,10 +3297,25 @@ function updatePayPreview(){
       <div class="pmg-item"><div class="pmg-v c-o">${usd(pol.fee)}</div><div class="pmg-l">${T('entryFee')}</div></div>
       <div class="pmg-item"><div class="pmg-v c-g">${prz.inscribed}</div><div class="pmg-l">${T('enrolled')}</div></div>
     </div>
-    ${prz.total>0?`<div style="margin-top:12px;background:linear-gradient(135deg,rgba(255,165,0,.18),rgba(255,165,0,.05));border:1px solid rgba(255,165,0,.45);border-radius:14px;padding:16px;text-align:center">
-      <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--org);text-transform:uppercase;margin-bottom:6px">🏆 ${T('prizes')}</div>
-      <div style="font-family:'Kallisto',sans-serif;font-size:28px;font-weight:700;color:var(--org);line-height:1">${usd(prz.total)}</div>
-      <div style="font-size:8px;color:var(--tx3);margin-top:5px;letter-spacing:1px">PRIZE POOL · GROWS WITH EVERY PLAYER</div>
+    ${prz.p1>0?`<div style="margin-top:12px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;margin-bottom:8px">🏆 ${T('prizes')}</div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:linear-gradient(135deg,rgba(255,165,0,.15),rgba(255,165,0,.05));border:1px solid rgba(255,165,0,.4);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-size:18px;margin-bottom:2px">🥇</div>
+          <div style="font-family:'Kallisto',sans-serif;font-size:15px;font-weight:700;color:var(--org)">${usd(prz.p1)}</div>
+          <div style="font-size:8px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:1px">1st Place</div>
+        </div>
+        <div style="flex:1;background:linear-gradient(135deg,rgba(180,180,180,.15),rgba(180,180,180,.05));border:1px solid rgba(180,180,180,.3);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-size:18px;margin-bottom:2px">🥈</div>
+          <div style="font-family:'Kallisto',sans-serif;font-size:15px;font-weight:700;color:var(--g2)">${usd(prz.p2)}</div>
+          <div style="font-size:8px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:1px">2nd Place</div>
+        </div>
+        <div style="flex:1;background:linear-gradient(135deg,rgba(180,130,80,.15),rgba(180,130,80,.05));border:1px solid rgba(180,130,80,.3);border-radius:12px;padding:12px 8px;text-align:center">
+          <div style="font-size:18px;margin-bottom:2px">🥉</div>
+          <div style="font-family:'Kallisto',sans-serif;font-size:15px;font-weight:700;color:var(--grn)">${usd(prz.p3)}</div>
+          <div style="font-size:8px;color:var(--tx3);margin-top:2px;text-transform:uppercase;letter-spacing:1px">3rd Place</div>
+        </div>
+      </div>
     </div>`:''}`;
   const wrap=document.getElementById('payLinkWrap');
   if(ya){
