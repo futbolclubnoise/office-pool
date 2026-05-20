@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Download Firebase data and save backup
+      - name: Download Firebase data and overwrite latest.json
         run: |
           node - <<'EOF'
           const https = require('https');
@@ -42,7 +42,6 @@ jobs:
             });
           }
 
-          // Convert Firestore typed value → plain JS value
           function fromFirestore(val) {
             if (!val) return null;
             if ('stringValue'  in val) return val.stringValue;
@@ -71,38 +70,36 @@ jobs:
             const timeStr = now.toISOString().replace('T',' ').split('.')[0] + ' UTC';
             console.log(`Starting backup ${dateStr}...`);
 
-            // Fetch cfl/data (pollas, matches, specials, settings, banners…)
-            const dataRaw  = await get(`${BASE_URL}/data?key=${API_KEY}`);
-            const data     = parseDoc(dataRaw);
+            // Fetch cfl/data
+            const dataRaw = await get(`${BASE_URL}/data?key=${API_KEY}`);
+            const data    = parseDoc(dataRaw);
 
             // Fetch cfl/users (chunk 0)
             let users = [];
             try {
               const usersRaw = await get(`${BASE_URL}/users?key=${API_KEY}`);
-              const usersDoc = parseDoc(usersRaw);
-              users = usersDoc.users || [];
+              users = parseDoc(usersRaw).users || [];
             } catch(e) { console.warn('users chunk 0 not found:', e.message); }
 
             // Fetch extra user chunks if any
             const numChunks = data.userChunks || 1;
             for (let i = 1; i < numChunks; i++) {
               try {
-                const chunkRaw = await get(`${BASE_URL}/users_${i}?key=${API_KEY}`);
-                const chunkDoc = parseDoc(chunkRaw);
+                const chunkDoc = parseDoc(await get(`${BASE_URL}/users_${i}?key=${API_KEY}`));
                 users = users.concat(chunkDoc.users || []);
               } catch(e) { console.warn(`chunk ${i} error:`, e.message); }
             }
 
             // Strip base64 photos to keep backup small
-            const usersClean = users.map(u => { const {photo, ...rest} = u; return rest; });
+            const usersClean = users.map(({ photo, ...rest }) => rest);
 
             const result = {
               _backupDate   : dateStr,
               _backupTime   : timeStr,
               _totalUsers   : usersClean.length,
-              _totalPollas  : (data.pollas  || []).length,
-              _totalMatches : (data.matches || []).length,
-              _totalSpecials: (data.specials|| []).length,
+              _totalPollas  : (data.pollas   || []).length,
+              _totalMatches : (data.matches  || []).length,
+              _totalSpecials: (data.specials || []).length,
               pollas        : data.pollas        || [],
               matches       : data.matches       || [],
               specials      : data.specials      || [],
@@ -113,72 +110,20 @@ jobs:
               users         : usersClean
             };
 
+            // Only ONE file — overwrite every day
             if (!fs.existsSync('backups')) fs.mkdirSync('backups');
-            fs.writeFileSync(`backups/backup-${dateStr}.json`, JSON.stringify(result, null, 2));
-            fs.writeFileSync('backups/latest.json',            JSON.stringify(result, null, 2));
+            fs.writeFileSync('backups/latest.json', JSON.stringify(result, null, 2));
 
-            console.log(`✅ Backup done: ${usersClean.length} users, ${(data.pollas||[]).length} pollas, ${(data.matches||[]).length} matches, ${(data.specials||[]).length} specials`);
+            console.log(`✅ Backup done: ${usersClean.length} users, ${(data.pollas||[]).length} pollas, ${(data.matches||[]).length} matches`);
           }
 
           backup().catch(e => { console.error('❌', e.message); process.exit(1); });
-          EOF
-
-      - name: Keep only last 30 backups
-        run: |
-          cd backups
-          ls backup-*.json 2>/dev/null | sort | head -n -30 | xargs rm -f || true
-          echo "Backups retained: $(ls backup-*.json 2>/dev/null | wc -l | tr -d ' ')"
-
-      - name: Detect anomalies and alert
-        run: |
-          node - <<'EOF'
-          const fs = require('fs');
-          const today = require('./backups/latest.json');
-
-          // Find yesterday's backup
-          const files = fs.readdirSync('backups')
-            .filter(f => f.startsWith('backup-') && f.endsWith('.json'))
-            .sort();
-
-          if (files.length < 2) { console.log('No previous backup to compare'); process.exit(0); }
-
-          const yesterday = JSON.parse(fs.readFileSync('backups/' + files[files.length - 2]));
-
-          const alerts = [];
-
-          // Users deleted?
-          const lost = yesterday._totalUsers - today._totalUsers;
-          if (lost > 0) alerts.push(`🚨 ${lost} user(s) DELETED (${yesterday._totalUsers} → ${today._totalUsers})`);
-
-          // Pollas deleted?
-          const lostP = yesterday._totalPollas - today._totalPollas;
-          if (lostP > 0) alerts.push(`🚨 ${lostP} polla(s) DELETED (${yesterday._totalPollas} → ${today._totalPollas})`);
-
-          // Matches deleted in bulk?
-          const lostM = yesterday._totalMatches - today._totalMatches;
-          if (lostM > 10) alerts.push(`🚨 ${lostM} matches DELETED (${yesterday._totalMatches} → ${today._totalMatches})`);
-
-          // Specials deleted?
-          const lostS = yesterday._totalSpecials - today._totalSpecials;
-          if (lostS > 0) alerts.push(`🚨 ${lostS} special(s) DELETED (${yesterday._totalSpecials} → ${today._totalSpecials})`);
-
-          // All data wiped?
-          if (today._totalUsers === 0 && yesterday._totalUsers > 0)
-            alerts.push('🔴 CRITICAL: ALL USERS WIPED!');
-
-          if (alerts.length > 0) {
-            console.log('⚠️  ANOMALIES DETECTED:\n' + alerts.join('\n'));
-            fs.writeFileSync('backups/.alert', alerts.join('\n'));
-            process.exit(1); // fail the job → GitHub sends email notification
-          } else {
-            console.log('✅ No anomalies. Users:', today._totalUsers, '| Pollas:', today._totalPollas, '| Matches:', today._totalMatches);
-          }
           EOF
 
       - name: Commit backup
         run: |
           git config user.name  "CFL Backup Bot"
           git config user.email "backup@cfl-office-pool"
-          git add backups/
-          git diff --staged --quiet || git commit -m "🗄️ Backup $(date -u '+%Y-%m-%d') — $(node -e "const f=require('./backups/latest.json');console.log(f._totalUsers+' users, '+f._totalPollas+' pollas')")"
+          git add backups/latest.json
+          git diff --staged --quiet || git commit -m "🗄️ Backup $(node -e "const f=require('./backups/latest.json');console.log(f._backupDate+' — '+f._totalUsers+' users, '+f._totalPollas+' pollas')")"
           git push
