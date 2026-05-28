@@ -4035,10 +4035,15 @@ function lsLoad(){
     return data;
   }catch(e){return null;}
 }
+var _saveDBTimer=null;
 async function saveDB(){
   DB._ts=Date.now();
-  lsSave();
-  if(window._fbSaveData&&window._fbSaveUsers){
+  lsSave(); // always immediate — localStorage is instant and cheap
+  if(!window._fbSaveData||!window._fbSaveUsers)return;
+  // Debounce Firebase writes: rapid sequential saves (e.g. scoring multiple matches)
+  // collapse into a single Firestore write after 800ms of inactivity
+  clearTimeout(_saveDBTimer);
+  _saveDBTimer=setTimeout(function(){
     // ── Build data payload: NO users, NO photos ─────────────────────────────
     var dataPayload={
       pollas:DB.pollas||[],
@@ -4050,7 +4055,7 @@ async function saveDB(){
       bonusQuestions:DB.bonusQuestions||[],
       nid:DB.nid||{u:10,p:1,m:1},
       notifications:DB.notifications||[],
-      userChunks:Math.max(1,Math.ceil((DB.users||[]).length/100)),
+      userChunks:Math.max(1,Math.ceil((DB.users||[]).length/50)), // 50 = CHUNK size in _fbSaveUsers
       _ts:DB._ts
     };
     var dataSz=Math.round(JSON.stringify(dataPayload).length/1024);
@@ -4066,7 +4071,7 @@ async function saveDB(){
       console.error('❌ Firebase save FAILED:',e.code,e.message);
       try{alert('⚠️ Could not save to cloud ('+(e.code||e.message||'unknown')+').\nData is saved locally. Try refreshing.');}catch(ex){}
     });
-  }
+  },800);
 }
 // fbSync: only used as fallback if onSnapshot hasn't fired yet (e.g. offline start)
 function fbSync(){
