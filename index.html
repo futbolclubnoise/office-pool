@@ -656,6 +656,9 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
           <div class="fg"><label class="fl" data-t="emailLabel">Email</label><input class="fi" id="rEmail" type="email" placeholder="your@email.com"></div>
           <div class="fg"><label class="fl" data-t="passwordLabel">Password</label><input class="fi" id="rPass" type="password" placeholder="Min 6 characters" data-t="minChars"></div>
           <div class="fg"><label class="fl" data-t="phoneLabel">Phone</label><input class="fi" id="rPhone" type="tel" placeholder="+1 555 000 0000"></div>
+          <div style="font-size:10px;color:var(--tx3);text-align:center;margin-bottom:8px">
+            Al registrarte aceptas nuestros <button onclick="showTC()" style="background:none;border:none;color:var(--org);font-size:10px;font-family:Poppins,sans-serif;cursor:pointer;padding:0;text-decoration:underline">Términos y Condiciones</button>
+          </div>
           <button class="btn btn-p" onclick="doRegister()" data-t="registerBtn">CREATE ACCOUNT</button>
         </div>
       </div>
