@@ -2785,8 +2785,8 @@ function renderPInicio(){
       const myWrong=myPolPreds.filter(p=>p.type==='wrong'||(p.pts===0&&p.type)).length;
       const myPoolPts=myPolPreds.reduce((s,p)=>s+(p.pts||0),0);
 
-      // My ranking in this pool
-      const players=DB.users.filter(u=>u.role!=='admin');
+      // My ranking in this pool — only paid/verified players
+      const players=DB.users.filter(u=>u.role!=='admin'&&isPlayerPaid(u,pol.id));
       const matchIds=ms.map(m=>m.id);
       const ranked=players.map(u=>({u,pts:u.predictions.filter(p=>matchIds.includes(p.matchId)).reduce((s,p)=>s+(p.pts||0),0)})).sort((a,b)=>b.pts-a.pts);
       const myRank=ranked.findIndex(r=>r.u.id===CU.id);
@@ -3171,13 +3171,15 @@ function renderPRanking(){
   var pol=DB.pollas.find(function(p){return p.id===pollaId;});
   if(!pol){document.getElementById('porRanking').innerHTML=empty(T('noPollas'));return;}
   var matchIds=DB.matches.filter(function(m){return m.pollaId===pollaId;}).map(function(m){return m.id;});
-  var players=DB.users.filter(function(u){return u.role!=='admin'&&u.status!=='disabled';});
+  // Only show paid/verified players in the ranking
+  var players=DB.users.filter(function(u){return u.role!=='admin'&&u.status!=='disabled'&&isPlayerPaid(u,pollaId);});
   var ranked=players.map(function(u){
     var pts=(u.predictions||[]).filter(function(p){return matchIds.indexOf(p.matchId)>=0;}).reduce(function(s,p){return s+(p.pts||0);},0);
     return{u:u,pts:pts};
   }).sort(function(a,b){return b.pts-a.pts;});
   var displayName=function(u){return u.nickname||u.name;};
-  document.getElementById('porRanking').innerHTML=ranked.map(function(r,i){
+  var iMePaid=isPlayerPaid(CU,pollaId);
+  var rows=ranked.map(function(r,i){
     var isMe=r.u.id===CU.id;
     var pc=i===0?'a':i===1?'b':i===2?'c':'';
     var sym=i===0?'◆':i===1?'◇':i===2?'▸':(i+1)+'.';
@@ -3191,6 +3193,20 @@ function renderPRanking(){
       +'<div style="font-family:\'Kallisto\',sans-serif;font-weight:500;font-size:16px;color:'+(isMe?'var(--org)':'var(--tx2)')+'">'+r.pts+'<span style="font-size:8px;color:var(--tx3);font-family:\'Poppins\',sans-serif"> pts</span></div>'
       +'</div>';
   }).join('')||empty(T('noPlayers'));
+  // CTA for unpaid player
+  var cta='';
+  if(!iMePaid&&pol.status==='open'){
+    var link=DB.settings&&DB.settings.stripeLink?DB.settings.stripeLink:'';
+    cta='<div style="margin-top:16px;background:linear-gradient(135deg,rgba(255,165,0,.15),rgba(255,165,0,.05));border:1px solid rgba(255,165,0,.4);border-radius:14px;padding:16px;text-align:center">'
+      +'<div style="font-size:20px;margin-bottom:6px">🏆</div>'
+      +'<div style="font-family:Kallisto,sans-serif;font-size:13px;font-weight:700;color:var(--org);margin-bottom:4px">'+T('joinToPlay').replace('→','').trim()+'</div>'
+      +'<div style="font-size:11px;color:var(--tx2);margin-bottom:12px">'+T('stripeRedirect')+'</div>'
+      +(link?'<a href="'+link+'?client_reference_id='+CU.id+'_'+pollaId+'" target="_blank" style="text-decoration:none" onclick="setTimeout(showPaymentToast,1500)">'
+        +'<button class="btn btn-p" style="background:var(--org);color:#fff;border:none;font-size:11px;letter-spacing:1px;padding:10px 24px">'+T('payTitle')+' '+usd(pol.fee)+'</button></a>'
+        :'<div style="font-size:10px;color:var(--tx3)">'+T('noPayLink')+'</div>')
+      +'</div>';
+  }
+  document.getElementById('porRanking').innerHTML=rows+cta;
 }
 
 function renderPHist(){
