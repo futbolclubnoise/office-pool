@@ -651,11 +651,11 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
                 <input type="file" id="rPhFile" accept="image/*" style="display:none" onchange="prevPh(event,'rPhPrev','rPhRing')">
               </div>
             </div>
-            <div style="flex:1"><div class="fg"><label class="fl" data-t="fullName">Full Name</label><input class="fi" id="rName" type="text" placeholder="Your name" data-t="yourName"></div></div>
+            <div style="flex:1"><div class="fg"><label class="fl" data-t="fullName">Full Name <span style="color:var(--red)">*</span></label><input class="fi" id="rName" type="text" placeholder="Your name" data-t="yourName"></div></div>
           </div>
-          <div class="fg"><label class="fl" data-t="emailLabel">Email</label><input class="fi" id="rEmail" type="email" placeholder="your@email.com"></div>
-          <div class="fg"><label class="fl" data-t="passwordLabel">Password</label><input class="fi" id="rPass" type="password" placeholder="Min 6 characters" data-t="minChars"></div>
-          <div class="fg"><label class="fl" data-t="phoneLabel">Phone</label><input class="fi" id="rPhone" type="tel" placeholder="+1 555 000 0000"></div>
+          <div class="fg"><label class="fl" data-t="emailLabel">Email <span style="color:var(--red)">*</span></label><input class="fi" id="rEmail" type="email" placeholder="your@email.com"></div>
+          <div class="fg"><label class="fl" data-t="passwordLabel">Password <span style="color:var(--red)">*</span></label><input class="fi" id="rPass" type="password" placeholder="Min 6 characters" data-t="minChars"></div>
+          <div class="fg"><label class="fl" data-t="phoneLabel">Phone <span style="color:var(--red)">*</span></label><input class="fi" id="rPhone" type="tel" placeholder="+1 555 000 0000"></div>
           <div style="font-size:10px;color:var(--tx3);text-align:center;margin-bottom:8px">
             Al registrarte aceptas nuestros <button onclick="showTC()" style="background:none;border:none;color:var(--org);font-size:10px;font-family:Poppins,sans-serif;cursor:pointer;padding:0;text-decoration:underline">Términos y Condiciones</button>
           </div>
@@ -1055,6 +1055,7 @@ function showTC(){var m=document.getElementById('tcModal');if(m)m.style.display=
               <tr>
                 <th onclick="sortUsers('name')" id="th-name">Player</th>
                 <th onclick="sortUsers('email')" id="th-email">Email</th>
+                <th>Phone</th>
                 <th onclick="sortUsers('points')" id="th-points">Points</th>
                 <th onclick="sortUsers('preds')" id="th-preds">Picks</th>
                 <th onclick="sortUsers('payments')" id="th-payments">Payments</th>
@@ -1604,7 +1605,7 @@ function doRegister(){
   // Use compressed version if available, else fall back to src
   const _phInput=document.getElementById('rPhFile');
   const ph=(_phInput&&_phInput._compressed)||document.getElementById('rPhPrev').src||'';
-  if(!name||!email||!pass)return showE('Completa todos los campos');
+  if(!name||!email||!pass||!phone)return showE(T('allFieldsRequired'));
   if(pass.length<6)return showE(T('passTooShort'));
   if(DB.users.find(u=>(u.email||'').toLowerCase()===email.toLowerCase()))return showE(T('emailExists'));
   hashPass(pass).then(function(hashed){
@@ -2597,6 +2598,7 @@ function renderAdmUsers(){
     return`<tr>
       <td><div style="display:flex;align-items:center;gap:7px">${avEl(u)} ${u.name}</div></td>
       <td style="color:var(--tx2);font-size:10px">${u.email}</td>
+      <td style="color:var(--tx2);font-size:10px">${u.phone||'—'}</td>
       <td style="font-family:'Kallisto',sans-serif;font-weight:500;color:var(--org)">${u.points}</td>
       <td>${u.predictions.length}</td>
       <td><span style="color:${paid?'var(--grn)':'var(--tx3)'};cursor:pointer" onclick="openUserPay(${u.id})">${paid} 💰</span></td>
@@ -3886,7 +3888,7 @@ var LD={
     specSelectAlert:'Select a team',
     specWriteAlert:'Write your prediction',
     specChangePrompt:'Change prediction:\n',
-    usernameEmail:'Username / Email',passwordLabel:'Password',loginBtn:'SIGN IN',photoOptional:'Photo (optional)',yourName:'Your name',fullName:'Full Name',emailLabel:'Email',minChars:'Min 6 characters',phoneLabel:'Phone',registerBtn:'CREATE ACCOUNT',myHistory:'My History',myProfile:'My Profile',changePhoto:'Change photo',nickname:'Nickname',nicknameHint:'(shown in ranking)',yourFullName:'Your full name',shortName:'Short name shown to others',newPassword:'New Password (optional)',keepPassword:'Leave blank to keep current',saveBtn:'SAVE',profileUpdated:'Profile updated ✓',poolLabel:'Pool',paymentsStripe:'Payments securely processed by Stripe',accountCreated:'Account created! You can sign in now.',emailRequired:'Email is required',phoneRequired:'Phone is required',passTooShort:'Password must be at least 6 characters',emailExists:'Email already registered',nameEmpty:'Name cannot be empty',passMin6:'Password must be at least 6 characters',savePredsBtn:'SAVE PREDICTIONS',editProfileBtn:'SAVE CHANGES',
+    usernameEmail:'Username / Email',passwordLabel:'Password',loginBtn:'SIGN IN',photoOptional:'Photo (optional)',yourName:'Your name',fullName:'Full Name',emailLabel:'Email',minChars:'Min 6 characters',phoneLabel:'Phone',registerBtn:'CREATE ACCOUNT',myHistory:'My History',myProfile:'My Profile',changePhoto:'Change photo',nickname:'Nickname',nicknameHint:'(shown in ranking)',yourFullName:'Your full name',shortName:'Short name shown to others',newPassword:'New Password (optional)',keepPassword:'Leave blank to keep current',saveBtn:'SAVE',profileUpdated:'Profile updated ✓',poolLabel:'Pool',paymentsStripe:'Payments securely processed by Stripe',accountCreated:'Account created! You can sign in now.',allFieldsRequired:'All fields are required.',emailRequired:'Email is required',phoneRequired:'Phone is required',passTooShort:'Password must be at least 6 characters',emailExists:'Email already registered',nameEmpty:'Name cannot be empty',passMin6:'Password must be at least 6 characters',savePredsBtn:'SAVE PREDICTIONS',editProfileBtn:'SAVE CHANGES',
     forgotPass:'Forgot your password?',backToLogin:'← Back to Sign In',resetSend:'SEND RESET LINK',resetEmailLabel:'Enter your registered email',resetSent:'✅ Check your email — reset link sent!',resetEmailNotFound:'No account found with that email.',resetTitle:'Reset Password',resetNewPass:'New Password',resetConfirmPass:'Confirm Password',resetPassMismatch:'Passwords do not match.',resetPassShort:'Password must be at least 6 characters.',resetSuccess:'✅ Password updated! You can now sign in.',resetLinkExpired:'This reset link has expired. Request a new one.',resetLinkInvalid:'Invalid reset link.',
     predEditTitle:'Ready to play?',predEditBody:"Let's go! 🏆 Enter your predictions before the matches lock.",predEditLater:'Later',predEditGo:'Go now! →'
   },
@@ -3947,7 +3949,7 @@ var LD={
     specSelectAlert:'Selecciona un equipo',
     specWriteAlert:'Escribe tu predicción',
     specChangePrompt:'Cambiar predicción:\n',
-    usernameEmail:'Usuario / Email',passwordLabel:'Contraseña',loginBtn:'INGRESAR',photoOptional:'Foto (opcional)',yourName:'Tu nombre',fullName:'Nombre Completo',emailLabel:'Email',minChars:'Mín. 6 caracteres',phoneLabel:'Teléfono',registerBtn:'CREAR CUENTA',myHistory:'Mi Historial',myProfile:'Mi Perfil',changePhoto:'Cambiar foto',nickname:'Apodo',nicknameHint:'(visible en ranking)',yourFullName:'Tu nombre completo',shortName:'Nombre corto visible para otros',newPassword:'Nueva Contraseña (opcional)',keepPassword:'Dejar en blanco para no cambiar',saveBtn:'GUARDAR',profileUpdated:'Perfil actualizado ✓',poolLabel:'Polla',paymentsStripe:'Pagos procesados de forma segura por Stripe',accountCreated:'¡Cuenta creada! Ya puedes ingresar.',emailRequired:'El email es obligatorio',phoneRequired:'El teléfono es obligatorio',passTooShort:'La contraseña debe tener al menos 6 caracteres',emailExists:'Este email ya está registrado',nameEmpty:'El nombre no puede estar vacío',passMin6:'La contraseña debe tener al menos 6 caracteres',savePredsBtn:'GUARDAR PREDICCIONES',editProfileBtn:'GUARDAR CAMBIOS',
+    usernameEmail:'Usuario / Email',passwordLabel:'Contraseña',loginBtn:'INGRESAR',photoOptional:'Foto (opcional)',yourName:'Tu nombre',fullName:'Nombre Completo',emailLabel:'Email',minChars:'Mín. 6 caracteres',phoneLabel:'Teléfono',registerBtn:'CREAR CUENTA',myHistory:'Mi Historial',myProfile:'Mi Perfil',changePhoto:'Cambiar foto',nickname:'Apodo',nicknameHint:'(visible en ranking)',yourFullName:'Tu nombre completo',shortName:'Nombre corto visible para otros',newPassword:'Nueva Contraseña (opcional)',keepPassword:'Dejar en blanco para no cambiar',saveBtn:'GUARDAR',profileUpdated:'Perfil actualizado ✓',poolLabel:'Polla',paymentsStripe:'Pagos procesados de forma segura por Stripe',accountCreated:'¡Cuenta creada! Ya puedes ingresar.',allFieldsRequired:'Todos los campos son obligatorios.',emailRequired:'El email es obligatorio',phoneRequired:'El teléfono es obligatorio',passTooShort:'La contraseña debe tener al menos 6 caracteres',emailExists:'Este email ya está registrado',nameEmpty:'El nombre no puede estar vacío',passMin6:'La contraseña debe tener al menos 6 caracteres',savePredsBtn:'GUARDAR PREDICCIONES',editProfileBtn:'GUARDAR CAMBIOS',
     forgotPass:'¿Olvidaste tu contraseña?',backToLogin:'← Volver al inicio de sesión',resetSend:'ENVIAR LINK DE RESTABLECIMIENTO',resetEmailLabel:'Ingresa tu email registrado',resetSent:'✅ Revisa tu email — link de restablecimiento enviado!',resetEmailNotFound:'No se encontró ninguna cuenta con ese email.',resetTitle:'Restablecer Contraseña',resetNewPass:'Nueva Contraseña',resetConfirmPass:'Confirmar Contraseña',resetPassMismatch:'Las contraseñas no coinciden.',resetPassShort:'La contraseña debe tener al menos 6 caracteres.',resetSuccess:'✅ Contraseña actualizada. Ya puedes ingresar.',resetLinkExpired:'Este link expiró. Solicita uno nuevo.',resetLinkInvalid:'Link de restablecimiento inválido.',
     predEditTitle:'¿Cómo es ahora de jugar?',predEditBody:'¡Ya puedes empezar! 🏆 Entra tus predicciones antes de que cierren los partidos.',predEditLater:'Luego',predEditGo:'¡Ir ahora! →'
   }
